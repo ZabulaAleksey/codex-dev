@@ -7,7 +7,7 @@
 Положи папку `dev-karkas` сюда:
 
 ```text
-%USERPROFILE%\.codex\skills\dev-karkas\
+%USERPROFILE%\.agents\skills\dev-karkas\
 ```
 
 Или из PowerShell, находясь в распакованной папке:

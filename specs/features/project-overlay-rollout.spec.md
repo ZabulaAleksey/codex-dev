@@ -17,7 +17,7 @@
 ## 2. Область
 
 - канонические источники AI Dev Team в `~/.codex`;
-- пользовательские `~/.codex/AGENTS.md` и `~/.codex/skills/bootstrap-project-framework`;
+- пользовательские `~/.codex/AGENTS.md` и `~/.agents/skills/bootstrap-project-framework`;
 - единый rollout-реестр активных `projects/*`;
 - read-only проверка одного project overlay;
 - пилотное подключение одного чистого repository без изменения продукта.
@@ -34,7 +34,7 @@
 
 ### FR-101 Глобальная активация
 
-Пользовательский слой Codex должен содержать router КАРКАСА в единственном `~/.codex/AGENTS.md` и единственный Skill `bootstrap-project-framework` в `~/.codex/skills/`.
+Пользовательский слой Codex должен содержать router КАРКАСА в единственном `~/.codex/AGENTS.md`; versioned source Skill хранится в `~/.codex/skill-sources/`, а active Skill — в `~/.agents/skills/`.
 
 ### FR-102 Канонический rollout-реестр
 

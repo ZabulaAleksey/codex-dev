@@ -9,6 +9,8 @@ if ([IO.Path]::GetFullPath($DevRoot) -ne [IO.Path]::GetFullPath($CodexHome)) {
 }
 
 Write-Host "ДЕВ уже расположен в каноническом ~/.codex." -ForegroundColor Green
+py -3 (Join-Path $DevRoot "tools\sync_global_skills.py") --apply
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 py -3 (Join-Path $DevRoot "tools\validate_context.py")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 py -3 (Join-Path $DevRoot "tools\validate_global_codex.py")

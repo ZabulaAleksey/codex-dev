@@ -120,11 +120,16 @@ class GlobalCodexValidatorTests(unittest.TestCase):
         self.home = Path(self.temporary.name)
         self.codex_home = self.home / ".codex"
         self.codex_home.mkdir()
+        self.runtime_skills = self.home / ".agents" / "skills"
+        self.runtime_skills.mkdir(parents=True)
         for source in managed_files(ROOT):
             relative = source.relative_to(ROOT)
             destination = self.codex_home / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+        for source in (ROOT / "skill-sources").iterdir():
+            if source.is_dir():
+                shutil.copytree(source, self.runtime_skills / source.name)
         project = self.home / "project"
         project.mkdir()
         (self.codex_home / "config.toml").write_text(
@@ -153,6 +158,11 @@ trust_level = "trusted"
     def test_drift_is_reported(self) -> None:
         (self.codex_home / "hooks/session_context.py").write_text("drift\n", encoding="utf-8")
         self.assertIn("managed-file-drift", self.issue_codes())
+
+    def test_runtime_skill_drift_is_reported(self) -> None:
+        skill = next(path for path in self.runtime_skills.iterdir() if path.is_dir())
+        (skill / "SKILL.md").write_text("drift\n", encoding="utf-8")
+        self.assertIn("runtime-skill-drift", self.issue_codes())
 
     def test_inline_credential_is_reported_without_value(self) -> None:
         config = self.codex_home / "config.toml"

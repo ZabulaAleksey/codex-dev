@@ -8,7 +8,7 @@
 
 - `~/.codex` — этот Git repository, общая AI-инфраструктура и активный пользовательский слой Codex.
 - `~/.codex/presets/<preset>` — шаблон проектных инструкций; это не рабочая копия проекта.
-- `~/codex-workspace/projects/<project>` — рабочий Git-репозиторий конкретного проекта.
+- `~/codex-workspace/<project>` — рабочий Git-репозиторий конкретного проекта.
 
 Такая схема позволяет переносить домашний каталог между компьютерами без изменения документации и не смешивает шаблоны с рабочими проектами.
 
@@ -17,7 +17,7 @@
 Не копировать 20 одинаковых агентов в каждый проект. Вместо этого:
 
 1. **Глобальное ядро команды** хранится в `~/.codex/agents/`.
-2. **Глобальные рабочие процессы** хранятся в `~/.codex/skills/`.
+2. **Глобальные Skills** версионируются в `~/.codex/skill-sources/` и устанавливаются в `~/.agents/skills/`.
 3. Каждый репозиторий имеет тонкий `AGENTS.md`, SPEC и `docs/AI_*.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при подтверждённом проектном пробеле.
 4. Глобальные hooks защищают от опасных команд и подмешивают краткий статус проекта в контекст.
 5. Rules задают детерминированную политику для опасных shell-команд.
@@ -85,7 +85,7 @@ config.ai-dev-team.recommended.toml
 ### 2. Установить preset в репозиторий
 
 ```powershell
-.\install-project.ps1 -Preset trading-terminal -Target '~/codex-workspace/projects/trading-terminal'
+.\install-project.ps1 -Preset trading-terminal -Target '~/codex-workspace/trading-terminal'
 ```
 
 Другие значения `-Preset`:
@@ -121,7 +121,7 @@ py -3 .\tools\validate_project_overlay.py .\projects\<project> --json
 py -3 .\tools\reconcile_project_framework.py .\projects\<project>
 ```
 
-Из корня рабочего репозитория `~/codex-workspace/projects/<project>`:
+Из корня рабочего репозитория `~/codex-workspace/<project>`:
 
 ```powershell
 codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов."

@@ -1,7 +1,7 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: Завершён, ожидает решения о merge
-Этап: Консолидация global context в `~/.codex`
+Статус: В работе
+Этап: Full governance migration — Phase 2/12
 Дата: 2026-08-24
 
 ## Выполнено
@@ -25,8 +25,18 @@
 - 12 Git repositories проверены; новые compatibility conflicts отсутствуют — PASS;
 - исходные dirty/merge состояния сохранены — PASS.
 
+## Текущая цель
+
+1. Завершить и проверить source/runtime split Skills.
+2. По одному переместить независимые product repositories из `projects/<repo>` в `<repo>`, сохранив Git/dirty/worktree state.
+3. Обновить paths, project overlays, `prompts/STAGES.md` и canonical docs.
+4. Расширить read-only validators и выполнить gates.
+
+## Blockers
+
+- legacy `codex-workspace/.git` защищён ACL и требует ручного quarantine владельцем;
+- merge в protected/dirty branches не разрешён и не входит в автоматическую миграцию.
+
 ## Следующее действие
 
-После проверки владельцем — отдельное разрешение на merge ветки
-`chore/codex-home-consolidation` и project reference branches. Временные worktrees
-не удалять без явного разрешения.
+Закончить Phase 2 validation, затем выполнить Phase 3 для clean repositories с lowest risk.

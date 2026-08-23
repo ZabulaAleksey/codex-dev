@@ -85,7 +85,7 @@ project framework и reusable automation, но не хранит канонич�
 **Решение:** перенести versioned AI Dev Team в `~/.codex` и использовать
 `AGENTS.md`, `agents/`, `hooks/`, `skills/` и `rules/` непосредственно из активного
 пользовательского слоя Codex. Product repositories остаются независимыми Git roots
-в `~/codex-workspace/projects/*`.
+в `~/codex-workspace/*`.
 
 **Причина:** прежняя схема «канон в `~/codex-workspace` → installed-копия в
 `~/.codex` / `~/.agents`» создавала drift и два конфликтующих `AGENTS.md`.
@@ -103,3 +103,25 @@ project framework и reusable automation, но не хранит канонич�
 - project overlays ссылаются на `~/.codex`, но не копируют глобальную automation;
 - `install-global.ps1` стал проверкой canonical placement, а не copy/sync installer;
 - откат versioned части выполняется Git, runtime state не затрагивается.
+
+## 2026-08-24 — Skills разделены на versioned source и runtime projection
+
+**Статус:** принято; supersedes часть решения 2026-08-23 о непосредственном использовании `~/.codex/skills` для Skills ДЕВ.
+
+**Решение:** versioned source reusable Skills хранится в `~/.codex/skill-sources`. Единственная active runtime-проекция ДЕВ находится в `~/.agents/skills`. `tools/sync_global_skills.py` сравнивает file set/SHA-256, не удаляет unmanaged Skills и перед заменой drifted runtime Skill переносит прежнюю копию в `~/.agents/.migration-backup`.
+
+**Причина:** Codex использует `.codex/skills` и `.agents/skills` как discovery roots, поэтому одинаковые Skills обнаруживались дважды. При этом source должен оставаться в Git для cross-device восстановления.
+
+**Альтернативы:** отдельный Git repository `.agents` отклонён из-за отсутствия отдельного remote и появления второго lifecycle; junction отклонён из-за двойного discovery и неясной Git-portability на Windows.
+
+**Последствия:** host-managed `.codex/skills/.system` и unmanaged Skills не затрагиваются; после clone выполняется `install-global.ps1`; runtime drift является validation error.
+
+## 2026-08-24 — workspace flatten и единый project governance contract
+
+**Статус:** принято.
+
+**Решение:** product repositories располагаются непосредственно в `~/codex-workspace/<project>`, canonical stage source — `prompts/STAGES.md`, а общие lifecycle/evidence/database/security/tooling policies находятся в `rules/governance.md`.
+
+**Причина:** промежуточный `projects/`, смешанные prompt formats и неполные project state contracts создавали path coupling и затрудняли восстановление новой сессии.
+
+**Последствия:** physical moves проверяются по одному repository; dirty/merge state сохраняется backup refs; legacy stage files удаляются только после semantic content/link audit; внешние projections остаются derived.

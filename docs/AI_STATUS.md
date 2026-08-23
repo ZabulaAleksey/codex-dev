@@ -4,25 +4,24 @@
 
 ## Статус
 
-Versioned ДЕВ и active global Codex layer консолидированы в `~/.codex`.
-Перенос проверен локально; merge и удаление временных worktrees требуют отдельного
-разрешения владельца.
+Предыдущая консолидация в `~/.codex` подтверждена commit `a195744`. Full governance migration находится в Phase 2: global source/runtime split реализован в feature-worktree, но ещё не активирован в canonical worktree.
 
 ## Реализовано
 
 - единый канонический `~/.codex/AGENTS.md`;
 - Git root `~/.codex` с сохранённой history/index на ветке `chore/codex-home-consolidation`;
-- прямые `agents/`, `hooks/`, `skills/`, `rules/`, `docs/`, `presets/`, `tools/` и `specs/`;
+- прямые `agents/`, `hooks/`, `rules/`, `docs/`, `presets/`, `tools/` и `specs/`;
+- versioned Skill sources в `skill-sources/` и recoverable runtime sync в `~/.agents/skills`;
 - отсутствие прежних параллельных source/installed trees;
 - runtime-safe Git allowlist: auth, config, secrets, sessions, SQLite, cache и plugins игнорируются;
-- project global links обновлены в отдельных migration-ветках; project roots остаются в `~/codex-workspace/projects`;
+- project global links обновлены в отдельных migration-ветках; project roots остаются в `~/codex-workspace`;
 - 11 атомарных project commits; `ai-mix` не требовал ссылочной правки;
 - исходные merge-state/dirty worktrees сохранены без изменений.
 
 ## Verification evidence
 
-- unit suite `tools.test_reconcile_project_framework`, `tools.test_validate_global_codex`, `tools.test_validate_project_overlay` — 34/34 PASS;
-- `py -3 -B tools/validate_context.py` — PASS, 254 managed files;
+- unit suite с `tools.test_sync_global_skills` — 39/39 PASS в full-governance feature-worktree;
+- `py -3 -B tools/validate_context.py` — PASS, 258 managed files в feature-worktree;
 - `py -3 -B tools/validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex` — PASS;
 - `hooks.json`, active и recommended TOML — parse PASS;
 - Git ignore probes для auth/config/sessions/logs/plugins/runtime rules/system Skills — PASS;
@@ -32,10 +31,11 @@ Versioned ДЕВ и active global Codex layer консолидированы в 
 
 ## Известные ограничения
 
-- `projects/dune-rts` не является Git repository и не входил в repository audit;
+- `projects/dune-rts` не является Git repository; принято решение объединить уникальное с backlog и архивировать placeholder;
 - `ai-mix`, `server`, `Task_21.07_Svelte`, `toemath` и `wifi-share` сохраняют ранее существовавшие overlay gaps;
 - основной worktree `receipt-scanner-ua` и `Task_21.07_Svelte` остаётся в незавершённом merge;
-- временные worktrees сохранены для последующего merge/проверки.
+- runtime validator против active `~/.codex` ожидаемо показывает drift до активации feature-ветки;
+- временные worktrees и backup refs сохранены для последующего merge/проверки.
 
 ## Следующее действие
 

@@ -9,8 +9,8 @@ policy внутрь проекта без подтверждённой project-s
 
 - AI-инфраструктура, глобальные правила и её Git repository находятся в `~/.codex`.
 - Шаблоны проектов находятся в `~/.codex/presets/<preset>`.
-- Рабочие репозитории находятся только в `~/codex-workspace/projects/<project>`.
-- Каждый каталог верхнего уровня в `~/codex-workspace/projects/` должен быть самостоятельным Git-репозиторием.
+- Рабочие репозитории находятся непосредственно в `~/codex-workspace/<project>`.
+- Каждый product-каталог верхнего уровня в `~/codex-workspace/` должен быть самостоятельным Git-репозиторием; служебные hidden-каталоги не являются product repositories.
 - Git repository ДЕВ в `~/.codex` не отслеживает runtime state Codex и содержимое product repositories.
 - Не используй каталог шаблонов как рабочий репозиторий проекта.
 - В документации и примерах используй переносимые пути от `~`, а не абсолютные пути конкретного диска или пользователя.
@@ -91,6 +91,8 @@ policy внутрь проекта без подтверждённой project-s
 
 Для `STANDARD` и `COMPLEX` изменений существенного поведения обязательно используй `~/.codex/rules/sdd/spec-driven-development.md`.
 
+Для изменений структуры repository, project lifecycle, stage/docs, source of truth, context inheritance, database/fallback/security/tooling/evidence или cross-device portability обязательно прочитай `~/.codex/rules/governance.md`.
+
 Не загружай все правила и все SPEC одновременно.
 
 ### Сквозная Fallback Policy
@@ -150,7 +152,7 @@ policy внутрь проекта без подтверждённой project-s
 1. Определи корень текущего Git-репозитория.
 2. Проверь наличие:
 
-`~/codex-workspace/projects/<project>/docs/git-flow.md`
+`~/codex-workspace/<project>/docs/git-flow.md`
 
 3. Если файл существует — прочитай его и используй его правила.
 4. Если файла нет — используй стандартные имена веток, например:
@@ -220,7 +222,7 @@ Git worktree обязателен только если **два или боле
 
 Если задача относится к существующему проекту, сначала проверь:
 
-`~/codex-workspace/projects/<project>`
+`~/codex-workspace/<project>`
 
 и прочитай его локальный `AGENTS.md`, если он существует.
 
@@ -312,25 +314,17 @@ Git worktree обязателен только если **два или боле
 
 ## Обязательная проектная документация
 
-Для существующего программного проекта проверь наличие следующих файлов:
+Канонический baseline и назначение документов определены в `rules/governance.md`. Для активного software repository обязательны содержательные `AGENTS.md`, `prompts/STAGES.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/LEARNING_LOG.md` и `docs/project-context.md`.
 
-`ARCHITECTURE.md`
+Не создавай пустые placeholders. `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `TRACEABILITY.md` и `DEPENDENCIES.md` обязательны только при соответствующей поверхности проекта.
 
-`DECISIONS.md`
-
-`DESIGN.md`
-
-`AI_STATUS.md`
-
-`ROADMAP.md`
-
-Предпочтительное расположение — в `~/codex-workspace/projects/<project>/docs/`, если структура проекта или локальный `AGENTS.md` не задают другое место.
+Предпочтительное расположение — в `~/codex-workspace/<project>/docs/`, если структура проекта или локальный `AGENTS.md` не задают другое место.
 
 `AI_STATUS.md` выполняет роль актуального снимка проекта. Не создавай отдельный `PROJECT_SNAPSHOT.md`, если проект уже использует `AI_STATUS.md`.
 
 `SECURITY.md` создавай или обновляй, когда проект обрабатывает аутентификацию, секреты, недоверенный ввод, сетевые границы, платежи или чувствительные данные.
 
-Если один или несколько из этих файлов отсутствуют, **создай недостающие файлы**.
+Если обязательный файл отсутствует, сначала исследуй фактический repository и создай содержательный minimum; не выдумывай архитектуру или evidence.
 
 Это считается первоначальным bootstrap проектной документации и выполняется независимо от режима SIMPLE / STANDARD / COMPLEX.
 

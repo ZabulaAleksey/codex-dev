@@ -92,7 +92,7 @@ Live inventory product repositories больше не является capabilit
 каноническим источником, а `docs/FALLBACKS.md` в product repository — только
 project-specific delta.
 
-Пользовательские `~/.codex/AGENTS.md` и `~/.codex/skills/bootstrap-project-framework` являются каноническими источниками. Это статус `INHERITED` для всех проектов: Skill и router не копируются в каждый repository.
+Пользовательские `~/.codex/AGENTS.md` и `~/.agents/skills/bootstrap-project-framework` являются каноническими источниками. Это статус `INHERITED` для всех проектов: Skill и router не копируются в каждый repository.
 
 ## Решение 2026-08-20 — нормализация глобального runtime-слоя
 
@@ -115,7 +115,7 @@ project-specific delta.
 |---|---|---|---|
 | Global router | active и прежний workspace router задавали пересекающиеся правила | `CONFLICT` → `INHERITED` | один объединённый `~/.codex/AGENTS.md` |
 | Agents / hooks / rules | source и installed trees дублировались | `CONFLICT` → `INHERITED` | непосредственные `~/.codex/{agents,hooks,rules}` |
-| Skills ДЕВ | source находился в repository, active Skills — в `~/.agents/skills` | `CONFLICT` → `INHERITED` | единый `~/.codex/skills/<skill>` |
-| Product repositories | независимые Git roots под `~/codex-workspace/projects` | `KEEP` | оставить на месте; менять только ссылки на global context |
+| Skills ДЕВ | source и runtime были одновременно discoverable | `CONFLICT` → `EXTEND` | versioned `~/.codex/skill-sources/<skill>` + hash-verified runtime `~/.agents/skills/<skill>` |
+| Product repositories | независимые Git roots под `~/codex-workspace` | `KEEP` | оставить на месте; менять только ссылки на global context |
 | Project-specific automation | локальные `.codex` / `.agents` в отдельных repositories | `EXTEND` / `PROJECT_ONLY` | сохранить без перезаписи |
 | Runtime state Codex | secrets, auth, sessions, SQLite, cache и plugins находятся рядом с ДЕВ | `FORBIDDEN_TO_OVERWRITE` | deny-by-default `.gitignore`, versioned allowlist только для файлов ДЕВ |

@@ -19,10 +19,10 @@ notepad "$HOME\.codex\config.ai-dev-team.recommended.toml"
 notepad "$HOME\.codex\config.toml"
 
 # 4) Установить один проектный preset
-.\install-project.ps1 -Preset trading-terminal -Target '~/codex-workspace/projects/trading-terminal'
+.\install-project.ps1 -Preset trading-terminal -Target '~/codex-workspace/trading-terminal'
 
 # 5) Проверить из репозитория
-Set-Location ~/codex-workspace/projects/trading-terminal
+Set-Location ~/codex-workspace/trading-terminal
 codex mcp list
 codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов. Не изменяй файлы."
 ```

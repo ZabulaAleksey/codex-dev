@@ -10,11 +10,11 @@ from tools.validate_project_overlay import validate_project
 
 REQUIRED_CONTENT = {
     "AGENTS.md": "# Project router\n",
-    "specs/README.md": "# SPEC index\n",
-    "specs/system.spec.md": "# System specification\n",
+    "prompts/STAGES.md": "# Stage 001\n\n## Status\nPLANNED\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",
-    "docs/DESIGN.md": "# Design\n",
+    "docs/LEARNING_LOG.md": "# Learning log\n",
+    "docs/project-context.md": "# Project context\n",
     "docs/ROADMAP.md": "# Roadmap\n",
     "docs/AI_PLAN.md": "# Current plan\n",
     "docs/AI_STATUS.md": "# Current status\n",
@@ -65,6 +65,13 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         self.assertFalse(result.ok)
         self.assertIn("missing-required-file", self.issue_codes(project))
         self.assertIn("alternate-status-file", self.issue_codes(project))
+
+    def test_legacy_stage_file_and_stale_workspace_path_are_reported(self) -> None:
+        project = self.make_project()
+        (project / "prompts/01-old-stage.md").write_text("cd ~/codex-workspace/projects/project\n", encoding="utf-8")
+        codes = self.issue_codes(project)
+        self.assertIn("legacy-stage-file", codes)
+        self.assertIn("stale-workspace-path", codes)
 
     def test_exact_global_duplicate_is_rejected_even_with_audit(self) -> None:
         project = self.make_project()

@@ -1,6 +1,6 @@
 # КАРКАС проекта и автоматизация контекста
 
-Этот документ задаёт общую для `~/codex-workspace/projects/*` терминологию. Он описывает инженерный процесс, а не структуру конкретного продукта.
+Этот документ задаёт общую для `~/codex-workspace/*` терминологию. Он описывает инженерный процесс, а не структуру конкретного продукта.
 
 ## Определения
 
@@ -75,13 +75,13 @@ implementation/tests фактическое состояние и доказат
 Готовый overlay проверяется без изменений repository:
 
 ```powershell
-py -3 ~/.codex/tools/validate_project_overlay.py ~/codex-workspace/projects/<project>
+py -3 ~/.codex/tools/validate_project_overlay.py ~/codex-workspace/<project>
 ```
 
 Перед изменением brownfield repository:
 
 ```powershell
-py -3 ~/.codex/tools/reconcile_project_framework.py ~/codex-workspace/projects/<project>
+py -3 ~/.codex/tools/reconcile_project_framework.py ~/codex-workspace/<project>
 ```
 
 Для машинного чтения доступен `--json`; отдельный registry при этом не создаётся.

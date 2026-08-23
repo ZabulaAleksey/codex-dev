@@ -12,7 +12,7 @@
 - перенести Git repository общей AI-инфраструктуры в `~/.codex`;
 - объединить `~/.codex/AGENTS.md` и `~/.codex/AGENTS.md` в один канонический `~/.codex/AGENTS.md`;
 - разместить общие agents, hooks, Skills, engineering rules, docs, presets, templates, tools и SPEC внутри `~/.codex`;
-- сохранить рабочие product repositories в `~/codex-workspace/projects/<project>` как независимые Git roots;
+- сохранить рабочие product repositories в `~/codex-workspace/<project>` как независимые Git roots;
 - обновить активные ссылки в global/project rules, hooks, Skills, validators и документации;
 - исключить runtime-файлы Codex, секреты, sessions, cache и базы данных из Git;
 - проверить каждый существующий project repository на конфликт с новым глобальным каноном.
@@ -32,7 +32,7 @@
 
 ### FR-CH-002 Раздельные границы
 
-`~/.codex` хранит ДЕВ и активный пользовательский слой Codex. `~/codex-workspace/projects/*` хранит независимые product repositories. Project-specific `.codex` и `.agents` остаются внутри соответствующих repositories.
+`~/.codex` хранит ДЕВ и активный пользовательский слой Codex. `~/codex-workspace/*` хранит независимые product repositories. Project-specific `.codex` и `.agents` остаются внутри соответствующих repositories.
 
 ### FR-CH-003 Git safety
 
@@ -40,7 +40,7 @@ Git repository ДЕВ должен отслеживать только упра�
 
 ### FR-CH-004 Ссылочная целостность
 
-Активные ссылки на global `AGENTS.md`, `rules/`, `docs/`, `tools/`, `templates/`, `presets/`, `specs/`, hooks и Skills должны указывать на `~/.codex`. Пути к product repositories остаются `~/codex-workspace/projects/<project>`.
+Активные ссылки на global `AGENTS.md`, `rules/`, `docs/`, `tools/`, `templates/`, `presets/`, `specs/`, hooks и Skills должны указывать на `~/.codex`. Пути к product repositories остаются `~/codex-workspace/<project>`.
 
 ### FR-CH-005 Совместимость проектов
 
@@ -59,7 +59,7 @@ Git repository ДЕВ должен отслеживать только упра�
 - поиск не находит устаревших ссылок `~/codex-workspace/{AGENTS.md,rules,docs,tools,templates,presets,global,specs,backlog}` в managed context и project repositories;
 - Git ignore не допускает tracking runtime/secrets;
 - unit, context, global-layer и project-overlay проверки проходят либо имеют явно зафиксированный pre-existing finding без новой regression;
-- каждый Git repository под `~/codex-workspace/projects` проверен read-only; его исходный dirty status сохранён.
+- каждый Git repository под `~/codex-workspace` проверен read-only; его исходный dirty status сохранён.
 
 ## Откат
 

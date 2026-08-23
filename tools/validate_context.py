@@ -46,6 +46,8 @@ REQUIRED = {
     "tools/test_validate_project_overlay.py",
     "tools/reconcile_project_framework.py",
     "tools/test_reconcile_project_framework.py",
+    "tools/sync_global_skills.py",
+    "tools/test_sync_global_skills.py",
 }
 
 

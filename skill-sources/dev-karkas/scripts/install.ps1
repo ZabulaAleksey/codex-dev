@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $SkillRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$DestinationRoot = Join-Path $HOME '.codex\skills'
+$DestinationRoot = Join-Path $HOME '.agents\skills'
 $Destination = Join-Path $DestinationRoot 'dev-karkas'
 
 if (-not (Test-Path (Join-Path $SkillRoot 'SKILL.md'))) {

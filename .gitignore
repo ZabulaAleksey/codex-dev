@@ -19,7 +19,7 @@
 !/hooks/
 !/presets/
 !/rules/
-!/skills/
+!/skill-sources/
 !/specs/
 !/templates/
 !/tools/
@@ -27,25 +27,9 @@
 # Runtime rules Codex не являются частью ДЕВ.
 /rules/default.rules
 
-# В `skills/` Codex также устанавливает system/plugin Skills. Версионируются
-# только Skills ДЕВ, перечисленные явно.
-/skills/*
-!/skills/bootstrap-project-framework/
-!/skills/bootstrap-project-framework/**
-!/skills/dev-karkas/
-!/skills/dev-karkas/**
-!/skills/explain-change/
-!/skills/explain-change/**
-!/skills/fix-bug/
-!/skills/fix-bug/**
-!/skills/implement-stage/
-!/skills/implement-stage/**
-!/skills/plan-stage/
-!/skills/plan-stage/**
-!/skills/resume-project/
-!/skills/resume-project/**
-!/skills/review-change/
-!/skills/review-change/**
+# Versioned source глобальных Skills. Активная runtime-проекция устанавливается
+# в `~/.agents/skills`; host-managed `~/.codex/skills` остаётся вне Git.
+!/skill-sources/**
 
 # Локальные секреты, caches и служебные файлы внутри управляемых каталогов.
 **/.env

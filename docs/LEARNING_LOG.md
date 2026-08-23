@@ -293,7 +293,7 @@ Cache, config definition и реально surfaced runtime capability — ра�
 
 `AGENTS.md`, agents, hooks, Skills, rules и framework library теперь находятся в
 одном Git root `~/.codex`. Runtime state защищён allowlist `.gitignore`. Product
-repositories остались в `~/codex-workspace/projects`; их ссылки на global context
+repositories остались в `~/codex-workspace`; их ссылки на global context
 обновлены отдельными атомарными commits. Для repositories с незавершённой работой
 использованы отдельные worktrees.
 

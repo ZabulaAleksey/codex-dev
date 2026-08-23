@@ -15,11 +15,11 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = (
     "AGENTS.md",
-    "specs/README.md",
-    "specs/system.spec.md",
+    "prompts/STAGES.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISIONS.md",
-    "docs/DESIGN.md",
+    "docs/LEARNING_LOG.md",
+    "docs/project-context.md",
     "docs/ROADMAP.md",
     "docs/AI_PLAN.md",
     "docs/AI_STATUS.md",
@@ -54,9 +54,19 @@ CANONICAL_SOURCES = (
     "config.ai-dev-team.recommended.toml",
     "hooks.json",
     "hooks",
-    "skills",
+    "skill-sources",
     "rules",
     "docs/WORKFLOW.md",
+)
+
+TEXT_SUFFIXES = {".md", ".toml", ".json", ".yaml", ".yml", ".ps1", ".py", ".sh", ".bat", ".cmd", ".ts", ".tsx", ".js", ".mjs", ".cjs"}
+SKIP_DIRECTORIES = {".git", "node_modules", ".venv", "dist", "build", "target", "__pycache__"}
+STALE_PATH_PATTERNS = (
+    "~/codex-workspace/AGENTS.md",
+    "~/codex-workspace/rules/",
+    "~/codex-workspace/docs/",
+    "codex-workspace/projects/",
+    "codex-workspace\\projects\\",
 )
 
 
@@ -130,6 +140,14 @@ def _automation_files(project: Path) -> list[Path]:
     return sorted(files, key=lambda candidate: _posix_relative(candidate, project).casefold())
 
 
+def _project_text_files(project: Path) -> Iterable[Path]:
+    for candidate in project.rglob("*"):
+        if not candidate.is_file() or any(part in SKIP_DIRECTORIES for part in candidate.parts):
+            continue
+        if candidate.suffix.casefold() in TEXT_SUFFIXES or candidate.name.startswith("Dockerfile"):
+            yield candidate
+
+
 def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -201,6 +219,53 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
                         "use docs/AI_STATUS.md as the only current-status source",
                     )
                 )
+
+    prompts = project / "prompts"
+    if prompts.is_dir():
+        for candidate in sorted(prompts.rglob("*.md"), key=lambda item: item.as_posix().casefold()):
+            if candidate.name.casefold() not in {"stages.md", "readme.md"}:
+                issues.append(
+                    Issue(
+                        "legacy-stage-file",
+                        _posix_relative(candidate, project),
+                        "detailed stage content must be consolidated into prompts/STAGES.md",
+                    )
+                )
+
+    for candidate in _project_text_files(project):
+        try:
+            content = candidate.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeError):
+            continue
+        for pattern in STALE_PATH_PATTERNS:
+            if pattern in content:
+                issues.append(
+                    Issue(
+                        "stale-workspace-path",
+                        _posix_relative(candidate, project),
+                        f"contains obsolete path pattern {pattern}",
+                    )
+                )
+                break
+        if re.search(r"(?i)[A-Z]:\\Users\\[^\\]+\\codex-workspace(?:\\|$)", content):
+            issues.append(
+                Issue(
+                    "machine-specific-workspace-path",
+                    _posix_relative(candidate, project),
+                    "contains a machine-specific codex-workspace path",
+                )
+            )
+
+    wrong_agent_root = project / ".agents"
+    if wrong_agent_root.is_dir():
+        for candidate in wrong_agent_root.rglob("*.toml"):
+            issues.append(
+                Issue(
+                    "agent-in-skill-directory",
+                    _posix_relative(candidate, project),
+                    "custom agent TOML belongs in .codex/agents",
+                )
+            )
 
     local_automation = _automation_files(project)
     compatibility = project / "docs/CONTEXT_COMPATIBILITY.md"

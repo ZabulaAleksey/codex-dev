@@ -8,8 +8,11 @@ import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools.sync_global_skills import compare_skills
 
 
 @dataclass(frozen=True, order=True)
@@ -71,6 +74,8 @@ def validate_global_codex(workspace: Path, codex_home: Path) -> tuple[Issue, ...
     workspace = workspace.resolve()
     codex_home = codex_home.expanduser().resolve()
     issues: list[Issue] = []
+    for skill_issue in compare_skills(workspace / "skill-sources", codex_home.parent / ".agents" / "skills"):
+        issues.append(Issue(skill_issue.code, f"skills/{skill_issue.path}", "runtime Skill differs from versioned source"))
     for source in managed_files(workspace):
         destination = installed_path(source, workspace, codex_home)
         label = destination.relative_to(codex_home).as_posix()

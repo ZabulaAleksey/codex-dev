@@ -2,7 +2,7 @@
 
 ## Назначение и границы
 
-`~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно активный пользовательский слой Codex. `agents/`, `hooks/`, `skills/` и `rules/` используются непосредственно, без installed-копии. `docs/`, `templates/`, `presets/`, `tools/` и `specs/` образуют инженерную библиотеку. Независимые product repositories находятся в `~/codex-workspace/projects/*` и не входят в историю ДЕВ.
+`~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно active operational layer Codex. `agents/`, `hooks/` и `rules/` используются непосредственно. Versioned source Skills находится в `skill-sources/`, а единственная active runtime-проекция — в `~/.agents/skills/`. `docs/`, `templates/`, `presets/`, `tools/` и `specs/` образуют инженерную библиотеку. Независимые product repositories находятся непосредственно в `~/codex-workspace/*` и не входят в историю ДЕВ.
 
 ## Project-framework контур
 
@@ -31,7 +31,7 @@ matrix, принимает explicit conflict resolutions и сравнивает
 ## Потоки и интерфейсы
 
 - Вход validator: путь repository и опциональный `--json`.
-- Источник глобальных fingerprints: `AGENTS.md`, `agents`, `hooks`, `skills`, `rules` и `docs/WORKFLOW.md`.
+- Источник глобальных fingerprints: `AGENTS.md`, `agents`, `hooks`, `skill-sources`, `rules` и `docs/WORKFLOW.md`.
 - Выход: код `0` при полном соответствии, `1` со стабильным отсортированным списком issues при нарушении.
 - Внешняя зависимость: только executable `git`; остальная реализация использует Python standard library.
 
@@ -57,7 +57,7 @@ Fallback/retry/degradation contract:
 
 Project-specific implementation:
 
-`projects/<project>/docs/FALLBACKS.md`
+`~/codex-workspace/<project>/docs/FALLBACKS.md`
 
 Архитектура проекта определяет компоненты, границы состояния,
 idempotency/recovery interfaces и места возможной деградации,
