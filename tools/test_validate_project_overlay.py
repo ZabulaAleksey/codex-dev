@@ -73,6 +73,18 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         self.assertIn("legacy-stage-file", codes)
         self.assertIn("stale-workspace-path", codes)
 
+    def test_generated_build_tree_is_not_scanned_for_machine_paths(self) -> None:
+        project = self.make_project()
+        generated = project / ".next/types/app/page.ts"
+        generated.parent.mkdir(parents=True)
+        generated.write_text(
+            r'export const source = "C:\Users\example\codex-workspace\projects\project";\n',
+            encoding="utf-8",
+        )
+        codes = self.issue_codes(project)
+        self.assertNotIn("machine-specific-workspace-path", codes)
+        self.assertNotIn("stale-workspace-path", codes)
+
     def test_exact_global_duplicate_is_rejected_even_with_audit(self) -> None:
         project = self.make_project()
         duplicate = project / ".codex/agents/reviewer.toml"

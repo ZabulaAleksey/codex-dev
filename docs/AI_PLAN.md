@@ -1,7 +1,7 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: В работе
-Этап: Full governance migration — Phase 2/12
+Статус: Готово к handoff
+Этап: Full governance migration — Phase 12/12
 Дата: 2026-08-24
 
 ## Выполнено
@@ -20,17 +20,16 @@
 - единый global `AGENTS.md` — PASS;
 - managed links на старые global paths отсутствуют в каноническом root и migration-ветках — PASS;
 - runtime/secrets не видны Git — PASS;
-- unit suite 34/34 — PASS;
+- unit suite 39/39 — PASS;
 - `validate_context.py` и `validate_global_codex.py` — PASS;
 - 12 Git repositories проверены; новые compatibility conflicts отсутствуют — PASS;
 - исходные dirty/merge состояния сохранены — PASS.
 
 ## Текущая цель
 
-1. Завершить и проверить source/runtime split Skills.
-2. По одному переместить независимые product repositories из `projects/<repo>` в `<repo>`, сохранив Git/dirty/worktree state.
-3. Обновить paths, project overlays, `prompts/STAGES.md` и canonical docs.
-4. Расширить read-only validators и выполнить gates.
+1. Собрать результаты 12 project migration-веток и выполнить общий stale/conflict audit.
+2. Вынести machine-local root artifacts в recoverable каталог вне workspace.
+3. Зафиксировать финальный evidence и оставить merge/push только на отдельное разрешение пользователя.
 
 ## Blockers
 
@@ -39,4 +38,4 @@
 
 ## Следующее действие
 
-Закончить Phase 2 validation, затем выполнить Phase 3 для clean repositories с lowest risk.
+Завершить Phase 11 validation и Phase 12 handoff без merge защищённых/dirty веток.

@@ -4,7 +4,24 @@
 
 ## Статус
 
-Предыдущая консолидация в `~/.codex` подтверждена commit `a195744`. Full governance migration находится в Phase 2: global source/runtime split реализован в feature-worktree, но ещё не активирован в canonical worktree.
+Full governance migration активирована в `~/.codex`: базовый governance commit `806ee29`, flattened-path follow-up `498a4b8`. Все 12 independent repositories физически находятся непосредственно в `~/codex-workspace`; project changes изолированы в migration-ветках до отдельного разрешения на merge.
+
+## Project migration commits
+
+| Project | Commit |
+|---|---|
+| `ai-mix` | `93ee756` |
+| `electro-tutor` | `d2fa899` |
+| `math-morph` | `56b9782` |
+| `monte-carlo` | `6c3a220` |
+| `off-screen-canvas` | `9b56423` |
+| `receipt-scanner-ua` | `8e1b735` |
+| `server` | `c13eb96` |
+| `Task_21.07_Svelte` | `73fc902` |
+| `text-recognition-core` | `b5731f4` |
+| `toemath` | `35591a8` |
+| `video-chronicle` | `6c879ff` |
+| `wifi-share` | `c0c3aa6` |
 
 ## Реализовано
 
@@ -20,8 +37,8 @@
 
 ## Verification evidence
 
-- unit suite с `tools.test_sync_global_skills` — 39/39 PASS в full-governance feature-worktree;
-- `py -3 -B tools/validate_context.py` — PASS, 258 managed files в feature-worktree;
+- unit suite с `tools.test_sync_global_skills` — 39/39 PASS;
+- `py -3 -B tools/validate_context.py` — PASS, 258 managed files;
 - `py -3 -B tools/validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex` — PASS;
 - `hooks.json`, active и recommended TOML — parse PASS;
 - Git ignore probes для auth/config/sessions/logs/plugins/runtime rules/system Skills — PASS;
@@ -31,13 +48,12 @@
 
 ## Известные ограничения
 
-- `projects/dune-rts` не является Git repository; принято решение объединить уникальное с backlog и архивировать placeholder;
-- `ai-mix`, `server`, `Task_21.07_Svelte`, `toemath` и `wifi-share` сохраняют ранее существовавшие overlay gaps;
+- прежний placeholder `dune-rts` не являлся Git repository; уникальный тестовый контракт объединён с `backlog/dune2-bot.md`, исходник архивирован;
+- project overlay gaps устранены в отдельных `chore/full-governance-migration` ветках и проверяются до merge;
 - основной worktree `receipt-scanner-ua` и `Task_21.07_Svelte` остаётся в незавершённом merge;
-- runtime validator против active `~/.codex` ожидаемо показывает drift до активации feature-ветки;
+- active `~/.codex` и runtime Skills validator проходят без drift;
 - временные worktrees и backup refs сохранены для последующего merge/проверки.
 
 ## Следующее действие
 
-Проверить ветки и дать отдельную команду на merge. После merge можно удалить
-временные worktrees и старую резервную копию migration-файлов.
+Завершить общий аудит веток и передать точные commit/gate/blocker данные. После отдельного разрешения на merge можно удалить временные worktrees и migration backup.

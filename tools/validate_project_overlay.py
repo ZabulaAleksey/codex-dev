@@ -60,7 +60,24 @@ CANONICAL_SOURCES = (
 )
 
 TEXT_SUFFIXES = {".md", ".toml", ".json", ".yaml", ".yml", ".ps1", ".py", ".sh", ".bat", ".cmd", ".ts", ".tsx", ".js", ".mjs", ".cjs"}
-SKIP_DIRECTORIES = {".git", "node_modules", ".venv", "dist", "build", "target", "__pycache__"}
+SKIP_DIRECTORIES = {
+    ".astro",
+    ".dart_tool",
+    ".git",
+    ".mypy_cache",
+    ".next",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".svelte-kit",
+    ".venv",
+    "__pycache__",
+    "build",
+    "coverage",
+    "dist",
+    "htmlcov",
+    "node_modules",
+    "target",
+}
 STALE_PATH_PATTERNS = (
     "~/codex-workspace/AGENTS.md",
     "~/codex-workspace/rules/",
