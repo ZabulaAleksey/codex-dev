@@ -2,7 +2,7 @@
 
 ## Назначение и границы
 
-`~/codex-workspace` — канонический repository общей AI-инфраструктуры. `global/` содержит устанавливаемые пользовательские возможности, `rules/` и `templates/` — выборочную инженерную библиотеку, `presets/` — шаблоны, а `projects/*` — независимые Git-репозитории и не входят в историю workspace.
+`~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно активный пользовательский слой Codex. `agents/`, `hooks/`, `skills/` и `rules/` используются непосредственно, без installed-копии. `docs/`, `templates/`, `presets/`, `tools/` и `specs/` образуют инженерную библиотеку. Независимые product repositories находятся в `~/codex-workspace/projects/*` и не входят в историю ДЕВ.
 
 ## Project-framework контур
 
@@ -18,29 +18,32 @@ read-only validator
 
 `tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation и compatibility audit. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
 
-`tools/validate_context.py` отдельно проверяет manifest самого workspace.
+`tools/reconcile_project_framework.py` является отдельным read-only gate перед bootstrap/refresh.
+Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility
+matrix, принимает explicit conflict resolutions и сравнивает test baseline с post-refresh run.
+Он не пишет файлы, не выполняет product code и не изменяет Git status.
+
+`tools/validate_context.py` отдельно проверяет manifest самого ДЕВ.
 `tools/validate_project_overlay.py` запускается для одного явно выбранного repository;
-workspace не хранит live inventory product repositories. Текущие этапы, blockers
+ДЕВ не хранит live inventory product repositories. Текущие этапы, blockers
 и другие сведения о состоянии продукта принадлежат самому product repository.
 
 ## Потоки и интерфейсы
 
 - Вход validator: путь repository и опциональный `--json`.
-- Источник глобальных fingerprints: `global/codex`, `global/skills`, `rules` и `docs/WORKFLOW.md`.
+- Источник глобальных fingerprints: `AGENTS.md`, `agents`, `hooks`, `skills`, `rules` и `docs/WORKFLOW.md`.
 - Выход: код `0` при полном соответствии, `1` со стабильным отсортированным списком issues при нарушении.
 - Внешняя зависимость: только executable `git`; остальная реализация использует Python standard library.
 
-## Контур глобальной установки Codex
+## Контур глобального runtime Codex
 
 ```text
-global/codex (канон в Git)
-        ↓ reviewed sync
-~/.codex (активный runtime-слой)
+~/.codex (канон в Git + активный runtime-слой)
         ↓ read-only validation
-hashes managed-файлов + безопасные инварианты config.toml
+managed-файлы + безопасные инварианты config.toml
 ```
 
-`install-global.ps1 -SyncManaged` синхронизирует только reviewed managed-файлы и не перезаписывает активный `config.toml`. `tools/normalize_user_codex.py` выполняет ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без вывода секретов. `tools/validate_global_codex.py` независимо проверяет hashes установленного слоя и статические границы безопасности.
+`install-global.ps1` проверяет каноническое расположение repository и не перезаписывает активный `config.toml`. `tools/normalize_user_codex.py` выполняет ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без вывода секретов. `tools/validate_global_codex.py` проверяет managed-файлы активного слоя и статические границы безопасности.
 
 Host-managed runtime bindings не подменяются угаданными путями: отсутствующая browser service удаляется, `sky` binding сохраняется, а browser client hash допускается только при совпадении с фактически установленным client-файлом.
 

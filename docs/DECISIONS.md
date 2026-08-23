@@ -1,5 +1,12 @@
 # Существенные решения
 
+## 2026-08-20 — Brownfield Reconciliation Gate
+
+- Решение: перед bootstrap/refresh классифицировать repository и для brownfield выполнять отдельный read-only reconciliation.
+- Причина: фактическая реализация и результаты baseline-тестов должны сохраняться source of truth; шаблон не должен молча перезаписывать продуктовые решения.
+- Статусы matrix: `KEEP`, `ADD`, `ADAPT`, `MERGE`, `CONFLICT`, `SUPERSEDED`, `FORBIDDEN_TO_OVERWRITE`.
+- Последствие: unresolved `CONFLICT` блокирует mutation, а `FORBIDDEN_TO_OVERWRITE` запрещает автоматическую запись. После refresh новые baseline failures считаются regression.
+
 ## 2026-08-13 — Project overlay вместо копии AI Dev Team
 
 - Решение: project хранит только локальные требования, документы и подтверждённые расширения.
@@ -58,7 +65,9 @@ project framework и reusable automation, но не хранит канонич�
 
 ## 2026-08-20 — Канон и runtime глобальной конфигурации разделены
 
-**Решение:** `global/codex` остаётся единственным versioned source-of-truth для managed AGENTS, agents, hooks и rules. `~/.codex/config.toml` остаётся runtime-specific и меняется только ограниченным идемпотентным normalizer; installer не перезаписывает его целиком.
+**Статус:** superseded 2026-08-23 консолидацией в `~/.codex`.
+
+**Решение:** прежний workspace source tree оставался единственным versioned source-of-truth для managed AGENTS, agents, hooks и rules. `~/.codex/config.toml` оставался runtime-specific и менялся только ограниченным идемпотентным normalizer; installer не перезаписывал его целиком.
 
 **Причина:** слепая синхронизация теряла полезные local deltas, а полное сохранение installed-файлов закрепляло drift, Unicode defect и небезопасные настройки.
 
@@ -70,3 +79,27 @@ project framework и reusable automation, но не хранит канонич�
 - inline secrets и broad trust являются validation errors;
 - host-managed browser paths/hashes не угадываются;
 - внешняя ротация credential и интерактивный trust hooks не автоматизируются.
+
+## 2026-08-23 — `~/.codex` является Git-корнем и единственным каноном ДЕВ
+
+**Решение:** перенести versioned AI Dev Team в `~/.codex` и использовать
+`AGENTS.md`, `agents/`, `hooks/`, `skills/` и `rules/` непосредственно из активного
+пользовательского слоя Codex. Product repositories остаются независимыми Git roots
+в `~/codex-workspace/projects/*`.
+
+**Причина:** прежняя схема «канон в `~/codex-workspace` → installed-копия в
+`~/.codex` / `~/.agents`» создавала drift и два конфликтующих `AGENTS.md`.
+
+**Альтернативы:**
+
+- оставить installer и две копии — отклонено из-за повторного drift;
+- поместить repository в `~/.codex/dev` — отклонено, потому что глобальный
+  `AGENTS.md`, hooks и agents снова оказались бы вне Git root либо потребовали бы копирования.
+
+**Последствия:**
+
+- runtime state, secrets, sessions, plugins, cache и `config.toml` исключены из Git;
+- engineering Markdown rules сосуществуют с runtime `.rules` в `~/.codex/rules`;
+- project overlays ссылаются на `~/.codex`, но не копируют глобальную automation;
+- `install-global.ps1` стал проверкой canonical placement, а не copy/sync installer;
+- откат versioned части выполняется Git, runtime state не затрагивается.

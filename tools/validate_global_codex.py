@@ -20,7 +20,7 @@ class Issue:
 
 
 def managed_files(workspace: Path) -> tuple[Path, ...]:
-    base = workspace / "global" / "codex"
+    base = workspace
     files = [base / "AGENTS.md", base / "hooks.json", base / "rules" / "ai-dev-team.rules"]
     files.extend(sorted((base / "agents").glob("*.toml")))
     files.extend(sorted((base / "hooks").glob("*.py")))
@@ -32,7 +32,7 @@ def digest(path: Path) -> str:
 
 
 def installed_path(source: Path, workspace: Path, codex_home: Path) -> Path:
-    relative = source.relative_to(workspace / "global" / "codex")
+    relative = source.relative_to(workspace)
     return codex_home / relative
 
 

@@ -16,8 +16,8 @@ from tools.validate_global_codex import managed_files, validate_global_codex
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SESSION_HOOK = ROOT / "global/codex/hooks/session_context.py"
-GUARD_HOOK = ROOT / "global/codex/hooks/guard_destructive.py"
+SESSION_HOOK = ROOT / "hooks/session_context.py"
+GUARD_HOOK = ROOT / "hooks/guard_destructive.py"
 
 
 def load_session_hook_module():
@@ -121,7 +121,7 @@ class GlobalCodexValidatorTests(unittest.TestCase):
         self.codex_home = self.home / ".codex"
         self.codex_home.mkdir()
         for source in managed_files(ROOT):
-            relative = source.relative_to(ROOT / "global/codex")
+            relative = source.relative_to(ROOT)
             destination = self.codex_home / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
@@ -247,6 +247,10 @@ class HookRegressionTests(unittest.TestCase):
     def test_destructive_guard_covers_windows_and_flag_variants(self) -> None:
         commands = (
             'git.exe -C "C:\\work tree" reset --hard HEAD',
+            "git clean -fdx",
+            "git clean -d -f -x",
+            "git clean --force -d -x",
+            'git.exe -C "C:\\work tree" clean -n -f',
             "Remove-Item -LiteralPath 'C:\\' -Force -Recurse",
             "rm -fr /",
             "git push --force-with-lease origin main",
@@ -260,6 +264,11 @@ class HookRegressionTests(unittest.TestCase):
                 result = subprocess.run([sys.executable, str(GUARD_HOOK)], input=payload, capture_output=True, check=True)
                 output = json.loads(result.stdout.decode("utf-8"))
                 self.assertEqual("deny", output["hookSpecificOutput"]["permissionDecision"])
+
+    def test_destructive_guard_allows_git_clean_dry_run(self) -> None:
+        payload = json.dumps({"tool_input": {"command": "git clean -n -d -x"}}).encode("utf-8")
+        result = subprocess.run([sys.executable, str(GUARD_HOOK)], input=payload, capture_output=True, check=True)
+        self.assertEqual(b"", result.stdout)
 
 
 if __name__ == "__main__":

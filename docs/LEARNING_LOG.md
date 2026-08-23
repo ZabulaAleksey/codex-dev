@@ -1,5 +1,18 @@
 # Учебный журнал
 
+## 2026-08-20 — Brownfield Reconciliation Gate
+
+Добавлен read-only `tools/reconcile_project_framework.py` с классификацией greenfield/brownfield,
+compatibility matrix и сравнением baseline/post-refresh failures. Неразрешённые конфликты блокируют
+gate, существующий product content помечается `FORBIDDEN_TO_OVERWRITE`, а reconciler не создаёт и не
+изменяет файлы.
+
+Проверка:
+
+```powershell
+py -3 -B -m unittest tools.test_reconcile_project_framework -v
+```
+
 ## 2026-08-13 — Read-only проверка project overlay
 
 ### Задача
@@ -162,7 +175,7 @@ Preset-шаблоны перенесены в `presets/`. Каталог `projec
 
 Показывает реально активные MCP, в отличие от шаблонов, которые только хранятся в репозитории.
 
-`git diff --no-index ~/.codex/AGENTS.md global/codex/AGENTS.md`
+Исторически active и source `AGENTS.md` сравнивались через `git diff --no-index`.
 
 Выявляет расхождение между установленным глобальным контекстом и его каноническим шаблоном.
 
@@ -239,7 +252,7 @@ Preset-шаблоны перенесены в `presets/`. Каталог `projec
 
 ```text
 py -3 -B tools/validate_context.py
-codex.cmd execpolicy check --pretty --rules global/codex/rules/ai-dev-team.rules -- git push --force origin main
+codex.cmd execpolicy check --pretty --rules ~/.codex/rules/ai-dev-team.rules -- git push --force origin main
 ```
 
 Дополнительно проверяются JSON/TOML, компиляция hook-скриптов и фактический вывод `SessionStart` на русском языке.
@@ -250,7 +263,7 @@ codex.cmd execpolicy check --pretty --rules global/codex/rules/ai-dev-team.rules
 
 ### Задача
 
-Устранить drift между `global/codex` и `~/.codex`, исправить Windows hook и закрыть конфликтные MCP/plugin/trust связи без слепого перезаписывания пользовательского config.
+Устранить drift между прежним source tree и active `~/.codex`, исправить Windows hook и закрыть конфликтные MCP/plugin/trust связи без слепого перезаписывания пользовательского config.
 
 ### Что изменили
 
@@ -267,3 +280,35 @@ codex.cmd execpolicy check --pretty --rules global/codex/rules/ai-dev-team.rules
 ### Важный вывод
 
 Cache, config definition и реально surfaced runtime capability — разные состояния. Отсутствие tool в одном сеансе не является основанием угадывать service path или удалять plugin cache; безопаснее отключить неоднозначный маршрут и подтвердить его после restart.
+
+## 2026-08-24 — Консолидация ДЕВ в `~/.codex`
+
+### Задача
+
+Устранить две канонические копии global context, перенести Git root ДЕВ в
+`~/.codex` и обновить project overlays без вмешательства в product-код и
+существующие dirty/merge состояния.
+
+### Что изменили
+
+`AGENTS.md`, agents, hooks, Skills, rules и framework library теперь находятся в
+одном Git root `~/.codex`. Runtime state защищён allowlist `.gitignore`. Product
+repositories остались в `~/codex-workspace/projects`; их ссылки на global context
+обновлены отдельными атомарными commits. Для repositories с незавершённой работой
+использованы отдельные worktrees.
+
+### Как повторить проверку
+
+1. `git -C ~/.codex rev-parse --show-toplevel`.
+2. `py -3 -B ~/.codex/tools/validate_context.py`.
+3. `py -3 -B ~/.codex/tools/validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex`.
+4. Запустить unit suite из `~/.codex`.
+5. Выполнить stale-link audit для `~/codex-workspace/{AGENTS.md,rules,docs,tools,templates,presets,specs}`.
+6. Для каждого project repository запустить `~/.codex/tools/validate_project_overlay.py`.
+
+### Важный вывод
+
+Перенос active configuration нельзя объединять в одну широкую операцию с
+overwrite и удалением source. Безопасная последовательность: inventory collisions
+→ backup → copy → hash verification → independent validation → Git relocation →
+отдельная cleanup-фаза.

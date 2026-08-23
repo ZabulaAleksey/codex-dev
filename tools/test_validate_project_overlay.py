@@ -27,7 +27,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.workspace = self.root / "workspace"
         self.workspace.mkdir()
-        canonical = self.workspace / "global/codex/agents/reviewer.toml"
+        canonical = self.workspace / "agents/reviewer.toml"
         canonical.parent.mkdir(parents=True)
         canonical.write_text('name = "reviewer"\n', encoding="utf-8")
         workflow = self.workspace / "docs/WORKFLOW.md"

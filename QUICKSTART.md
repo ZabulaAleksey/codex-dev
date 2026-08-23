@@ -1,18 +1,18 @@
 # Быстрый старт в Windows
 
 ```powershell
-# 1) Открыть PowerShell в репозитории AI-инфраструктуры
-Set-Location ~/codex-workspace
+# 1) Открыть PowerShell в каноническом Git repository ДЕВ
+Set-Location ~/.codex
 Set-ExecutionPolicy -Scope Process Bypass
 
-# 2) Установить глобальное ядро
+# 2) Проверить глобальное ядро
 .\install-global.ps1
 
-# 2a) Проверить целостность workspace-контекста
+# 2a) Проверить целостность глобального контекста
 py -3 .\tools\validate_context.py
 
 # 2b) Read-only проверка одного project overlay
-py -3 .\tools\validate_project_overlay.py .\projects\<project>
+py -3 .\tools\validate_project_overlay.py ~\codex-workspace\projects\<project>
 
 # 3) Объединить предложенную конфигурацию с существующей, если она была
 notepad "$HOME\.codex\config.ai-dev-team.recommended.toml"

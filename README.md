@@ -1,13 +1,13 @@
 # AI-команда разработки для Codex — набор для нескольких проектов
 
-Актуализировано: 2026-08-13.
+Актуализировано: 2026-08-23.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.
 
 ## Расположение каталогов
 
-- `~/codex-workspace` — этот репозиторий с общей AI-инфраструктурой.
-- `~/codex-workspace/presets/<preset>` — шаблон проектных инструкций; это не рабочая копия проекта.
+- `~/.codex` — этот Git repository, общая AI-инфраструктура и активный пользовательский слой Codex.
+- `~/.codex/presets/<preset>` — шаблон проектных инструкций; это не рабочая копия проекта.
 - `~/codex-workspace/projects/<project>` — рабочий Git-репозиторий конкретного проекта.
 
 Такая схема позволяет переносить домашний каталог между компьютерами без изменения документации и не смешивает шаблоны с рабочими проектами.
@@ -17,7 +17,7 @@
 Не копировать 20 одинаковых агентов в каждый проект. Вместо этого:
 
 1. **Глобальное ядро команды** хранится в `~/.codex/agents/`.
-2. **Глобальные рабочие процессы** хранятся в `~/.agents/skills/`.
+2. **Глобальные рабочие процессы** хранятся в `~/.codex/skills/`.
 3. Каждый репозиторий имеет тонкий `AGENTS.md`, SPEC и `docs/AI_*.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при подтверждённом проектном пробеле.
 4. Глобальные hooks защищают от опасных команд и подмешивают краткий статус проекта в контекст.
 5. Rules задают детерминированную политику для опасных shell-команд.
@@ -63,22 +63,24 @@
 
 ### 1. Глобальное ядро
 
-Открой PowerShell в `~/codex-workspace`:
+Repository ДЕВ должен быть клонирован или перемещён непосредственно в `~/.codex`.
+Открой PowerShell в этом каталоге:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\install-global.ps1
 ```
 
-Скрипт безопасно устанавливает агентов, skills, hook-скрипты и rules. Он **не перезаписывает существующий `~/.codex/config.toml` автоматически**. Рекомендуемые настройки находятся в:
+Скрипт подтверждает, что ДЕВ уже находится в каноническом каталоге, и запускает
+read-only проверки. Он **не перезаписывает `~/.codex/config.toml`**. Рекомендуемые настройки находятся в:
 
 ```text
-global/codex/config.windows.recommended.toml
+config.ai-dev-team.recommended.toml
 ```
 
 Их нужно объединить со своим `~/.codex/config.toml`.
 
-Для hooks скрипт копирует `hooks.json`, только если такого файла ещё нет. Если файл существует, рекомендованный вариант сохраняется рядом как `hooks.ai-dev-team.recommended.json`.
+`AGENTS.md`, agents, Skills, hooks и rules используются непосредственно из `~/.codex` без второй installed-копии.
 
 ### 2. Установить preset в репозиторий
 
@@ -111,6 +113,12 @@ py -3 .\tools\validate_context.py
 ```powershell
 py -3 .\tools\validate_project_overlay.py .\projects\<project>
 py -3 .\tools\validate_project_overlay.py .\projects\<project> --json
+```
+
+Для brownfield repository сначала выполни read-only reconciliation gate:
+
+```powershell
+py -3 .\tools\reconcile_project_framework.py .\projects\<project>
 ```
 
 Из корня рабочего репозитория `~/codex-workspace/projects/<project>`:

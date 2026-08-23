@@ -1,31 +1,32 @@
-# Текущий план AI Dev Team
+# Текущий план ДЕВ / КАРКАС
 
-Статус: Завершён с внешними follow-up
-Этап: Нормализация глобального слоя Codex
-Дата: 2026-08-20
+Статус: Завершён, ожидает решения о merge
+Этап: Консолидация global context в `~/.codex`
+Дата: 2026-08-24
 
 ## Выполнено
 
-1. Сформирована и утверждена `global-codex-normalization.spec.md`.
-2. Семантически объединены canonical и installed AGENTS/agents без потери model routing.
-3. Hooks исправлены для UTF-8 Windows output, repository containment, bounded read и расширенного destructive deny-list.
-4. Добавлены идемпотентный config normalizer и read-only global validator.
-5. Активный `~/.codex` синхронизирован; Context7 credential удалён из args, package versions закреплены, конфликтные MCP/plugins выключены, trust paths нормализованы.
-6. Выполнены unit, integration, component и security проверки.
+1. Утверждена `specs/features/codex-home-consolidation.spec.md`.
+2. `~/.codex` подготовлен как единственный Git root и active runtime-layer ДЕВ.
+3. Два глобальных `AGENTS.md` объединены; source/installed duplication agents, hooks, Skills и rules устранён.
+4. Runtime state и secrets закрыты deny-by-default `.gitignore`.
+5. Global links обновлены в shared context, presets, Skills и migration-ветках 11 project repositories; `ai-mix` не требовал правки.
+6. Для merge-in-progress/dirty repositories изменения изолированы worktrees и отдельными branches.
+7. Unit contracts, manifest, global validator, JSON/TOML и project overlay audit выполнены.
 
 ## Definition of Done
 
-- active managed hashes совпадают с `global/codex` — PASS;
-- normalizer повторно не меняет config — PASS;
-- global validator — PASS;
-- hook UTF-8/containment/bounds/deny probes — PASS;
-- workspace manifest validator — PASS;
-- независимые architecture/security/reviewer checks — обязательны до commit;
-- внешние и интерактивные действия перечислены и не выдаются за автоматизированные — PASS.
+- Git root `~/.codex` — PASS;
+- единый global `AGENTS.md` — PASS;
+- managed links на старые global paths отсутствуют в каноническом root и migration-ветках — PASS;
+- runtime/secrets не видны Git — PASS;
+- unit suite 34/34 — PASS;
+- `validate_context.py` и `validate_global_codex.py` — PASS;
+- 12 Git repositories проверены; новые compatibility conflicts отсутствуют — PASS;
+- исходные dirty/merge состояния сохранены — PASS.
 
-## Внешние follow-up
+## Следующее действие
 
-- отозвать/ротировать старый Context7 credential;
-- выбрать безопасный GitHub plugin write-permission mode;
-- перезапустить Codex, подтвердить `/hooks`, Browser и отсутствие secret-like variables в новом shell;
-- отдельно решить lifecycle `dune-rts` и bootstrap `monte-carlo`.
+После проверки владельцем — отдельное разрешение на merge ветки
+`chore/codex-home-consolidation` и project reference branches. Временные worktrees
+не удалять без явного разрешения.

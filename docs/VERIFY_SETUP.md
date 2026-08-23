@@ -1,8 +1,8 @@
 # Контрольный список проверки установки
 
-## Целостность workspace
+## Целостность глобального ДЕВ
 
-Из корня `~/codex-workspace`:
+Из корня `~/.codex`:
 
 ```powershell
 py -3 .\tools\validate_context.py

@@ -49,13 +49,12 @@ AUTOMATION_FILES = (
 )
 
 CANONICAL_SOURCES = (
-    "global/codex/AGENTS.md",
-    "global/codex/agents",
-    "global/codex/config.windows.recommended.toml",
-    "global/codex/hooks.json",
-    "global/codex/hooks",
-    "global/codex/rules",
-    "global/skills",
+    "AGENTS.md",
+    "agents",
+    "config.ai-dev-team.recommended.toml",
+    "hooks.json",
+    "hooks",
+    "skills",
     "rules",
     "docs/WORKFLOW.md",
 )

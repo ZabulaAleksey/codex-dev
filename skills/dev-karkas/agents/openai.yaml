@@ -1,0 +1,6 @@
+interface:
+  display_name: "DEV / КАРКАС"
+  short_description: "Bootstrap and maintain the DEV project framework"
+  default_prompt: "Use $dev-karkas to inspect this repository, apply only the missing parts of КАРКАС, preserve existing project decisions, validate what can be validated, and report the first unfinished next step."
+policy:
+  allow_implicit_invocation: true

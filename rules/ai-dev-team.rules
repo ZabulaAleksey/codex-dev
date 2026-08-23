@@ -24,6 +24,20 @@ prefix_rule(
     justification = "git clean может необратимо удалить неотслеживаемые файлы.",
 )
 
+# Exact argv ordering is enforced by the hook; these common split/long forms are
+# blocked here as a second layer before sandbox escalation.
+prefix_rule(
+    pattern = ["git", "clean", "-d", "-f"],
+    decision = "forbidden",
+    justification = "Принудительный git clean может удалить runtime state из ~/.codex.",
+)
+
+prefix_rule(
+    pattern = ["git", "clean", "--force"],
+    decision = "forbidden",
+    justification = "Принудительный git clean может удалить runtime state из ~/.codex.",
+)
+
 prefix_rule(
     pattern = ["git", "push"],
     decision = "prompt",

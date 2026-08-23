@@ -6,7 +6,11 @@ import sys
 # разрешениях и rules Codex, а не в хрупких регулярных выражениях.
 DENY = [
     (r"\bgit(?:\.exe)?\b[^\r\n;&|]*\breset\s+--hard\b", "git reset --hard может уничтожить незакоммиченные изменения."),
-    (r"\bgit(?:\.exe)?\b[^\r\n;&|]*\bclean\s+-[^\s]*f", "git clean -f может необратимо удалить неотслеживаемые файлы."),
+    (
+        r"\bgit(?:\.exe)?\b[^\r\n;&|]*\bclean\b"
+        r"(?=[^\r\n;&|]*(?:\s--force(?=\s|$|[;&|])|\s-[A-Za-z]*f[A-Za-z]*(?=\s|$|[;&|])))",
+        "git clean --force может необратимо удалить неотслеживаемые файлы.",
+    ),
     (r"\bgit(?:\.exe)?\b[^\r\n;&|]*\bpush\b[^\r\n;&|]*(?:--force(?:-[A-Za-z-]+)?(?:=[^\s;&|]+)?|-f)(?=\s|$|[;&|])", "Force-push заблокирован глобальным hook AI-команды."),
     (r"\bdocker\s+system\s+prune\b", "docker system prune может удалить локальные ресурсы других проектов."),
     (r"\bDROP\s+DATABASE\b", "DROP DATABASE должен выполнять человек после явного решения."),

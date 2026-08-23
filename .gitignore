@@ -1,27 +1,53 @@
-# По умолчанию игнорировать всё, что не относится к AI Dev Team.
+# `~/.codex` одновременно является runtime-каталогом Codex и Git-корнем ДЕВ.
+# По умолчанию не отслеживать host-managed state, credentials, sessions и cache.
 /*
 
-# Канонические файлы и каталоги AI Dev Team.
+# Канонические файлы и каталоги ДЕВ.
 !/.gitignore
 !/AGENTS.md
+!/DESIGN.md
 !/MANIFEST.txt
 !/QUICKSTART.md
 !/README.md
 !/install-global.ps1
 !/install-project.ps1
+!/config.ai-dev-team.recommended.toml
+!/hooks.json
+!/agents/
 !/backlog/
 !/docs/
-!/global/
+!/hooks/
 !/presets/
 !/rules/
+!/skills/
+!/specs/
 !/templates/
 !/tools/
-!/specs/
 
-# Рабочие проекты являются отдельными вложенными Git-репозиториями.
-/projects/
+# Runtime rules Codex не являются частью ДЕВ.
+/rules/default.rules
 
-# Локальные секреты, кэши и служебные файлы внутри AI Dev-каталогов.
+# В `skills/` Codex также устанавливает system/plugin Skills. Версионируются
+# только Skills ДЕВ, перечисленные явно.
+/skills/*
+!/skills/bootstrap-project-framework/
+!/skills/bootstrap-project-framework/**
+!/skills/dev-karkas/
+!/skills/dev-karkas/**
+!/skills/explain-change/
+!/skills/explain-change/**
+!/skills/fix-bug/
+!/skills/fix-bug/**
+!/skills/implement-stage/
+!/skills/implement-stage/**
+!/skills/plan-stage/
+!/skills/plan-stage/**
+!/skills/resume-project/
+!/skills/resume-project/**
+!/skills/review-change/
+!/skills/review-change/**
+
+# Локальные секреты, caches и служебные файлы внутри управляемых каталогов.
 **/.env
 **/.env.*
 !**/.env.example

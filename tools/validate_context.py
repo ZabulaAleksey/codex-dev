@@ -10,6 +10,8 @@ MANIFEST = ROOT / "MANIFEST.txt"
 REQUIRED = {
     ".gitignore",
     "AGENTS.md",
+    "config.ai-dev-team.recommended.toml",
+    "hooks.json",
     "MANIFEST.txt",
     "docs/AI_PLAN.md",
     "docs/AI_STATUS.md",
@@ -33,6 +35,7 @@ REQUIRED = {
     "templates/SPEC_TEMPLATE.md",
     "specs/README.md",
     "specs/features/global-codex-normalization.spec.md",
+    "specs/features/codex-home-consolidation.spec.md",
     "specs/system.spec.md",
     "tools/normalize_user_codex.py",
     "tools/test_validate_global_codex.py",
@@ -41,6 +44,8 @@ REQUIRED = {
     "tools/validate_global_codex.py",
     "tools/validate_project_overlay.py",
     "tools/test_validate_project_overlay.py",
+    "tools/reconcile_project_framework.py",
+    "tools/test_reconcile_project_framework.py",
 }
 
 
@@ -105,7 +110,7 @@ def main() -> int:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    print(f"codex-workspace context OK ({len(manifest_files)} files)")
+    print(f"~/.codex DEV context OK ({len(manifest_files)} files)")
     return 0
 
 
