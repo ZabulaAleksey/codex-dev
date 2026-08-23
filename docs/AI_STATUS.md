@@ -52,8 +52,10 @@ Full governance migration активирована в `~/.codex`: базовый
 - project overlay gaps устранены в отдельных `chore/full-governance-migration` ветках и проверяются до merge;
 - основной worktree `receipt-scanner-ua` и `Task_21.07_Svelte` остаётся в незавершённом merge;
 - active `~/.codex` и runtime Skills validator проходят без drift;
+- machine-local root artifacts и старый root Node bundle сохранены в `~/.codex-local/workspace-legacy-20260824`;
+- legacy `codex-workspace/.git` остаётся единственным некарантинированным элементом из-за защищающего ACL и требует действия владельца;
 - временные worktrees и backup refs сохранены для последующего merge/проверки.
 
 ## Следующее действие
 
-Завершить общий аудит веток и передать точные commit/gate/blocker данные. После отдельного разрешения на merge можно удалить временные worktrees и migration backup.
+После отдельного разрешения интегрировать project migration-ветки, повторить gates на целевых branches и только затем удалить временные worktrees/migration backup.

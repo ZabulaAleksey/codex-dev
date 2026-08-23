@@ -25,11 +25,11 @@
 - 12 Git repositories проверены; новые compatibility conflicts отсутствуют — PASS;
 - исходные dirty/merge состояния сохранены — PASS.
 
-## Текущая цель
+## Завершённый результат
 
-1. Собрать результаты 12 project migration-веток и выполнить общий stale/conflict audit.
-2. Вынести machine-local root artifacts в recoverable каталог вне workspace.
-3. Зафиксировать финальный evidence и оставить merge/push только на отдельное разрешение пользователя.
+1. Все 12 project migration-веток чисты, имеют отдельные commits и проходят общий stale/conflict/overlay audit.
+2. Machine-local root artifacts перенесены в recoverable `~/.codex-local/workspace-legacy-20260824`.
+3. Global context, runtime Skills и project paths проверены; merge/push оставлены только на отдельное разрешение пользователя.
 
 ## Blockers
 
@@ -38,4 +38,4 @@
 
 ## Следующее действие
 
-Завершить Phase 11 validation и Phase 12 handoff без merge защищённых/dirty веток.
+Получить отдельное решение пользователя по интеграции project migration-веток. До этого сохранить linked worktrees, backup refs и migration backup.
