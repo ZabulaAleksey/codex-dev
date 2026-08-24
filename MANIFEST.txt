@@ -21,7 +21,6 @@ backlog/nonogram-solver.md
 backlog/README.md
 backlog/video-compiler.md
 config.ai-dev-team.recommended.toml
-DESIGN.md
 docs/AI_PLAN.md
 docs/AI_STATUS.md
 docs/ARCHITECTURE.md

@@ -4,7 +4,7 @@
 
 ## Статус
 
-Full governance migration активирована в `~/.codex`: базовый governance commit `806ee29`, flattened-path follow-up `498a4b8`. Все 12 independent repositories физически находятся непосредственно в `~/codex-workspace`; project changes изолированы в migration-ветках до отдельного разрешения на merge.
+Full governance migration активирована в `~/.codex`: базовый governance commit `806ee29`, flattened-path follow-up `498a4b8`, handoff commit `89d60cd`. Все 12 independent repositories физически находятся непосредственно в `~/codex-workspace`; project changes изолированы в migration-ветках до отдельного разрешения на merge.
 
 ## Project migration commits
 
@@ -15,7 +15,7 @@ Full governance migration активирована в `~/.codex`: базовый
 | `math-morph` | `56b9782` |
 | `monte-carlo` | `6c3a220` |
 | `off-screen-canvas` | `9b56423` |
-| `receipt-scanner-ua` | `8e1b735` |
+| `receipt-scanner-ua` | `1347bf9` |
 | `server` | `c13eb96` |
 | `Task_21.07_Svelte` | `73fc902` |
 | `text-recognition-core` | `b5731f4` |
@@ -32,17 +32,18 @@ Full governance migration активирована в `~/.codex`: базовый
 - отсутствие прежних параллельных source/installed trees;
 - runtime-safe Git allowlist: auth, config, secrets, sessions, SQLite, cache и plugins игнорируются;
 - project global links обновлены в отдельных migration-ветках; project roots остаются в `~/codex-workspace`;
+- Receipt-specific Calm Blue UI перенесён из глобального `DESIGN.md` в `receipt-scanner-ua/docs/CALM_BLUE_UI.md`; канонический проектный `docs/DESIGN.md` сохранён и явно определяет приоритеты интеграции;
 - 11 атомарных project commits; `ai-mix` не требовал ссылочной правки;
 - исходные merge-state/dirty worktrees сохранены без изменений.
 
 ## Verification evidence
 
-- unit suite с `tools.test_sync_global_skills` — 39/39 PASS;
-- `py -3 -B tools/validate_context.py` — PASS, 258 managed files;
+- unit suite с `tools.test_sync_global_skills` — 40/40 PASS;
+- `py -3 -B tools/validate_context.py` — PASS, 257 managed files после удаления project-specific global `DESIGN.md`;
 - `py -3 -B tools/validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex` — PASS;
 - `hooks.json`, active и recommended TOML — parse PASS;
 - Git ignore probes для auth/config/sessions/logs/plugins/runtime rules/system Skills — PASS;
-- 12 project repositories: 7 overlay PASS; 5 имеют только pre-existing missing framework files/legacy status;
+- 12 project repositories: overlay PASS во всех migration-ветках; pre-existing product gate limitations сохранены отдельно;
 - stale global link audit migration-веток — PASS; новых `CONFLICT` и exact-global-duplicate нет;
 - защищённые и грязные checkout’ы получат ссылочные изменения только после явно разрешённого merge.
 
