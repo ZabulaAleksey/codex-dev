@@ -297,3 +297,12 @@ docs/FALLBACKS.md
 Глобальную Fallback Policy туда не копировать.
 
 AGENTS.md должен только маршрутизировать контекст к этому документу.
+
+## Dependency manager migration
+
+Dependency-manager migration follows
+[`dependency-management.md`](dependency-management.md). Incompatibility is not a
+reason to silently switch manager: retain the current working state, document an
+exception and stop. A graph change, failed verification, dirty worktree, unavailable
+dependency or unknown directory prohibits deletion of the previous lockfile or
+materialized dependencies until recovery/clean-restore proof is complete.

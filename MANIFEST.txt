@@ -97,6 +97,7 @@ rules/domains/README.md
 rules/domains/realtime.md
 rules/domains/scientific-computing.md
 rules/domains/security.md
+rules/dependency-management.md
 rules/fallback-policy.md
 rules/governance.md
 rules/model-routing.md
@@ -163,6 +164,7 @@ skill-sources/plan-stage/SKILL.md
 skill-sources/resume-project/SKILL.md
 skill-sources/review-change/SKILL.md
 specs/features/codex-home-consolidation.spec.md
+specs/features/dependency-manager-policy.spec.md
 specs/features/full-workspace-governance.spec.md
 specs/features/global-codex-normalization.spec.md
 specs/features/project-overlay-rollout.spec.md

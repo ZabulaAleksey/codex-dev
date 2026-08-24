@@ -74,11 +74,14 @@ implementation/tests фактическое состояние и доказат
 7. Проверь общую AI Dev Team и `docs/CONTEXT_COMPATIBILITY.md`.
 8. Для каждого предлагаемого agent, hook, MCP, Skill, config или workflow назначь статус `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`.
 9. Создай только проектную delta: требования, архитектуру, решения, этапы, проверки и локальные инварианты.
-10. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
-11. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
-12. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
-13. Зафиксируй текущее состояние и следующий этап.
-14. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
+10. Определи dependency ecosystem и зафиксируй canonical manager, manifest,
+    lockfile, штатный cache/store, project-local materialization, cleanup, CI clean
+    restore и exception rationale по `rules/dependency-management.md`.
+11. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
+12. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
+13. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
+14. Зафиксируй текущее состояние и следующий этап.
+15. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
 
 Готовый overlay проверяется без изменений repository:
 

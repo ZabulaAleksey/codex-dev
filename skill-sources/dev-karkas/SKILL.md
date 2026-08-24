@@ -59,6 +59,8 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - AI_PLAN, AI_STATUS, PROGRESS, DEV_LOG, LEARNING, decisions;
 - `PROMPTS/`, docs, tests, CI/CD;
 - package/workspace manifests;
+- dependency manager, canonical lockfile, CI restore command and tracked generated
+  dependency/build directories when an ecosystem is present;
 - существующие skills, hooks, MCP и agent config;
 - git status и последние релевантные изменения, если git доступен.
 

@@ -91,13 +91,22 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 Следуй `TESTING_POLICY.md`.
 
-## 7. Fallback and resilience
+## 7. Dependency management
+
+Когда ecosystem определим, зафиксируй canonical dependency manager, manifest,
+lockfile, штатный shared cache/store, project-local materialization, cleanup
+classification и CI clean-restore command. Следуй глобальной
+`rules/dependency-management.md`: preferred defaults не отменяют стабильный
+upstream/toolchain contract; exception требует причины, а migration — clean restore
+и проверки до удаления прежнего состояния.
+
+## 8. Fallback and resilience
 
 Для внешних сервисов, ускорителей, моделей, сетевых зависимостей и optional backends явно определи fallback policy.
 
 Следуй `FALLBACK_POLICY.md`.
 
-## 8. Prompts / staged implementation
+## 9. Prompts / staged implementation
 
 Если проект развивается этапами, используй `PROMPTS/` как очередь самодостаточных implementation prompts.
 
@@ -110,7 +119,7 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 Следуй `PROMPT_TEMPLATE.md`.
 
-## 9. Decisions
+## 10. Decisions
 
 Фиксируй решения, когда выбор:
 
@@ -123,7 +132,7 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 Запись решения должна содержать context, decision, rationale, alternatives, consequences и date/status при необходимости.
 
-## 10. Learning / development record
+## 11. Learning / development record
 
 Используй `LEARNING.md` и/или `DEV_LOG.md`, только если проект действительно получает ценность от истории:
 
@@ -134,7 +143,7 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 Не превращай журнал в копию git history.
 
-## 11. Commercial/product policy
+## 12. Commercial/product policy
 
 Для коммерческого продукта при необходимости используй `COMMERCIAL_PRODUCT.md` или эквивалент для:
 
@@ -146,7 +155,7 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 Не создавай его для лабораторного скрипта без коммерческого контекста.
 
-## 12. Tooling / automation
+## 13. Tooling / automation
 
 При необходимости КАРКАС может включать:
 

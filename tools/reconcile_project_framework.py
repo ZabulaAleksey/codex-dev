@@ -40,6 +40,11 @@ MATRIX_STATUSES = (
     "SUPERSEDED",
     "FORBIDDEN_TO_OVERWRITE",
 )
+GENERATED_DEPENDENCY_DIRECTORIES = {
+    ".gradle", ".mypy_cache", ".next", ".nuxt", ".pytest_cache", ".ruff_cache",
+    ".svelte-kit", ".turbo", ".venv", "__pycache__", "bin", "build", "coverage",
+    "dist", "node_modules", "obj", "target", "venv",
+}
 
 
 @dataclass(frozen=True)
@@ -68,12 +73,22 @@ class TestComparison:
 
 
 @dataclass(frozen=True)
+class DependencyInventory:
+    manager: str | None
+    manifests: tuple[str, ...]
+    lockfiles: tuple[str, ...]
+    tracked_generated_paths: tuple[str, ...]
+    drift: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ReconciliationReport:
     project: str
     classification: str
     entries: tuple[MatrixEntry, ...]
     baseline: TestBaseline | None = None
     test_comparison: TestComparison | None = None
+    dependency_inventory: DependencyInventory | None = None
 
     @property
     def blocked(self) -> bool:
@@ -112,6 +127,89 @@ def _is_forbidden(path: str, project: Path, forbidden_paths: set[str]) -> bool:
     return not any(path == framework or path.startswith(f"{framework}/") for framework in FRAMEWORK_FILES for _ in (0,)) and candidate.exists()
 
 
+def _git_tracked_paths(project: Path) -> tuple[str, ...]:
+    command = ["git", "-c", f"safe.directory={project}", "-C", str(project), "ls-files", "--cached"]
+    try:
+        completed = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
+    except FileNotFoundError:
+        return ()
+    if completed.returncode != 0:
+        return ()
+    return tuple(sorted((line.replace("\\", "/") for line in completed.stdout.splitlines()), key=str.casefold))
+
+
+def dependency_inventory(project_path: Path) -> DependencyInventory:
+    project = project_path.expanduser().resolve()
+    manifest_candidates = [
+        "package.json", "pyproject.toml", "Cargo.toml", "go.mod", "composer.json", "pubspec.yaml", "Package.swift",
+        "vcpkg.json", "conanfile.py", "conanfile.txt",
+    ]
+    manifest_candidates.extend(path.name for path in project.glob("*.csproj"))
+    manifest_candidates.extend(path.name for path in project.glob("build.gradle*"))
+    manifests = tuple(relative for relative in manifest_candidates if (project / relative).is_file())
+    lockfiles = tuple(relative for relative in (
+        "pnpm-lock.yaml", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb",
+        "uv.lock", "Cargo.lock", "go.sum", "composer.lock", "pubspec.lock", "Package.resolved", "conan.lock", "packages.lock.json",
+    ) if (project / relative).is_file())
+    manager: str | None = None
+    package_json = project / "package.json"
+    if package_json.is_file():
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            package = {}
+        pinned = package.get("packageManager") if isinstance(package, dict) else None
+        if isinstance(pinned, str) and pinned.casefold().startswith("pnpm@") or "pnpm-lock.yaml" in lockfiles:
+            manager = "pnpm"
+    if manager is None and "pyproject.toml" in manifests:
+        pyproject = (project / "pyproject.toml").read_text(encoding="utf-8-sig", errors="replace").casefold()
+        if "uv.lock" in lockfiles or "[tool.uv" in pyproject:
+            manager = "uv"
+    if manager is None and "Cargo.toml" in manifests:
+        manager = "cargo"
+    if manager is None and "go.mod" in manifests:
+        manager = "go-modules"
+    if manager is None and any(path.endswith(".csproj") for path in manifests):
+        manager = "nuget"
+    if manager is None and any(path.startswith("build.gradle") for path in manifests):
+        manager = "gradle"
+    if manager is None and "vcpkg.json" in manifests:
+        manager = "vcpkg"
+    if manager is None and ("conanfile.py" in manifests or "conanfile.txt" in manifests):
+        manager = "conan"
+    if manager is None and "composer.json" in manifests:
+        manager = "composer"
+    if manager is None and "pubspec.yaml" in manifests:
+        manager = "pub"
+    if manager is None and "Package.swift" in manifests:
+        manager = "swiftpm"
+    tracked_generated = tuple(path for path in _git_tracked_paths(project) if any(part in GENERATED_DEPENDENCY_DIRECTORIES for part in Path(path).parts))
+    drift: list[str] = []
+    if manager == "pnpm":
+        competing = {"package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb"}
+        if any(lockfile in competing for lockfile in lockfiles):
+            drift.append("competing-node-lockfile")
+    if manager == "uv" and "uv.lock" not in lockfiles:
+        drift.append("missing-uv-lockfile")
+    if tracked_generated:
+        drift.append("tracked-generated-dependency-path")
+    if manager is not None:
+        dependency_docs = (project / "docs/DEPENDENCIES.md", project / "docs/ARCHITECTURE.md")
+        documented = False
+        for candidate in dependency_docs:
+            if not candidate.is_file():
+                continue
+            content = candidate.read_text(encoding="utf-8-sig", errors="replace").casefold()
+            if ("source of truth" in content or "источник истины" in content) and (
+                "clean restore" in content or "чистое восстановление" in content
+            ):
+                documented = True
+                break
+        if not documented:
+            drift.append("missing-dependency-contract")
+    return DependencyInventory(manager, manifests, lockfiles, tracked_generated, tuple(sorted(drift)))
+
+
 def reconcile_project(
     project_path: Path,
     *,
@@ -124,6 +222,7 @@ def reconcile_project(
     forbidden = set(forbidden_paths)
     resolved = set(resolved_conflicts)
     entries: list[MatrixEntry] = []
+    inventory = dependency_inventory(project)
 
     for relative in FRAMEWORK_FILES:
         project_file = project / relative
@@ -160,7 +259,7 @@ def reconcile_project(
 
     ordered = tuple(sorted(entries, key=lambda entry: (
         entry.path.casefold(), entry.status)))
-    return ReconciliationReport(str(project), classify_project(project), ordered)
+    return ReconciliationReport(str(project), classify_project(project), ordered, dependency_inventory=inventory)
 
 
 def capture_test_baseline(command: Sequence[str], *, cwd: Path) -> TestBaseline:
@@ -200,6 +299,18 @@ def render_report(report: ReconciliationReport) -> str:
     ]
     lines.extend(
         f"| `{entry.path}` | `{entry.status}` | {entry.reason} |" for entry in report.entries)
+    inventory = report.dependency_inventory
+    if inventory and (inventory.manager or inventory.manifests or inventory.lockfiles):
+        lines.extend([
+            "",
+            "## Dependency inventory",
+            "",
+            f"- Manager: `{inventory.manager or 'undetermined'}`",
+            f"- Manifests: {', '.join(f'`{item}`' for item in inventory.manifests) or 'none'}",
+            f"- Lockfiles: {', '.join(f'`{item}`' for item in inventory.lockfiles) or 'none'}",
+            f"- Tracked generated paths: {', '.join(f'`{item}`' for item in inventory.tracked_generated_paths) or 'none'}",
+            f"- Drift: {', '.join(f'`{item}`' for item in inventory.drift) or 'none'}",
+        ])
     return "\n".join(lines) + "\n"
 
 

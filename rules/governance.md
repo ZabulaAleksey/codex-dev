@@ -94,6 +94,9 @@ domain requirement → data contract → canonical schema/model
 - MCP/hook/subagent/Skill добавляется только после доказанного gap, с минимальными permissions и bounded failure behavior.
 - Hooks deterministic, non-destructive и repository-relative.
 - Не добавляй dependency без проверки existing alternatives, maintenance, license, security, platform/runtime и lockfile impact.
+- Выбор manager, manifest/lockfile, штатного shared cache/store, clean restore и
+  documented exception регулирует [`dependency-management.md`](dependency-management.md).
+  Не коммить dependency trees или rebuildable caches без stack-specific contract.
 - Performance change требует baseline → profile → targeted optimization → correctness parity → benchmark → regression guard.
 - Model routing и global reusable agents не дублируются в project overlays.
 

@@ -10,6 +10,7 @@
 | `docs/ARCHITECTURE.md` | каноническая архитектура | для существенного software repository |
 | `docs/DESIGN.md` | канонический UI/UX contract | есть пользовательский интерфейс |
 | `docs/SECURITY.md` | security baseline | есть сеть, пользователи, данные, upload, auth или публичный API |
+| `docs/DEPENDENCIES.md` | canonical manager, lockfile, shared cache/store и clean restore | ecosystem определим и существующий architecture document не выполняет эту роль |
 | `docs/ROADMAP.md` | направления и крупные этапы | для существенного agent-driven проекта |
 | `docs/AI_PLAN.md` | ближайший исполнимый план | для существенного agent-driven проекта |
 | `docs/AI_STATUS.md` | подтверждённое текущее состояние | для существенного agent-driven проекта |

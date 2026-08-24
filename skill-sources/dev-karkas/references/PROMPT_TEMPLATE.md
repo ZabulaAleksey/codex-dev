@@ -38,6 +38,9 @@
 ## Compatibility / migration
 Если меняются contracts, formats, schema или runtime requirements.
 
+Если работа затрагивает зависимости: canonical manager, manifest/lockfile, shared
+cache/store, clean restore command, migration recovery point и documented exception.
+
 ## Testing & validation
 Какие существующие проверки запустить и какие новые проверки допустимы/нужны.
 Не ослаблять существующие тесты для получения зелёного результата.

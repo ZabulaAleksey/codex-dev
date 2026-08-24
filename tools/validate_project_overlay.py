@@ -78,6 +78,26 @@ SKIP_DIRECTORIES = {
     "node_modules",
     "target",
 }
+GENERATED_DEPENDENCY_DIRECTORIES = {
+    ".gradle",
+    ".mypy_cache",
+    ".next",
+    ".nuxt",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".svelte-kit",
+    ".turbo",
+    ".venv",
+    "__pycache__",
+    "bin",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+    "obj",
+    "target",
+    "venv",
+}
 STALE_PATH_PATTERNS = (
     "~/codex-" "workspace/AGENTS.md",
     "~/codex-" "workspace/rules/",
@@ -194,6 +214,101 @@ def _canonical_digests(workspace_root: Path) -> dict[str, list[str]]:
     for paths in digests.values():
         paths.sort(key=str.casefold)
     return digests
+
+
+def _dependency_exception(project: Path) -> bool:
+    for relative in ("docs/DEPENDENCIES.md", "docs/ARCHITECTURE.md"):
+        candidate = project / relative
+        if candidate.is_file() and "dependency-manager exception" in candidate.read_text(
+            encoding="utf-8-sig", errors="replace"
+        ).casefold():
+            return True
+    return False
+
+
+def _dependency_documented(project: Path) -> bool:
+    for relative in ("docs/DEPENDENCIES.md", "docs/ARCHITECTURE.md"):
+        candidate = project / relative
+        if not candidate.is_file():
+            continue
+        content = candidate.read_text(encoding="utf-8-sig", errors="replace").casefold()
+        source_of_truth = "source of truth" in content or "источник истины" in content
+        clean_restore = "clean restore" in content or "чистое восстановление" in content
+        if source_of_truth and clean_restore:
+            return True
+    return False
+
+
+def _declared_manager(project: Path) -> str | None:
+    package_json = project / "package.json"
+    if package_json.is_file():
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            package = {}
+        package_manager = package.get("packageManager") if isinstance(package, dict) else None
+        if isinstance(package_manager, str) and package_manager.casefold().startswith("pnpm@"):
+            return "pnpm"
+        if (project / "pnpm-lock.yaml").is_file():
+            return "pnpm"
+
+    pyproject = project / "pyproject.toml"
+    if pyproject.is_file():
+        content = pyproject.read_text(encoding="utf-8-sig", errors="replace").casefold()
+        if (project / "uv.lock").is_file() or "[tool.uv" in content:
+            return "uv"
+    return None
+
+
+def _tracked_generated_paths(project: Path) -> tuple[str, ...]:
+    command = ["git", "-c", f"safe.directory={project}", "-C", str(project), "ls-files", "--cached"]
+    try:
+        completed = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
+    except FileNotFoundError:
+        return ()
+    if completed.returncode != 0:
+        return ()
+    tracked = []
+    for line in completed.stdout.splitlines():
+        parts = Path(line).parts
+        if any(part in GENERATED_DEPENDENCY_DIRECTORIES for part in parts):
+            tracked.append(line.replace("\\", "/"))
+    return tuple(sorted(tracked, key=str.casefold))
+
+
+def _ci_files(project: Path) -> Iterable[Path]:
+    ci = project / ".github" / "workflows"
+    if ci.is_dir():
+        yield from sorted((path for path in ci.rglob("*") if path.is_file()), key=lambda path: path.as_posix().casefold())
+
+
+def _dependency_issues(project: Path) -> list[Issue]:
+    manager = _declared_manager(project)
+    if manager is None:
+        return []
+    issues: list[Issue] = []
+    exception = _dependency_exception(project)
+    if manager == "pnpm":
+        competing = ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb")
+        for relative in competing:
+            if (project / relative).is_file() and not exception:
+                issues.append(Issue("competing-lockfile", relative, "pnpm project has an undocumented competing lockfile"))
+        for ci_file in _ci_files(project):
+            content = ci_file.read_text(encoding="utf-8-sig", errors="replace")
+            if re.search(r"\bnpm\s+(?:ci|install)\b", content) and not exception:
+                issues.append(Issue("manager-inconsistent-ci", _posix_relative(ci_file, project), "pnpm project CI installs with npm"))
+    elif manager == "uv":
+        if not (project / "uv.lock").is_file():
+            issues.append(Issue("missing-canonical-lockfile", "uv.lock", "uv project requires uv.lock"))
+        for ci_file in _ci_files(project):
+            content = ci_file.read_text(encoding="utf-8-sig", errors="replace").casefold()
+            if "python" in content and "uv " not in content and not exception:
+                issues.append(Issue("manager-inconsistent-ci", _posix_relative(ci_file, project), "uv project CI does not invoke uv"))
+    for relative in _tracked_generated_paths(project):
+        issues.append(Issue("tracked-generated-dependency-path", relative, "dependency/build cache path is tracked by Git"))
+    if not _dependency_documented(project):
+        issues.append(Issue("missing-dependency-contract", "docs/DEPENDENCIES.md", "document source of truth and clean restore for the detected manager"))
+    return issues
 
 
 def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) -> ValidationResult:
@@ -319,6 +434,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
                 )
             )
 
+    issues.extend(_dependency_issues(project))
     ordered = tuple(sorted(issues, key=lambda item: (item.code, item.path.casefold(), item.message)))
     return ValidationResult(str(project), not ordered, ordered)
 

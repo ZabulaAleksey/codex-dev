@@ -10,6 +10,7 @@ from tools.reconcile_project_framework import (
     capture_test_baseline,
     classify_project,
     compare_test_runs,
+    dependency_inventory,
     reconcile_project,
 )
 
@@ -134,6 +135,24 @@ class ReconciliationTests(unittest.TestCase):
                        for path in project.rglob("*") if path.is_file())
         self.assertEqual(first, second)
         self.assertEqual(before, after)
+
+    def test_dependency_inventory_reports_manager_and_drift(self) -> None:
+        project = self.make_project(files={
+            "package.json": '{"packageManager":"pnpm@9.0.0"}\n',
+            "pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+            "package-lock.json": "{}\n",
+        })
+        generated = project / "node_modules/pkg/index.js"
+        generated.parent.mkdir(parents=True)
+        generated.write_text("module.exports = {}\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(project), "add", "node_modules/pkg/index.js"], check=True)
+        inventory = dependency_inventory(project)
+        self.assertEqual("pnpm", inventory.manager)
+        self.assertIn("package.json", inventory.manifests)
+        self.assertIn("package-lock.json", inventory.lockfiles)
+        self.assertIn("node_modules/pkg/index.js", inventory.tracked_generated_paths)
+        self.assertIn("competing-node-lockfile", inventory.drift)
+        self.assertIn("missing-dependency-contract", inventory.drift)
 
 
 if __name__ == "__main__":

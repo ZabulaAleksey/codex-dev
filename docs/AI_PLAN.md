@@ -4,6 +4,13 @@
 Этап: Global governance decontamination
 Дата: 2026-08-24
 
+## Текущий ограниченный срез
+
+Закрепить global dependency-manager policy и deterministic read-only inventory/drift
+checks. Не выполнять migration product repositories этим изменением global framework.
+
+Связанная SPEC: `specs/features/dependency-manager-policy.spec.md`
+
 ## Цель
 
 Фактически мигрировать накопленный project-specific контекст из глобального слоя, удалить только верифицированные исходники и закрепить project-agnostic boundary.
@@ -29,4 +36,6 @@
 
 ## Следующее действие
 
-Для снятия оставшихся `BLOCKED` требуется доказанный repository mapping либо отдельное разрешение на точное внешнее архивирование исходных bundles; до этого исходники сохраняются.
+Проверить policy/validator delta, синхронизировать runtime Skill и зафиксировать
+evidence. Для снятия сохранённых `BLOCKED` требуется доказанный repository mapping
+либо отдельное разрешение на точное внешнее архивирование исходных bundles.

@@ -69,5 +69,8 @@ Feature SPEC
   `rules/fallback-policy.md`.
 - Если задача работает с Node.js, Corepack, npm, pnpm или Yarn,
   загрузи `rules/node-package-management.md`.
+- Если задача выбирает dependency manager, меняет lockfile, восстанавливает
+  dependencies либо проверяет cache/build drift, загрузи
+  `rules/dependency-management.md`.
 - Сквозная policy подключается только при наличии соответствующего риска;
   не загружай её автоматически для каждой простой задачи.

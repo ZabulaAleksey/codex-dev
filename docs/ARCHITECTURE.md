@@ -16,11 +16,11 @@ read-only validator
 детерминированный human/JSON результат
 ```
 
-`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation и compatibility audit. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
+`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
 
 `tools/reconcile_project_framework.py` является отдельным read-only gate перед bootstrap/refresh.
 Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility
-matrix, принимает explicit conflict resolutions и сравнивает test baseline с post-refresh run.
+matrix, принимает explicit conflict resolutions, добавляет read-only dependency inventory/drift и сравнивает test baseline с post-refresh run.
 Он не пишет файлы, не выполняет product code и не изменяет Git status.
 
 `tools/validate_context.py` отдельно проверяет manifest самого ДЕВ.
@@ -54,6 +54,10 @@ Host-managed runtime bindings не подменяются угаданными �
 Fallback/retry/degradation contract:
 
 `rules/fallback-policy.md`
+
+Dependency manager/cache/lockfile contract:
+
+`rules/dependency-management.md`
 
 Project-specific implementation:
 

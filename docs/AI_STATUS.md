@@ -15,6 +15,9 @@
 - `docs/AI_STATUS.md` — единственный текущий status source; `docs/AI_PLAN.md` — единственный текущий plan source;
 - новые дополнительные долговечные `.md` размещаются в `docs/notes/`, если содержание нельзя включить в существующий canonical document;
 - external Notion/Eraser/Figma projections не заменяют Git source of truth.
+- global `rules/dependency-management.md` задаёт preferred matrix, exception
+  contract, штатные shared caches/stores и clean-restore requirements; validators
+  дают только read-only inventory/drift evidence и не мигрируют product repositories.
 
 ## Verification evidence
 
@@ -31,4 +34,6 @@
 
 ## Следующее действие
 
-Снять оставшиеся `BLOCKED` только после доказанного project mapping или отдельно разрешённого точного внешнего архива с read-back.
+Поддерживать dependency contract в project overlays и выполнять actual project
+migration только в отдельной repository-scoped работе с recovery point, clean restore
+и проверками.

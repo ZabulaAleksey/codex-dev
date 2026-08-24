@@ -52,6 +52,12 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         result = validate_project(project, self.workspace)
         return {issue.code for issue in result.issues}
 
+    def document_dependencies(self, project: Path) -> None:
+        (project / "docs/DEPENDENCIES.md").write_text(
+            "# Dependencies\n\n## Source of truth\nmanifest + lockfile\n\n## Clean restore\ncanonical manager install\n",
+            encoding="utf-8",
+        )
+
     def test_complete_overlay_passes(self) -> None:
         result = validate_project(self.make_project(), self.workspace)
         self.assertTrue(result.ok)
@@ -160,6 +166,40 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text("application content\n", encoding="utf-8")
         self.assertNotIn("missing-compatibility-audit", self.issue_codes(project))
+
+    def test_pnpm_dependency_drift_is_reported(self) -> None:
+        project = self.make_project()
+        (project / "package.json").write_text('{"packageManager":"pnpm@9.0.0"}\n', encoding="utf-8")
+        (project / "pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n", encoding="utf-8")
+        (project / "package-lock.json").write_text("{}\n", encoding="utf-8")
+        workflow = project / ".github/workflows/ci.yml"
+        workflow.parent.mkdir(parents=True)
+        workflow.write_text("- run: npm ci\n", encoding="utf-8")
+        cached = project / "node_modules/pkg/index.js"
+        cached.parent.mkdir(parents=True)
+        cached.write_text("module.exports = {}\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(project), "add", "node_modules/pkg/index.js"], check=True)
+        codes = self.issue_codes(project)
+        self.assertIn("competing-lockfile", codes)
+        self.assertIn("manager-inconsistent-ci", codes)
+        self.assertIn("tracked-generated-dependency-path", codes)
+        self.assertIn("missing-dependency-contract", codes)
+
+    def test_documented_pnpm_contract_passes_dependency_checks(self) -> None:
+        project = self.make_project()
+        (project / "package.json").write_text('{"packageManager":"pnpm@9.0.0"}\n', encoding="utf-8")
+        (project / "pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n", encoding="utf-8")
+        self.document_dependencies(project)
+        codes = self.issue_codes(project)
+        self.assertNotIn("competing-lockfile", codes)
+        self.assertNotIn("missing-dependency-contract", codes)
+
+    def test_uv_requires_lockfile_and_contract(self) -> None:
+        project = self.make_project()
+        (project / "pyproject.toml").write_text("[tool.uv]\n", encoding="utf-8")
+        codes = self.issue_codes(project)
+        self.assertIn("missing-canonical-lockfile", codes)
+        self.assertIn("missing-dependency-contract", codes)
 
 
 if __name__ == "__main__":
