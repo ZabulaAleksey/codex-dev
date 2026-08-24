@@ -79,9 +79,9 @@ SKIP_DIRECTORIES = {
     "target",
 }
 STALE_PATH_PATTERNS = (
-    "~/codex-workspace/AGENTS.md",
-    "~/codex-workspace/rules/",
-    "~/codex-workspace/docs/",
+    "~/codex-" "workspace/AGENTS.md",
+    "~/codex-" "workspace/rules/",
+    "~/codex-" "workspace/docs/",
     "codex-workspace/projects/",
     "codex-workspace\\projects\\",
 )

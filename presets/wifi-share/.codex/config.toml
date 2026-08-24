@@ -1,8 +1,0 @@
-[features]
-multi_agent = true
-hooks = true
-
-[agents]
-max_concurrent_threads_per_session = 4
-
-# Необязательно: добавь Playwright/Chrome DevTools из docs/MCP.md, когда появится активный браузерный UI.

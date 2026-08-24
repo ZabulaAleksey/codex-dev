@@ -1,13 +1,12 @@
 # AI-команда разработки для Codex — набор для нескольких проектов
 
-Актуализировано: 2026-08-23.
+Актуализировано: 2026-08-24.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.
 
 ## Расположение каталогов
 
 - `~/.codex` — этот Git repository, общая AI-инфраструктура и активный пользовательский слой Codex.
-- `~/.codex/presets/<preset>` — шаблон проектных инструкций; это не рабочая копия проекта.
 - `~/codex-workspace/<project>` — рабочий Git-репозиторий конкретного проекта.
 
 Такая схема позволяет переносить домашний каталог между компьютерами без изменения документации и не смешивает шаблоны с рабочими проектами.
@@ -48,16 +47,9 @@
 - [`docs/PROJECT_FRAMEWORK.md`](docs/PROJECT_FRAMEWORK.md) определяет общие для всех проектов понятия КАРКАСА и АВТОМАТИЗАЦИИ КОНТЕКСТА.
 - [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md) задаёт порядок загрузки, проектный overlay и канонические имена документов.
 - [`docs/CONTEXT_COMPATIBILITY.md`](docs/CONTEXT_COMPATIBILITY.md) используется перед добавлением agents, hooks, MCP, Skills или config.
-- [`docs/AUTOMATION_EXTENSIONS.md`](docs/AUTOMATION_EXTENSIONS.md) описывает опциональные расширения и условия, при которых они оправданы.
+- [`docs/notes/AUTOMATION_EXTENSIONS.md`](docs/notes/AUTOMATION_EXTENSIONS.md) описывает опциональные расширения и условия, при которых они оправданы.
 
-## Активные presets
-
-- `trading-terminal` — торговый терминал, бэктест, Monte Carlo, TimescaleDB, Temporal, OpenTelemetry, Rust/WASM.
-- `music-sequencer` — секвенсер, Web Audio, AudioWorklet, DSP, Rust/WASM.
-- `field-lab` — вычисление и визуализация полей и математические модели.
-- `tutor-platform` — сайт или приложение репетитора, доска, WebRTC, Yjs, календарь, PWA и мобильные устройства.
-- `wifi-share` — локальная передача файлов по Wi‑Fi.
-- `receipt-price-db` — OCR чеков, Apache Arrow/Parquet, нормализация товаров, база цен.
+Project-specific инструкции, архитектура, Skills и agents хранятся только в соответствующем project repository. Глобальный framework предоставляет schema, policies, validators и универсальные templates, но не ведёт библиотеку именованных проектов.
 
 ## Установка на Windows
 
@@ -81,24 +73,6 @@ config.ai-dev-team.recommended.toml
 Их нужно объединить со своим `~/.codex/config.toml`.
 
 `AGENTS.md`, agents, Skills, hooks и rules используются непосредственно из `~/.codex` без второй installed-копии.
-
-### 2. Установить preset в репозиторий
-
-```powershell
-.\install-project.ps1 -Preset trading-terminal -Target '~/codex-workspace/trading-terminal'
-```
-
-Другие значения `-Preset`:
-
-```text
-music-sequencer
-field-lab
-tutor-platform
-wifi-share
-receipt-price-db
-```
-
-По умолчанию существующие файлы не перезаписываются. Для явной замены используй `-Force` после проверки diff и резервной копии.
 
 ## Проверка
 

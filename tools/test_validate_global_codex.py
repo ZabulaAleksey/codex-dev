@@ -33,8 +33,8 @@ class UserConfigNormalizerTests(unittest.TestCase):
     def test_normalizer_removes_secret_and_stale_routes_idempotently(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary)
-            existing = home / "codex-workspace/projects/math-morph"
-            existing.mkdir(parents=True)
+            stale = home / "codex-workspace/projects/ExampleProject"
+            stale.mkdir(parents=True)
             source = f'''[mcp_servers.node_repl.env]
 NODE_REPL_TRUSTED_SERVICES = '{{"browser":"{(home / "missing/service.mjs").as_posix()}"}}'
 
@@ -54,7 +54,7 @@ enabled = true
 [plugins."slack@openai-curated"]
 enabled = true
 
-[projects.'{home / "codex-workspace/projects/MathMorph"}']
+[projects.'{stale}']
 trust_level = "trusted"
 
 [projects.'{home}']
@@ -64,7 +64,7 @@ trust_level = "trusted"
             self.assertNotIn("synthetic-test-token", normalized)
             self.assertNotIn("NODE_REPL_TRUSTED_SERVICES", normalized)
             self.assertNotIn(f"[projects.'{home}']", normalized)
-            self.assertIn("codex-workspace/math-morph", normalized.replace("\\", "/"))
+            self.assertNotIn("ExampleProject", normalized)
             self.assertNotIn("codex-workspace/projects/", normalized.replace("\\", "/"))
             self.assertIn("ignore_default_excludes = false", normalized)
             self.assertIn("@upstash/context7-mcp@4.0.2", normalized)

@@ -31,7 +31,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\validate.ps1
 ```text
 $dev-karkas bootstrap this repository
 $dev-karkas audit this repository
-$dev-karkas обработай новые идеи Tutor из Notion
+$dev-karkas обработай новые идеи выбранного проекта из Notion
 $dev-karkas составь implementation prompt для этой идеи
 $dev-karkas синхронизируй статус после завершённого этапа
 ```
@@ -46,6 +46,6 @@ Skill также разрешает implicit invocation через `agents/opena
 
 Остальные references раскрывают отдельные policy. Такой layout не перегружает контекст Codex: основной skill остаётся компактным, а детали читаются по необходимости.
 
-## Tutor / Notion
+## Notion
 
-Пакет уже содержит `references/PROJECT_REGISTRY.md` с канонической Notion-страницей Tutor. Поэтому intake может начинать поиск сразу внутри Tutor и его дочерних заметок, а не сканировать весь workspace.
+`references/PROJECT_REGISTRY.md` содержит только schema и discovery policy. Actual project bindings ищутся во внешнем project-aware слое и подтверждаются fetch/read-back; реальные project names, IDs и абсолютные paths не сохраняются в global Skill.

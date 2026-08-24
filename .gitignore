@@ -9,11 +9,9 @@
 !/QUICKSTART.md
 !/README.md
 !/install-global.ps1
-!/install-project.ps1
 !/config.ai-dev-team.recommended.toml
 !/hooks.json
 !/agents/
-!/backlog/
 !/docs/
 !/hooks/
 !/presets/

@@ -18,11 +18,8 @@ py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project>
 notepad "$HOME\.codex\config.ai-dev-team.recommended.toml"
 notepad "$HOME\.codex\config.toml"
 
-# 4) Установить один проектный preset
-.\install-project.ps1 -Preset trading-terminal -Target '~/codex-workspace/trading-terminal'
-
-# 5) Проверить из репозитория
-Set-Location ~/codex-workspace/trading-terminal
+# 4) Проверить из выбранного независимого project repository
+Set-Location ~/codex-workspace/<project>
 codex mcp list
 codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов. Не изменяй файлы."
 ```

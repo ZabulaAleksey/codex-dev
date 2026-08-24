@@ -34,7 +34,7 @@ Read-only implementation: `tools/reconcile_project_framework.py`. Baseline failu
 | Возможность | Что уже есть | Потребность | Статус | Канонический источник |
 |---|---|---|---|---|
 | Brownfield reconciliation | read-only `validate_project_overlay.py` без классификации и baseline comparison | gate до bootstrap/refresh с matrix и regression contract | `EXTEND` | `tools/reconcile_project_framework.py` |
-| Project overlay templates | `presets/*` и общие `templates/*`; отдельного overlay-template каталога нет | сохранить существующие project-specific решения | `KEEP` | фактический repository; framework docs/specs добавляются через reconciliation |
+| Project overlay templates | только project-agnostic `templates/*`; именованные project presets запрещены | сохранить существующие project-specific решения | `PROJECT_ONLY` | фактический repository; framework docs/specs добавляются через reconciliation |
 | Product code refresh | product repositories являются независимыми Git roots | исключить автоматическую перезапись | `FORBIDDEN_TO_OVERWRITE` | target repository и explicit resolutions |
 
 ## Таблица решения
@@ -68,7 +68,7 @@ Read-only implementation: `tools/reconcile_project_framework.py`. Baseline failu
 | Context routing | корневой и глобальный `AGENTS.md` | распознавать команды «создай КАРКАС» / «автоматизация контекста» | `EXTEND` | короткие routers; полный текст не копируется |
 | Bootstrap workflow | generic planning/implementation Skills | повторяемый inspect → gap → minimal delta процесс | `EXTEND` | общий `bootstrap-project-framework` Skill |
 | SessionStart hook | компактный активный context hook | task-aware выбор документов | `INHERITED` | hook не расширять всей библиотекой docs/prompts |
-| Presets/projects | локальные overlays | распространить определение | `INHERITED` | не копировать документ/Skill в каждый repository |
+| Project overlays | локальные overlays | распространить определение | `INHERITED` | не копировать документ/Skill в каждый repository |
 | OCR-примеры исходного brief | только Text Recognition Core | общая терминология | `CONFLICT` | оставить в TRC; глобальный документ domain-neutral |
 | Язык проектного контекста | единого правила не было, часть agents и документов была на английском | единый читаемый язык новых КАРКАСОВ | `EXTEND` | русский по умолчанию в `AGENTS.md`, `PROJECT_FRAMEWORK.md` и bootstrap Skill; программные идентификаторы и внешние контракты не переводятся |
 

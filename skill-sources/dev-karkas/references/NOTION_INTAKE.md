@@ -4,7 +4,7 @@
 
 ## Source scope
 
-Сначала проверь `PROJECT_REGISTRY.md`. Если там есть канонический root проекта, используй его как основной scope.
+Сначала прочитай schema/discovery policy в `PROJECT_REGISTRY.md`. Фактические project bindings глобальный Skill не хранит: найди внешний root по явному названию/URL, затем подтверди mapping полным fetch/read-back.
 
 Обычный путь:
 

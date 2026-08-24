@@ -20,13 +20,15 @@
 
 После изменения глобального контекста обязательны `validate_context.py`, `validate_global_codex.py`, unit suite и проверка runtime Skill parity. Фактические команды и результаты фиксируются в handoff текущей задачи.
 
-## Известные ограничения
+## Результат decontamination
 
-- forward-only правило `docs/notes/` не переносит legacy files автоматически;
-- semantic classification существующего документа требует отдельного content/link audit;
-- внешняя визуализация может отставать от Git и должна обновляться как derived projection.
-- tracked `presets/`, `backlog/` и `skill-sources/dev-karkas/references/PROJECT_REGISTRY.md` остаются предметом отдельного decontamination audit из нового prompt; они не являются автоматически загружаемым active governance, но пока не соответствуют его целевой repository boundary.
+- backlog мигрирован в каноническую Notion-страницу с read-back verification; локальные исходники удалены;
+- доказанно сопоставленные project presets удалены после сверки с более свежими repositories;
+- registry содержит только schema/discovery policy, без actual inventory;
+- вспомогательные Markdown-файлы находятся в `docs/notes/`;
+- активная документация и automation больше не предлагают установку project-named presets;
+- неоднозначные project-specific источники сохранены со статусом `BLOCKED` и не считаются active governance.
 
 ## Следующее действие
 
-Сохранять project-agnostic boundary и применять новый Markdown layout при создании будущего контекста.
+Снять оставшиеся `BLOCKED` только после доказанного project mapping или отдельно разрешённого точного внешнего архива с read-back.

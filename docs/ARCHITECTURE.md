@@ -2,7 +2,7 @@
 
 ## Назначение и границы
 
-`~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно active operational layer Codex. `agents/`, `hooks/` и `rules/` используются непосредственно. Versioned source Skills находится в `skill-sources/`, а единственная active runtime-проекция — в `~/.agents/skills/`. `docs/`, `templates/`, `presets/`, `tools/` и `specs/` образуют инженерную библиотеку. Независимые product repositories находятся непосредственно в `~/codex-workspace/*` и не входят в историю ДЕВ.
+`~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно active operational layer Codex. `agents/`, `hooks/` и `rules/` используются непосредственно. Versioned source Skills находится в `skill-sources/`, а единственная active runtime-проекция — в `~/.agents/skills/`. `docs/`, `templates/`, `tools/` и `specs/` образуют project-agnostic инженерную библиотеку. Project-specific контекст хранится только в независимых repositories под `~/codex-workspace/*`.
 
 ## Project-framework контур
 

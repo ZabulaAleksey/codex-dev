@@ -35,7 +35,7 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 Читай только те references, которые нужны текущей задаче:
 
 - `references/KARKAS.md` — канонический состав и логика КАРКАСА;
-- `references/PROJECT_REGISTRY.md` — стабильные привязки Notion/project roots для известных проектов;
+- `references/PROJECT_REGISTRY.md` — schema и discovery policy внешних project-aware привязок без actual inventory;
 - `references/PROJECT_FILES.md` — назначение файлов и правила их создания;
 - `references/NOTION_INTAKE.md` — Notion `Идеи → <проект> → backlog`;
 - `references/PROMPT_TEMPLATE.md` — стандарт implementation prompt;
@@ -116,8 +116,8 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 
 Если задача относится к идеям/планированию и Notion доступен:
 
-1. Сначала проверь `references/PROJECT_REGISTRY.md`; если для проекта есть стабильный Notion root, используй его.
-2. Если привязки нет или она недоступна, найди корень `Идеи` и страницу проекта, например `Tutor`.
+1. Прочитай schema/discovery policy в `references/PROJECT_REGISTRY.md`; actual inventory в global Skill отсутствует намеренно.
+2. Найди внешний корень `Идеи`/`Projects` и страницу проекта по явному названию или URL пользователя, затем проверь mapping полным fetch/read-back.
 3. Ограничь поиск страницей проекта и её потомками, когда это возможно.
 4. Следуй `references/NOTION_INTAKE.md`.
 5. Не реализуй сырую идею автоматически только потому, что она присутствует в Notion.

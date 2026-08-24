@@ -1,39 +1,43 @@
-# Project registry
+# Project registry contract
 
-Этот файл хранит стабильные пользовательские привязки, которые помогают `dev-karkas` не искать канонические корни проекта заново. Он не заменяет project-specific `AGENTS.md` и не должен содержать secrets.
+Этот файл описывает только schema, discovery policy и validation contract. Он не хранит фактический список пользовательских проектов, реальные Notion page IDs, repository names или абсолютные project paths.
 
-## Tutor
+## Schema внешней привязки
 
-- Canonical Notion root title: `Tutor`
-- Canonical Notion page ID: `3c161ed8-f246-8162-9e2a-c13427218b33`
-- Canonical Notion URL: `https://app.notion.com/p/3c161ed8f24681629e2ac13427218b33?pvs=204`
-- Purpose: продуктовая концепция, учебный опыт, архитектура, AI, монетизация и исторический backlog.
-- Idea-processing rule: материалы Tutor являются уровнем идей/целевой архитектуры; не переносить их в SPEC/ROADMAP и не реализовывать автоматически без отдельного решения/approval.
-
-Known child sources useful for intake:
-
-- `Исходные идеи Tutor` — исторические идеи, ранее находившиеся в общей странице `Идеи`;
-- `Банк идей Tutor` — текущий банк идей;
-- `Общие принципы Tutor` — концептуальные принципы и целевая архитектура;
-- `Безопасность, abuse и защита от перегрузки` — security/abuse backlog;
-- `UX, дизайн и A11y` — UX/accessibility backlog;
-- `AI, вузовский контент и контекст страницы` — AI/content context.
-
-### Repository resolution
-
-Не хранить здесь выдуманный локальный путь. Определять репозиторий Tutor из текущего Codex project/cwd, project metadata, GitHub/Notion ссылки или явной пользовательской привязки. После надёжного определения путь/URL можно добавить сюда.
-
-## Добавление проекта
-
-Для нового проекта добавь:
+Project-aware внешний слой при необходимости может хранить:
 
 ```text
-## <Project>
-- Canonical Notion root title:
-- Canonical Notion page ID:
-- Canonical Notion URL:
-- Repository:
-- Notes:
+project_id
+display_name
+repository_url_or_path
+notion_root_url_or_id
+status
+overlay_path
+required_docs
+validation_state
+last_verified_at
 ```
 
-Не добавляй credentials, tokens или приватные ключи.
+## Discovery policy
+
+1. Определи текущий repository из Git root/cwd и ближайшего project `AGENTS.md`.
+2. Ищи внешний project root по явному названию/URL пользователя и проверяй полный page/repository context.
+3. Не считай search highlight или совпадение имени доказанной привязкой.
+4. Перед записью или реализацией сверь repository, SPEC, status и project-local instructions.
+5. Если mapping неоднозначен, сохрани материал во внешнем Ideas/staging layer и пометь `BLOCKED`; не добавляй реальный inventory в global КАРКАС.
+
+## Где хранить actual inventory
+
+Фактические привязки принадлежат project-aware внешнему слою, например Notion `Projects`, либо machine-local registry вне versioned active governance. Такой registry не должен содержать secrets и не становится источником требований продукта.
+
+## Синтетический пример
+
+```text
+project_id: example-project-a
+repository_url_or_path: <discovered-project-root>
+notion_root_url_or_id: <verified-external-root>
+validation_state: verified | stale | blocked
+last_verified_at: YYYY-MM-DD
+```
+
+Синтетический пример нельзя заменять реальным пользовательским inventory внутри этого файла.

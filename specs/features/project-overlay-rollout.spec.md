@@ -1,7 +1,7 @@
 # Спецификация глобального project=overlay-каркаса
 
-Статус: Утверждено для этапа 1
-Версия: 1.0
+Статус: SUPERSEDED — rollout этапа 1 завершён
+Версия: 1.1
 
 > Историческое примечание 2026-08-20:
 > требования FR-102, FR-105, FR-106 и связанные AC описывают завершённый
@@ -9,6 +9,10 @@
 > AI Dev Team больше не хранит live inventory product repositories и не назначает
 > один следующий product repository своим этапом. Универсальный read-only
 > project-overlay validator и inheritance rules остаются действующими.
+> Ссылки ниже на `docs/PROJECT_CATALOG.md`, конкретные repositories и `projects/*`
+> являются историческим audit trail. Текущая policy не хранит live inventory в
+> global framework: `PROJECT_REGISTRY.md` задаёт только schema/discovery contract,
+> actual bindings находятся во внешнем project-aware слое.
 
 ## 1. Назначение
 
@@ -127,3 +131,4 @@ Workspace delta и pilot delta должны находиться в отдель
 ## 11. История изменений
 
 - 2026-08-13 — версия 1.0: глобальная активация, read-only validator, единый реестр и пилот `off-screen-canvas`.
+- 2026-08-24 — версия 1.1: SPEC помечен `SUPERSEDED`; live inventory вынесен из global framework.
