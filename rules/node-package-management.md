@@ -39,6 +39,11 @@ Corepack, npm, pnpm и Yarn, особенно на Windows.
 
 Lockfile другого package manager не создаётся.
 
+Предпочтительный default нового совместимого Node/JS/TS project — pnpm согласно
+[`dependency-management.md`](dependency-management.md). Исключение, shared store,
+clean restore и migration proof определяются там; этот документ уточняет только
+Node/Corepack behavior.
+
 ## Exact version
 
 Предпочитай exact package-manager version в `packageManager`.

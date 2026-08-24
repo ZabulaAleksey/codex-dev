@@ -1,42 +1,46 @@
-# Текущее состояние AI Dev Team
+# Текущее состояние ДЕВ / КАРКАС
 
-Дата: 2026-08-20
+Дата: 2026-08-24
 
 ## Статус
 
-Нормализация canonical/installed глобального слоя Codex реализована, локально проверена и одобрена финальными read-only reviewer/security проверками. Интерактивные действия после restart вынесены отдельно.
+Глобальный ДЕВ хранится в единственном Git root `~/.codex`. Active instruction/rules layer предоставляет project-agnostic правила, agents, hooks, Skills, templates, validators и framework documentation. Product repositories наследуют глобальный `~/.codex/AGENTS.md` и хранят только локальную delta.
 
-## Реализовано
+## Подтверждённые инварианты
 
-- единый канон managed AGENTS, 13 agents, hooks и rules в `global/codex`;
-- explicit model pins: architect/security — Sol, test engineer — Luna medium;
-- безопасный `install-global.ps1 -SyncManaged` без перезаписи active config;
-- `tools/normalize_user_codex.py` с atomic apply и secret-safe output;
-- `tools/validate_global_codex.py` для installed hashes и config invariants;
-- Windows UTF-8 hook output, containment fixed docs внутри Git-root и bounded reads;
-- destructive probes для `git.exe -C`, PowerShell root deletion и `rm -fr /`;
-- Context7 без inline key и с pin `4.0.2`; Chrome DevTools MCP pin `1.7.0`;
-- GitHub static MCP и Atlassian отключены; Google Calendar/Slack inert blocks выключены;
-- broad/non-project trust удалён, три project paths исправлены;
-- missing browser service и unmatched client hash удалены без изменения `sky` binding;
-- spawned shell policy переведена в fail-closed режим для `KEY`/`SECRET`/`TOKEN`.
+- active global instruction source — `~/.codex/AGENTS.md`;
+- runtime state, credentials, sessions, caches, downloaded plugins и machine-local config не входят в tracked global context;
+- versioned custom Skill sources находятся в `skill-sources/`, runtime projection — в `~/.agents/skills`;
+- project root определяется независимо, а глобальный framework не ведёт live inventory потребителей;
+- `docs/AI_STATUS.md` — единственный текущий status source; `docs/AI_PLAN.md` — единственный текущий plan source;
+- новые дополнительные долговечные `.md` размещаются в `docs/notes/`, если содержание нельзя включить в существующий canonical document;
+- external Notion/Eraser/Figma projections не заменяют Git source of truth.
+- global `rules/dependency-management.md` задаёт preferred matrix, exception
+  contract, штатные shared caches/stores и clean-restore requirements; validators
+  дают только read-only inventory/drift evidence и не мигрируют product repositories.
 
 ## Verification evidence
 
-- `py -3 -m unittest tools.test_validate_global_codex tools.test_validate_project_overlay -v` — PASS, один platform skip symlink creation и отдельный containment test PASS;
-- `py -3 tools/validate_context.py` — PASS;
-- `py -3 tools/validate_global_codex.py --codex-home C:\\Users\\aleks\\.codex` — PASS;
-- повторный normalizer check — PASS;
-- active SessionStart cp1251 probe и destructive guard probes — PASS;
-- TOML/JSON/Python и PowerShell syntax — PASS.
+Для dependency-policy branch подтверждены:
 
-## Оставшиеся внешние действия
+- `py -3 -B -m unittest tools.test_validate_project_overlay tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_sync_global_skills` — PASS, 48 tests;
+- `py -3 -B tools/validate_context.py` — PASS, 189 files;
+- обновлённый project overlay validator — PASS на 12 фактических repositories, включая nested и multi-ecosystem manifests;
+- `git diff --check` — PASS.
 
-- провайдер: revoke/rotate ранее использованный Context7 credential;
-- GitHub: изменить app-specific `Allow all actions` на выбранный владельцем `inherit` или `ask_before_writes`;
-- UI/restart: review и trust новых hook hashes через `/hooks`, затем smoke-test Browser/Context7/GitHub;
-- project policy: решить, создавать ли реальный repository для пустого `dune-rts`, и отдельно bootstrap неполного `monte-carlo` overlay.
+После локальной интеграции в `main` runtime Skill `dev-karkas` синхронизирован из versioned source. Явная проверка `validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex` и runtime Skill parity — PASS; push не выполнялся.
+
+## Результат decontamination
+
+- backlog мигрирован в каноническую Notion-страницу с read-back verification; локальные исходники удалены;
+- доказанно сопоставленные project presets удалены после сверки с более свежими repositories;
+- registry содержит только schema/discovery policy, без actual inventory;
+- вспомогательные Markdown-файлы находятся в `docs/notes/`;
+- активная документация и automation больше не предлагают установку project-named presets;
+- неоднозначные project-specific источники сохранены со статусом `BLOCKED` и не считаются active governance.
 
 ## Следующее действие
 
-Перезапустить Codex, доверить новые hook hashes через `/hooks` и выполнить перечисленные smoke-tests. Merge рабочей ветки выполняется только по отдельному разрешению пользователя.
+Поддерживать dependency contract в project overlays через repository-scoped
+migration с recovery point, clean restore и проверками; периодически повторять
+global/project validators после изменений manager или lockfile policy.

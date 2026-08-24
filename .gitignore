@@ -1,27 +1,34 @@
-# По умолчанию игнорировать всё, что не относится к AI Dev Team.
+# `~/.codex` одновременно является runtime-каталогом Codex и Git-корнем ДЕВ.
+# По умолчанию не отслеживать host-managed state, credentials, sessions и cache.
 /*
 
-# Канонические файлы и каталоги AI Dev Team.
+# Канонические файлы и каталоги ДЕВ.
 !/.gitignore
 !/AGENTS.md
 !/MANIFEST.txt
 !/QUICKSTART.md
 !/README.md
 !/install-global.ps1
-!/install-project.ps1
-!/backlog/
+!/config.ai-dev-team.recommended.toml
+!/hooks.json
+!/agents/
 !/docs/
-!/global/
+!/hooks/
 !/presets/
 !/rules/
+!/skill-sources/
+!/specs/
 !/templates/
 !/tools/
-!/specs/
 
-# Рабочие проекты являются отдельными вложенными Git-репозиториями.
-/projects/
+# Runtime rules Codex не являются частью ДЕВ.
+/rules/default.rules
 
-# Локальные секреты, кэши и служебные файлы внутри AI Dev-каталогов.
+# Versioned source глобальных Skills. Активная runtime-проекция устанавливается
+# в `~/.agents/skills`; host-managed `~/.codex/skills` остаётся вне Git.
+!/skill-sources/**
+
+# Локальные секреты, caches и служебные файлы внутри управляемых каталогов.
 **/.env
 **/.env.*
 !**/.env.example
@@ -32,3 +39,55 @@
 **/.vscode/
 **/.DS_Store
 **/Thumbs.db
+
+# Secrets and local credentials inside otherwise versioned DEV directories.
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/auth.json
+**/credentials.json
+**/credentials.*.json
+**/*-credentials.json
+**/.secrets/
+**/secrets.local.*
+
+# Downloaded dependencies, generated builds and test/tool caches.
+**/node_modules/
+**/.npm/
+**/.pnpm-store/
+**/.yarn/cache/
+**/.gradle/
+**/.dart_tool/
+**/target/
+**/build/
+**/dist/
+**/out/
+**/.next/
+**/.svelte-kit/
+**/.astro/
+**/coverage/
+**/.coverage
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.cache/
+**/downloads/
+
+# Local databases, logs, temporary/editor files and downloaded archives.
+**/*.sqlite
+**/*.sqlite3
+**/*.sqlite-*
+**/*.db
+**/*.db-*
+**/*.log
+**/*.tmp
+**/*.temp
+**/*.bak
+**/*.swp
+**/*.swo
+**/*.zip
+**/*.7z
+**/*.tar
+**/*.tar.gz
+**/*.tgz

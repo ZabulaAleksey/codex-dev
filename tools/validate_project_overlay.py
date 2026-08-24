@@ -15,11 +15,11 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_FILES = (
     "AGENTS.md",
-    "specs/README.md",
-    "specs/system.spec.md",
+    "prompts/STAGES.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISIONS.md",
-    "docs/DESIGN.md",
+    "docs/LEARNING_LOG.md",
+    "docs/project-context.md",
     "docs/ROADMAP.md",
     "docs/AI_PLAN.md",
     "docs/AI_STATUS.md",
@@ -49,15 +49,61 @@ AUTOMATION_FILES = (
 )
 
 CANONICAL_SOURCES = (
-    "global/codex/AGENTS.md",
-    "global/codex/agents",
-    "global/codex/config.windows.recommended.toml",
-    "global/codex/hooks.json",
-    "global/codex/hooks",
-    "global/codex/rules",
-    "global/skills",
+    "AGENTS.md",
+    "agents",
+    "config.ai-dev-team.recommended.toml",
+    "hooks.json",
+    "hooks",
+    "skill-sources",
     "rules",
     "docs/WORKFLOW.md",
+)
+
+TEXT_SUFFIXES = {".md", ".toml", ".json", ".yaml", ".yml", ".ps1", ".py", ".sh", ".bat", ".cmd", ".ts", ".tsx", ".js", ".mjs", ".cjs"}
+SKIP_DIRECTORIES = {
+    ".astro",
+    ".dart_tool",
+    ".git",
+    ".mypy_cache",
+    ".next",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".svelte-kit",
+    ".venv",
+    "__pycache__",
+    "build",
+    "coverage",
+    "dist",
+    "htmlcov",
+    "node_modules",
+    "target",
+}
+GENERATED_DEPENDENCY_DIRECTORIES = {
+    ".gradle",
+    ".mypy_cache",
+    ".next",
+    ".nuxt",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".svelte-kit",
+    ".turbo",
+    ".venv",
+    "__pycache__",
+    "bin",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+    "obj",
+    "target",
+    "venv",
+}
+STALE_PATH_PATTERNS = (
+    "~/codex-" "workspace/AGENTS.md",
+    "~/codex-" "workspace/rules/",
+    "~/codex-" "workspace/docs/",
+    "codex-workspace/projects/",
+    "codex-workspace\\projects\\",
 )
 
 
@@ -131,6 +177,14 @@ def _automation_files(project: Path) -> list[Path]:
     return sorted(files, key=lambda candidate: _posix_relative(candidate, project).casefold())
 
 
+def _project_text_files(project: Path) -> Iterable[Path]:
+    for candidate in project.rglob("*"):
+        if not candidate.is_file() or any(part in SKIP_DIRECTORIES for part in candidate.parts):
+            continue
+        if candidate.suffix.casefold() in TEXT_SUFFIXES or candidate.name.startswith("Dockerfile"):
+            yield candidate
+
+
 def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -160,6 +214,146 @@ def _canonical_digests(workspace_root: Path) -> dict[str, list[str]]:
     for paths in digests.values():
         paths.sort(key=str.casefold)
     return digests
+
+
+def _dependency_exception(project: Path) -> bool:
+    for relative in ("docs/DEPENDENCIES.md", "docs/ARCHITECTURE.md"):
+        candidate = project / relative
+        if candidate.is_file() and "dependency-manager exception" in candidate.read_text(
+            encoding="utf-8-sig", errors="replace"
+        ).casefold():
+            return True
+    return False
+
+
+def _dependency_documented(project: Path) -> bool:
+    for relative in ("docs/DEPENDENCIES.md", "docs/ARCHITECTURE.md"):
+        candidate = project / relative
+        if not candidate.is_file():
+            continue
+        content = candidate.read_text(encoding="utf-8-sig", errors="replace").casefold()
+        source_of_truth = "source of truth" in content or "источник истины" in content
+        clean_restore = "clean restore" in content or "чистое восстановление" in content
+        if source_of_truth and clean_restore:
+            return True
+    return False
+
+
+def _git_visible_paths(project: Path) -> tuple[Path, ...]:
+    command = [
+        "git", "-c", f"safe.directory={project}", "-C", str(project),
+        "ls-files", "--cached", "--others", "--exclude-standard",
+    ]
+    try:
+        completed = subprocess.run(
+            command, check=False, capture_output=True, text=True, encoding="utf-8"
+        )
+    except FileNotFoundError:
+        return ()
+    if completed.returncode != 0:
+        return ()
+    paths: list[Path] = []
+    for relative in completed.stdout.splitlines():
+        candidate = project / relative
+        if any(part in GENERATED_DEPENDENCY_DIRECTORIES or part == ".git" for part in Path(relative).parts):
+            continue
+        if candidate.is_file():
+            paths.append(candidate)
+    return tuple(sorted(paths, key=lambda path: _posix_relative(path, project).casefold()))
+
+
+def _declared_managers(project: Path) -> tuple[tuple[str, Path], ...]:
+    visible = _git_visible_paths(project)
+    visible_set = {path.resolve() for path in visible}
+    managers: set[tuple[str, Path]] = set()
+    for package_json in (path for path in visible if path.name == "package.json"):
+        root = package_json.parent
+        try:
+            package = json.loads(package_json.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            package = {}
+        package_manager = package.get("packageManager") if isinstance(package, dict) else None
+        if isinstance(package_manager, str) and package_manager.casefold().startswith("pnpm@") or (root / "pnpm-lock.yaml").resolve() in visible_set:
+            managers.add(("pnpm", root))
+    for pyproject in (path for path in visible if path.name == "pyproject.toml"):
+        root = pyproject.parent
+        content = pyproject.read_text(encoding="utf-8-sig", errors="replace").casefold()
+        if (root / "uv.lock").resolve() in visible_set or "[tool.uv" in content:
+            managers.add(("uv", root))
+    generic = {
+        "Cargo.toml": "cargo",
+        "go.mod": "go-modules",
+        "composer.json": "composer",
+        "pubspec.yaml": "pub",
+        "Package.swift": "swiftpm",
+        "vcpkg.json": "vcpkg",
+        "conanfile.py": "conan",
+        "conanfile.txt": "conan",
+    }
+    for manifest in visible:
+        if manifest.name in generic:
+            managers.add((generic[manifest.name], manifest.parent))
+        elif manifest.name.endswith(".csproj"):
+            managers.add(("nuget", manifest.parent))
+        elif manifest.name.startswith("build.gradle"):
+            managers.add(("gradle", manifest.parent))
+    return tuple(sorted(managers, key=lambda item: (item[0], _posix_relative(item[1], project).casefold())))
+
+
+def _tracked_generated_paths(project: Path) -> tuple[str, ...]:
+    command = ["git", "-c", f"safe.directory={project}", "-C", str(project), "ls-files", "--cached"]
+    try:
+        completed = subprocess.run(command, check=False, capture_output=True, text=True, encoding="utf-8")
+    except FileNotFoundError:
+        return ()
+    if completed.returncode != 0:
+        return ()
+    tracked = []
+    for line in completed.stdout.splitlines():
+        parts = Path(line).parts
+        if any(part in GENERATED_DEPENDENCY_DIRECTORIES for part in parts):
+            tracked.append(line.replace("\\", "/"))
+    return tuple(sorted(tracked, key=str.casefold))
+
+
+def _ci_files(project: Path) -> Iterable[Path]:
+    ci = project / ".github" / "workflows"
+    if ci.is_dir():
+        yield from sorted((path for path in ci.rglob("*") if path.is_file()), key=lambda path: path.as_posix().casefold())
+
+
+def _dependency_issues(project: Path) -> list[Issue]:
+    managers = _declared_managers(project)
+    if not managers:
+        return []
+    issues: list[Issue] = []
+    exception = _dependency_exception(project)
+    visible = set(_git_visible_paths(project))
+    for manager, root in managers:
+        root_relative = _posix_relative(root, project) or "."
+        if manager == "pnpm":
+            competing = ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb")
+            for filename in competing:
+                candidate = root / filename
+                if candidate in visible and not exception:
+                    issues.append(Issue("competing-lockfile", _posix_relative(candidate, project), "pnpm project has an undocumented competing lockfile"))
+        elif manager == "uv" and (root / "uv.lock") not in visible:
+            issues.append(Issue("missing-canonical-lockfile", f"{root_relative}/uv.lock", "uv project requires uv.lock"))
+    if any(manager == "pnpm" for manager, _ in managers):
+        for ci_file in _ci_files(project):
+            content = ci_file.read_text(encoding="utf-8-sig", errors="replace")
+            if re.search(r"\bnpm\s+(?:ci|install)\b", content) and not exception:
+                issues.append(Issue("manager-inconsistent-ci", _posix_relative(ci_file, project), "pnpm project CI installs with npm"))
+    if any(manager == "uv" for manager, _ in managers):
+        for ci_file in _ci_files(project):
+            content = ci_file.read_text(encoding="utf-8-sig", errors="replace").casefold()
+            if "python" in content and "uv " not in content and not exception:
+                issues.append(Issue("manager-inconsistent-ci", _posix_relative(ci_file, project), "uv project CI does not invoke uv"))
+    for relative in _tracked_generated_paths(project):
+        issues.append(Issue("tracked-generated-dependency-path", relative, "dependency/build cache path is tracked by Git"))
+    if not _dependency_documented(project):
+        issues.append(Issue("missing-dependency-contract", "docs/DEPENDENCIES.md", "document source of truth and clean restore for the detected manager"))
+    return issues
 
 
 def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) -> ValidationResult:
@@ -203,6 +397,53 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
                     )
                 )
 
+    prompts = project / "prompts"
+    if prompts.is_dir():
+        for candidate in sorted(prompts.rglob("*.md"), key=lambda item: item.as_posix().casefold()):
+            if candidate.name.casefold() not in {"stages.md", "readme.md"}:
+                issues.append(
+                    Issue(
+                        "legacy-stage-file",
+                        _posix_relative(candidate, project),
+                        "detailed stage content must be consolidated into prompts/STAGES.md",
+                    )
+                )
+
+    for candidate in _project_text_files(project):
+        try:
+            content = candidate.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeError):
+            continue
+        for pattern in STALE_PATH_PATTERNS:
+            if pattern in content:
+                issues.append(
+                    Issue(
+                        "stale-workspace-path",
+                        _posix_relative(candidate, project),
+                        f"contains obsolete path pattern {pattern}",
+                    )
+                )
+                break
+        if re.search(r"(?i)[A-Z]:\\Users\\[^\\]+\\codex-workspace(?:\\|$)", content):
+            issues.append(
+                Issue(
+                    "machine-specific-workspace-path",
+                    _posix_relative(candidate, project),
+                    "contains a machine-specific codex-workspace path",
+                )
+            )
+
+    wrong_agent_root = project / ".agents"
+    if wrong_agent_root.is_dir():
+        for candidate in wrong_agent_root.rglob("*.toml"):
+            issues.append(
+                Issue(
+                    "agent-in-skill-directory",
+                    _posix_relative(candidate, project),
+                    "custom agent TOML belongs in .codex/agents",
+                )
+            )
+
     local_automation = _automation_files(project)
     compatibility = project / "docs/CONTEXT_COMPATIBILITY.md"
     if local_automation:
@@ -238,6 +479,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
                 )
             )
 
+    issues.extend(_dependency_issues(project))
     ordered = tuple(sorted(issues, key=lambda item: (item.code, item.path.casefold(), item.message)))
     return ValidationResult(str(project), not ordered, ordered)
 

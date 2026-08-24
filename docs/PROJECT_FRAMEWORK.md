@@ -1,6 +1,6 @@
 # КАРКАС проекта и автоматизация контекста
 
-Этот документ задаёт общую для `~/codex-workspace/projects/*` терминологию. Он описывает инженерный процесс, а не структуру конкретного продукта.
+Этот документ задаёт общую для `~/codex-workspace/*` терминологию. Он описывает инженерный процесс, а не структуру конкретного продукта.
 
 ## Определения
 
@@ -41,6 +41,14 @@ Implementation → tests → state update
 
 Stage prompts могут храниться в `prompts/`, если проекту нужна библиотека самостоятельных этапов. Они не заменяют SPEC, ROADMAP или текущий `AI_PLAN`.
 
+### Каталог дополнительных Markdown-файлов
+
+До создания нового документа определи его роль. Если содержание относится к существующим SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `AI_PLAN.md`, `AI_STATUS.md`, `ROADMAP.md` или другому каноническому контракту, обнови этот источник вместо создания параллельного файла.
+
+На верхнем уровне `docs/` остаются только обязательные и условные канонические документы КАРКАСА. Новый долговечный материал без канонической роли — исследовательская заметка, разбор, handoff, audit note или вспомогательное объяснение — размещается в `docs/notes/<topic>.md`. Одноразовый временный материал не входит в repository.
+
+Это forward-only правило: существующие файлы не перемещаются механически. Их объединение или перенос требует semantic audit, проверки ссылок и подтверждения отсутствия потери уникального контента.
+
 ## Канонические роли документов
 
 ```text
@@ -58,20 +66,33 @@ implementation/tests фактическое состояние и доказат
 ## Процесс bootstrap
 
 1. Определи Git-корень, ближайшие инструкции и состояние рабочей копии.
-2. Классифицируй сложность, режим, этап SDLC, домен, стек и относящуюся SPEC.
-3. Исследуй существующий проект; если КАРКАС уже есть, выполни gap analysis вместо регенерации.
-4. Проверь общую AI Dev Team и `docs/CONTEXT_COMPATIBILITY.md`.
-5. Для каждого предлагаемого agent, hook, MCP, Skill, config или workflow назначь статус `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`.
-6. Создай только проектную delta: требования, архитектуру, решения, этапы, проверки и локальные инварианты.
-7. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
-8. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
-9. Зафиксируй текущее состояние и следующий этап.
-10. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
+2. Классифицируй repository как `GREENFIELD` или `BROWNFIELD`; в brownfield код и тесты являются source of truth текущего состояния.
+3. Для brownfield до mutations выполни read-only reconciliation и сформируй matrix `KEEP` / `ADD` / `ADAPT` / `MERGE` / `CONFLICT` / `SUPERSEDED` / `FORBIDDEN_TO_OVERWRITE`.
+4. Сними baseline тестов, отдели pre-existing failures, разреши конфликты и только затем выполняй refresh.
+5. Классифицируй сложность, режим, этап SDLC, домен, стек и относящуюся SPEC.
+6. Исследуй существующий проект; если КАРКАС уже есть, выполни gap analysis вместо регенерации.
+7. Проверь общую AI Dev Team и `docs/CONTEXT_COMPATIBILITY.md`.
+8. Для каждого предлагаемого agent, hook, MCP, Skill, config или workflow назначь статус `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`.
+9. Создай только проектную delta: требования, архитектуру, решения, этапы, проверки и локальные инварианты.
+10. Определи dependency ecosystem и зафиксируй canonical manager, manifest,
+    lockfile, штатный cache/store, project-local materialization, cleanup, CI clean
+    restore и exception rationale по `rules/dependency-management.md`.
+11. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
+12. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
+13. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
+14. Зафиксируй текущее состояние и следующий этап.
+15. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
 
 Готовый overlay проверяется без изменений repository:
 
 ```powershell
-py -3 ~/codex-workspace/tools/validate_project_overlay.py ~/codex-workspace/projects/<project>
+py -3 ~/.codex/tools/validate_project_overlay.py ~/codex-workspace/<project>
+```
+
+Перед изменением brownfield repository:
+
+```powershell
+py -3 ~/.codex/tools/reconcile_project_framework.py ~/codex-workspace/<project>
 ```
 
 Для машинного чтения доступен `--json`; отдельный registry при этом не создаётся.
@@ -102,7 +123,7 @@ nearest instructions
 Отсутствие локального config, hook, MCP, Skill или subagent является нормальным результатом bootstrap.
 
 Общая Fallback Policy наследуется из
-`~/codex-workspace/rules/fallback-policy.md`.
+`~/.codex/rules/fallback-policy.md`.
 
 Если проект имеет собственные предметные цепочки деградации,
 он хранит только project-specific delta в `docs/FALLBACKS.md`.

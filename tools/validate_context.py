@@ -10,11 +10,13 @@ MANIFEST = ROOT / "MANIFEST.txt"
 REQUIRED = {
     ".gitignore",
     "AGENTS.md",
+    "config.ai-dev-team.recommended.toml",
+    "hooks.json",
     "MANIFEST.txt",
     "docs/AI_PLAN.md",
     "docs/AI_STATUS.md",
     "docs/ARCHITECTURE.md",
-    "docs/AUTOMATION_EXTENSIONS.md",
+    "docs/notes/AUTOMATION_EXTENSIONS.md",
     "docs/CONTEXT_COMPATIBILITY.md",
     "docs/CONTEXT_POLICY.md",
     "docs/DECISIONS.md",
@@ -22,9 +24,10 @@ REQUIRED = {
     "docs/PROJECT_FRAMEWORK.md",
     "docs/ROADMAP.md",
     "docs/SECURITY.md",
-    "docs/SDD_GUIDE.md",
+    "docs/notes/SDD_GUIDE.md",
     "docs/WORKFLOW.md",
     "rules/fallback-policy.md",
+    "rules/dependency-management.md",
     "rules/README.md",
     "rules/model-routing.md",
     "rules/modes/standard.md",
@@ -33,14 +36,20 @@ REQUIRED = {
     "templates/SPEC_TEMPLATE.md",
     "specs/README.md",
     "specs/features/global-codex-normalization.spec.md",
+    "specs/features/codex-home-consolidation.spec.md",
     "specs/system.spec.md",
     "tools/normalize_user_codex.py",
     "tools/test_validate_global_codex.py",
     "specs/features/project-overlay-rollout.spec.md",
+    "specs/features/dependency-manager-policy.spec.md",
     "tools/validate_context.py",
     "tools/validate_global_codex.py",
     "tools/validate_project_overlay.py",
     "tools/test_validate_project_overlay.py",
+    "tools/reconcile_project_framework.py",
+    "tools/test_reconcile_project_framework.py",
+    "tools/sync_global_skills.py",
+    "tools/test_sync_global_skills.py",
 }
 
 
@@ -105,7 +114,7 @@ def main() -> int:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    print(f"codex-workspace context OK ({len(manifest_files)} files)")
+    print(f"~/.codex DEV context OK ({len(manifest_files)} files)")
     return 0
 
 

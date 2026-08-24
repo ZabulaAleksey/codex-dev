@@ -16,16 +16,6 @@ PLUGINS_TO_DISABLE = {
     'plugins."google-calendar@openai-curated"',
     'plugins."slack@openai-curated"',
 }
-PROJECT_DIR_RENAMES = {
-    "MathMorph": "math-morph",
-    "OffScreenCanvas": "off-screen-canvas",
-    "Receipt Scanner UA": "receipt-scanner-ua",
-}
-NONPROJECT_TRUST_RELATIVE = {
-    "documents/codex/2026-07-17/github-plugin-github-openai-curated-remote",
-    "documents/codex/2026-07-17/github-plugin-github-openai-curated-remote-2",
-    "documents/platformio/projects/cube",
-}
 CONTEXT7_PACKAGE = "@upstash/context7-mcp@4.0.2"
 CHROME_DEVTOOLS_PACKAGE = "chrome-devtools-mcp@1.7.0"
 
@@ -103,6 +93,7 @@ def normalize_text(
     preamble, sections = split_sections(text)
     changes: list[str] = []
     broad_home = str(user_home.resolve()).casefold()
+    legacy_projects_root = (user_home.resolve() / "codex-workspace" / "projects").resolve()
     output: list[str] = list(preamble)
     section_names = {header for header, _ in sections}
     has_shell_policy = "shell_environment_policy" in section_names
@@ -114,21 +105,12 @@ def normalize_text(
         if project_path and str(project_path).casefold() == broad_home:
             changes.append("remove-broad-home-trust")
             continue
-        if project_path:
-            try:
-                relative = project_path.relative_to(
-                    user_home.resolve()).as_posix().casefold()
-            except ValueError:
-                relative = ""
-            if relative in NONPROJECT_TRUST_RELATIVE:
-                changes.append("remove-nonproject-trust")
-                continue
-
-        if project_path and project_path.parent.name.casefold() == "projects" and project_path.name in PROJECT_DIR_RENAMES:
-            project_path = project_path.with_name(
-                PROJECT_DIR_RENAMES[project_path.name])
-            header = f"projects.'{project_path}'"
-            changes.append("rename-stale-project-path")
+        if project_path and project_path.parent == legacy_projects_root:
+            changes.append("remove-stale-project-trust")
+            continue
+        if project_path and not (project_path / ".git").exists():
+            changes.append("remove-nonproject-trust")
+            continue
 
         if header == "mcp_servers.node_repl.env":
             services_raw = original.get("mcp_servers", {}).get(
@@ -252,14 +234,13 @@ def normalize_text(
         if name in parsed.get("plugins", {}) and parsed["plugins"][name].get("enabled", True):
             raise ValueError(f"{name} remains enabled after normalization")
 
-    original_projects = original.get("projects", {})
     normalized_projects = parsed.get("projects", {})
-    for old in original_projects:
-        old_path = Path(old)
-        if old_path.parent.name.casefold() == "projects" and old_path.name in PROJECT_DIR_RENAMES:
-            new = str(old_path.with_name(PROJECT_DIR_RENAMES[old_path.name]))
-            if old in normalized_projects or new not in normalized_projects:
-                raise ValueError("stale project path was not normalized")
+    for project in normalized_projects:
+        project_path = Path(project).resolve()
+        if project_path.parent == legacy_projects_root:
+            raise ValueError("stale project trust remains after normalization")
+        if not (project_path / ".git").exists():
+            raise ValueError("non-project trust remains after normalization")
     return normalized, sorted(set(changes))
 
 

@@ -4,7 +4,7 @@
 
 Для файловых инструкций действует каскад:
 
-`Модуль → Проект → codex-workspace → глобальная конфигурация Codex`
+`Модуль → Проект → ~/.codex → глобальная конфигурация Codex`
 
 Более локальное правило уточняет общее только в своей области. Прямая инструкция пользователя для текущей задачи имеет высший приоритет, если не нарушает ограничения безопасности.
 
@@ -42,3 +42,18 @@
 ## Совместимость расширений
 
 Перед добавлением agent, hook, MCP, Skill или config используй `docs/CONTEXT_COMPATIBILITY.md`. Для нетривиальных изменений запиши решение в одноимённый документ проекта.
+
+## Brownfield reconciliation gate
+
+Перед `bootstrap` или `refresh` классифицируй repository как `GREENFIELD` или `BROWNFIELD`.
+В brownfield фактический код, документы проекта и результаты тестов являются source of truth
+текущего состояния. КАРКАС адаптируется к реализации и не перезаписывает её автоматически.
+
+До любой mutation запусти read-only `tools/reconcile_project_framework.py`. Его matrix использует
+статусы `KEEP`, `ADD`, `ADAPT`, `MERGE`, `CONFLICT`, `SUPERSEDED` и
+`FORBIDDEN_TO_OVERWRITE`. Неразрешённый `CONFLICT` блокирует соответствующую mutation;
+`FORBIDDEN_TO_OVERWRITE` запрещает автоматическую запись в существующий путь.
+
+Последовательность gate: reconciliation → resolution conflicts → refresh →
+`validate_project_overlay.py` → повтор baseline-тестов. Baseline failures фиксируются
+отдельно как pre-existing; новые failures после refresh считаются regression.

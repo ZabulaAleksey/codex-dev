@@ -8,8 +8,20 @@ import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools.sync_global_skills import compare_skills
+
+
+DOCUMENT_LAYOUT_POLICY_FILES = (
+    "AGENTS.md",
+    "rules/governance.md",
+    "docs/PROJECT_FRAMEWORK.md",
+    "skill-sources/dev-karkas/references/PROJECT_FILES.md",
+)
+DOCUMENT_LAYOUT_MARKER = "docs/notes/<topic>.md"
 
 
 @dataclass(frozen=True, order=True)
@@ -19,8 +31,31 @@ class Issue:
     detail: str
 
 
+def documentation_layout_issues(workspace: Path) -> tuple[Issue, ...]:
+    issues: list[Issue] = []
+    for relative in DOCUMENT_LAYOUT_POLICY_FILES:
+        candidate = workspace / relative
+        if not candidate.is_file():
+            issues.append(Issue("missing-document-layout-policy", relative, "policy source is missing"))
+            continue
+        try:
+            content = candidate.read_text(encoding="utf-8")
+        except OSError as exc:
+            issues.append(Issue("unreadable-document-layout-policy", relative, type(exc).__name__))
+            continue
+        if DOCUMENT_LAYOUT_MARKER not in content:
+            issues.append(
+                Issue(
+                    "missing-document-layout-policy",
+                    relative,
+                    f"new supplemental Markdown must route to {DOCUMENT_LAYOUT_MARKER}",
+                )
+            )
+    return tuple(sorted(issues))
+
+
 def managed_files(workspace: Path) -> tuple[Path, ...]:
-    base = workspace / "global" / "codex"
+    base = workspace
     files = [base / "AGENTS.md", base / "hooks.json", base / "rules" / "ai-dev-team.rules"]
     files.extend(sorted((base / "agents").glob("*.toml")))
     files.extend(sorted((base / "hooks").glob("*.py")))
@@ -32,7 +67,7 @@ def digest(path: Path) -> str:
 
 
 def installed_path(source: Path, workspace: Path, codex_home: Path) -> Path:
-    relative = source.relative_to(workspace / "global" / "codex")
+    relative = source.relative_to(workspace)
     return codex_home / relative
 
 
@@ -71,6 +106,9 @@ def validate_global_codex(workspace: Path, codex_home: Path) -> tuple[Issue, ...
     workspace = workspace.resolve()
     codex_home = codex_home.expanduser().resolve()
     issues: list[Issue] = []
+    issues.extend(documentation_layout_issues(workspace))
+    for skill_issue in compare_skills(workspace / "skill-sources", codex_home.parent / ".agents" / "skills"):
+        issues.append(Issue(skill_issue.code, f"skills/{skill_issue.path}", "runtime Skill differs from versioned source"))
     for source in managed_files(workspace):
         destination = installed_path(source, workspace, codex_home)
         label = destination.relative_to(codex_home).as_posix()

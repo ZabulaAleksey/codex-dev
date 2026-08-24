@@ -4,6 +4,9 @@
 
 Project-overlay validator читает путь локального repository, его файлы и Git metadata. Он не выполняет project scripts, hooks или код из проверяемого repository, не обращается к сети и не записывает файлы.
 
+Brownfield reconciler соблюдает те же границы: он только читает repository и test output.
+`FORBIDDEN_TO_OVERWRITE` и unresolved `CONFLICT` не могут быть автоматически обойдены refresh-процессом.
+
 ## Меры
 
 - команды Git передаются как список аргументов без shell interpolation;
@@ -31,6 +34,8 @@ Project-overlay validator читает путь локального repository,
 - отсутствующая browser service и неподтверждённый browser client hash не считаются доверенными.
 
 Hook контекста использует repository containment и bounded read. Destructive guard покрывает `git.exe`, `git -C`, варианты порядка PowerShell flags и `rm -fr /`, но остаётся дополнительным слоем поверх sandbox/approvals/execpolicy.
+
+Git-root ДЕВ совмещён с runtime-каталогом `~/.codex`. Поэтому принудительный `git clean` запрещён во всех формах (`-f`, combined/split flags и `--force`): иначе Git может удалить игнорируемые credentials, sessions, SQLite, cache, plugins и active config. Для аудита допустим только dry-run без force.
 
 ## Остаточные действия владельца
 

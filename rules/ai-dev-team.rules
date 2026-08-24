@@ -1,0 +1,63 @@
+# Rules создают дополнительное ограничение для команд, запрашивающих выполнение вне sandbox.
+
+prefix_rule(
+    pattern = ["git", "push", "--force"],
+    decision = "forbidden",
+    justification = "Force-push не делегируется Codex. Используй обычный push либо выполни force-push вручную после проверки.",
+)
+
+prefix_rule(
+    pattern = ["git", "push", "-f"],
+    decision = "forbidden",
+    justification = "Force-push не делегируется Codex.",
+)
+
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "forbidden",
+    justification = "Hard reset может уничтожить незакоммиченную работу. Предпочитай обратимое восстановление или явное ручное действие.",
+)
+
+prefix_rule(
+    pattern = ["git", "clean", "-fd"],
+    decision = "forbidden",
+    justification = "git clean может необратимо удалить неотслеживаемые файлы.",
+)
+
+# Exact argv ordering is enforced by the hook; these common split/long forms are
+# blocked here as a second layer before sandbox escalation.
+prefix_rule(
+    pattern = ["git", "clean", "-d", "-f"],
+    decision = "forbidden",
+    justification = "Принудительный git clean может удалить runtime state из ~/.codex.",
+)
+
+prefix_rule(
+    pattern = ["git", "clean", "--force"],
+    decision = "forbidden",
+    justification = "Принудительный git clean может удалить runtime state из ~/.codex.",
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Внешняя запись в GitHub: требуется подтверждение перед push.",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "create"],
+    decision = "prompt",
+    justification = "Создание pull request является внешней операцией записи.",
+)
+
+prefix_rule(
+    pattern = ["npm", "publish"],
+    decision = "prompt",
+    justification = "Публикация пакета является внешней операцией записи.",
+)
+
+prefix_rule(
+    pattern = ["docker", "system", "prune"],
+    decision = "forbidden",
+    justification = "Системная очистка может удалить ресурсы других проектов.",
+)

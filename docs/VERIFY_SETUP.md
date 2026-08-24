@@ -1,8 +1,8 @@
 # Контрольный список проверки установки
 
-## Целостность workspace
+## Целостность глобального ДЕВ
 
-Из корня `~/codex-workspace`:
+Из корня `~/.codex`:
 
 ```powershell
 py -3 .\tools\validate_context.py
@@ -39,7 +39,7 @@ codex execpolicy check --pretty --rules "$HOME\.codex\rules\ai-dev-team.rules" -
 ## Пробный запуск hook
 
 ```powershell
-'{"cwd":"~/codex-workspace/projects/trading-terminal","hook_event_name":"SessionStart","source":"startup"}' | py -3 "$HOME\.codex\hooks\session_context.py"
+'{"cwd":"~/codex-workspace/<project>","hook_event_name":"SessionStart","source":"startup"}' | py -3 "$HOME\.codex\hooks\session_context.py"
 ```
 
 Для репозитория с `docs/AI_STATUS.md` ожидается JSON, содержащий `additionalContext`.

@@ -12,12 +12,12 @@ import unittest
 from pathlib import Path
 
 from tools.normalize_user_codex import ConcurrentConfigUpdateError, normalize_text, write_atomic
-from tools.validate_global_codex import managed_files, validate_global_codex
+from tools.validate_global_codex import documentation_layout_issues, managed_files, validate_global_codex
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SESSION_HOOK = ROOT / "global/codex/hooks/session_context.py"
-GUARD_HOOK = ROOT / "global/codex/hooks/guard_destructive.py"
+SESSION_HOOK = ROOT / "hooks/session_context.py"
+GUARD_HOOK = ROOT / "hooks/guard_destructive.py"
 
 
 def load_session_hook_module():
@@ -33,8 +33,8 @@ class UserConfigNormalizerTests(unittest.TestCase):
     def test_normalizer_removes_secret_and_stale_routes_idempotently(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             home = Path(temporary)
-            existing = home / "codex-workspace/projects/math-morph"
-            existing.mkdir(parents=True)
+            stale = home / "codex-workspace/projects/ExampleProject"
+            stale.mkdir(parents=True)
             source = f'''[mcp_servers.node_repl.env]
 NODE_REPL_TRUSTED_SERVICES = '{{"browser":"{(home / "missing/service.mjs").as_posix()}"}}'
 
@@ -54,7 +54,7 @@ enabled = true
 [plugins."slack@openai-curated"]
 enabled = true
 
-[projects.'{home / "codex-workspace/projects/MathMorph"}']
+[projects.'{stale}']
 trust_level = "trusted"
 
 [projects.'{home}']
@@ -64,7 +64,8 @@ trust_level = "trusted"
             self.assertNotIn("synthetic-test-token", normalized)
             self.assertNotIn("NODE_REPL_TRUSTED_SERVICES", normalized)
             self.assertNotIn(f"[projects.'{home}']", normalized)
-            self.assertIn("projects/math-morph", normalized.replace("\\", "/"))
+            self.assertNotIn("ExampleProject", normalized)
+            self.assertNotIn("codex-workspace/projects/", normalized.replace("\\", "/"))
             self.assertIn("ignore_default_excludes = false", normalized)
             self.assertIn("@upstash/context7-mcp@4.0.2", normalized)
             self.assertIn("remove-context7-inline-key", changes)
@@ -120,11 +121,16 @@ class GlobalCodexValidatorTests(unittest.TestCase):
         self.home = Path(self.temporary.name)
         self.codex_home = self.home / ".codex"
         self.codex_home.mkdir()
+        self.runtime_skills = self.home / ".agents" / "skills"
+        self.runtime_skills.mkdir(parents=True)
         for source in managed_files(ROOT):
-            relative = source.relative_to(ROOT / "global/codex")
+            relative = source.relative_to(ROOT)
             destination = self.codex_home / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+        for source in (ROOT / "skill-sources").iterdir():
+            if source.is_dir():
+                shutil.copytree(source, self.runtime_skills / source.name)
         project = self.home / "project"
         project.mkdir()
         (self.codex_home / "config.toml").write_text(
@@ -150,9 +156,21 @@ trust_level = "trusted"
     def test_clean_installed_layer_passes(self) -> None:
         self.assertEqual(set(), self.issue_codes())
 
+    def test_missing_document_layout_policy_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            (workspace / "AGENTS.md").write_text("docs/notes/<topic>.md\n", encoding="utf-8")
+            issues = documentation_layout_issues(workspace)
+            self.assertIn("missing-document-layout-policy", {issue.code for issue in issues})
+
     def test_drift_is_reported(self) -> None:
         (self.codex_home / "hooks/session_context.py").write_text("drift\n", encoding="utf-8")
         self.assertIn("managed-file-drift", self.issue_codes())
+
+    def test_runtime_skill_drift_is_reported(self) -> None:
+        skill = next(path for path in self.runtime_skills.iterdir() if path.is_dir())
+        (skill / "SKILL.md").write_text("drift\n", encoding="utf-8")
+        self.assertIn("runtime-skill-drift", self.issue_codes())
 
     def test_inline_credential_is_reported_without_value(self) -> None:
         config = self.codex_home / "config.toml"
@@ -247,6 +265,10 @@ class HookRegressionTests(unittest.TestCase):
     def test_destructive_guard_covers_windows_and_flag_variants(self) -> None:
         commands = (
             'git.exe -C "C:\\work tree" reset --hard HEAD',
+            "git clean -fdx",
+            "git clean -d -f -x",
+            "git clean --force -d -x",
+            'git.exe -C "C:\\work tree" clean -n -f',
             "Remove-Item -LiteralPath 'C:\\' -Force -Recurse",
             "rm -fr /",
             "git push --force-with-lease origin main",
@@ -260,6 +282,11 @@ class HookRegressionTests(unittest.TestCase):
                 result = subprocess.run([sys.executable, str(GUARD_HOOK)], input=payload, capture_output=True, check=True)
                 output = json.loads(result.stdout.decode("utf-8"))
                 self.assertEqual("deny", output["hookSpecificOutput"]["permissionDecision"])
+
+    def test_destructive_guard_allows_git_clean_dry_run(self) -> None:
+        payload = json.dumps({"tool_input": {"command": "git clean -n -d -x"}}).encode("utf-8")
+        result = subprocess.run([sys.executable, str(GUARD_HOOK)], input=payload, capture_output=True, check=True)
+        self.assertEqual(b"", result.stdout)
 
 
 if __name__ == "__main__":
