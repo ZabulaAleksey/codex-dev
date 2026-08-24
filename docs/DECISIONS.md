@@ -125,3 +125,13 @@ project framework и reusable automation, но не хранит канонич�
 **Причина:** промежуточный `projects/`, смешанные prompt formats и неполные project state contracts создавали path coupling и затрудняли восстановление новой сессии.
 
 **Последствия:** physical moves проверяются по одному repository; dirty/merge state сохраняется backup refs; legacy stage files удаляются только после semantic content/link audit; внешние projections остаются derived.
+
+## 2026-08-24 — Дополнительные Markdown-файлы изолируются в `docs/notes`
+
+**Статус:** принято.
+
+**Решение:** непосредственно в `docs/` создаются только обязательные и условные канонические документы КАРКАСА. Новый долговечный Markdown без собственной канонической роли хранится в `docs/notes/<topic>.md`; временный scratch и одноразовые audit outputs не коммитятся.
+
+**Причина:** произвольные документы на верхнем уровне `docs/` размывают источник истины и увеличивают контекстный шум.
+
+**Последствия:** сначала обновляется существующий canonical source; правило применяется forward-only; legacy files переносятся только после semantic/link audit без потери содержания.

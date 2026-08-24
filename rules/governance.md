@@ -40,6 +40,14 @@
 
 Не создавай пустой placeholder. Для UI добавляй `DESIGN.md`, для security surface — `SECURITY.md`, для behavior traceability — `TRACEABILITY.md`, для отдельного test contract — `TESTING.md`.
 
+### Markdown layout
+
+- Сначала дополняй существующий canonical document; новый файл не должен создавать вторую роль или второй source of truth.
+- Непосредственно в `docs/` создаются только обязательное ядро и условные канонические контракты КАРКАСА: `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `TRACEABILITY.md`, `DEPENDENCIES.md`, `API.md`, `DATA_MODEL.md`, `PRIVACY.md` и `FALLBACKS.md` при наличии соответствующей поверхности.
+- Любой новый долговечный `.md`, не входящий в canonical set, размещается в `docs/notes/<topic>.md` и связывается ссылкой с ближайшим каноническим документом, если влияет на работу.
+- Произвольные новые `.md` в корне repository и непосредственно в `docs/` запрещены. Временный scratch/audit output не коммитится.
+- Политика действует на новые файлы; legacy layout меняется только после semantic content audit, проверки ссылок и сохранения уникального содержания.
+
 - `AI_PLAN` описывает текущий/следующий исполнимый срез.
 - `AI_STATUS` содержит только подтверждённые факты и evidence.
 - `ROADMAP` — короткий индекс этапов, не копия prompts.

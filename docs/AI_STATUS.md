@@ -4,59 +4,29 @@
 
 ## Статус
 
-Full governance migration активирована в `~/.codex`: базовый governance commit `806ee29`, flattened-path follow-up `498a4b8`, handoff commit `89d60cd`. Все 12 independent repositories физически находятся непосредственно в `~/codex-workspace`; project changes изолированы в migration-ветках до отдельного разрешения на merge.
+Глобальный ДЕВ хранится в единственном Git root `~/.codex`. Active instruction/rules layer предоставляет project-agnostic правила, agents, hooks, Skills, templates, validators и framework documentation. Product repositories наследуют глобальный `~/.codex/AGENTS.md` и хранят только локальную delta.
 
-## Project migration commits
+## Подтверждённые инварианты
 
-| Project | Commit |
-|---|---|
-| `ai-mix` | `93ee756` |
-| `electro-tutor` | `d2fa899` |
-| `math-morph` | `56b9782` |
-| `monte-carlo` | `6c3a220` |
-| `off-screen-canvas` | `9b56423` |
-| `receipt-scanner-ua` | `1347bf9` |
-| `server` | `c13eb96` |
-| `Task_21.07_Svelte` | `73fc902` |
-| `text-recognition-core` | `b5731f4` |
-| `toemath` | `35591a8` |
-| `video-chronicle` | `6c879ff` |
-| `wifi-share` | `c0c3aa6` |
-
-## Реализовано
-
-- единый канонический `~/.codex/AGENTS.md`;
-- Git root `~/.codex` с сохранённой history/index на ветке `chore/codex-home-consolidation`;
-- прямые `agents/`, `hooks/`, `rules/`, `docs/`, `presets/`, `tools/` и `specs/`;
-- versioned Skill sources в `skill-sources/` и recoverable runtime sync в `~/.agents/skills`;
-- отсутствие прежних параллельных source/installed trees;
-- runtime-safe Git allowlist: auth, config, secrets, sessions, SQLite, cache и plugins игнорируются;
-- project global links обновлены в отдельных migration-ветках; project roots остаются в `~/codex-workspace`;
-- Receipt-specific Calm Blue UI перенесён из глобального `DESIGN.md` в `receipt-scanner-ua/docs/CALM_BLUE_UI.md`; канонический проектный `docs/DESIGN.md` сохранён и явно определяет приоритеты интеграции;
-- 11 атомарных project commits; `ai-mix` не требовал ссылочной правки;
-- исходные merge-state/dirty worktrees сохранены без изменений.
+- active global instruction source — `~/.codex/AGENTS.md`;
+- runtime state, credentials, sessions, caches, downloaded plugins и machine-local config не входят в tracked global context;
+- versioned custom Skill sources находятся в `skill-sources/`, runtime projection — в `~/.agents/skills`;
+- project root определяется независимо, а глобальный framework не ведёт live inventory потребителей;
+- `docs/AI_STATUS.md` — единственный текущий status source; `docs/AI_PLAN.md` — единственный текущий plan source;
+- новые дополнительные долговечные `.md` размещаются в `docs/notes/`, если содержание нельзя включить в существующий canonical document;
+- external Notion/Eraser/Figma projections не заменяют Git source of truth.
 
 ## Verification evidence
 
-- unit suite с `tools.test_sync_global_skills` — 40/40 PASS;
-- `py -3 -B tools/validate_context.py` — PASS, 257 managed files после удаления project-specific global `DESIGN.md`;
-- `py -3 -B tools/validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex` — PASS;
-- `hooks.json`, active и recommended TOML — parse PASS;
-- Git ignore probes для auth/config/sessions/logs/plugins/runtime rules/system Skills — PASS;
-- 12 project repositories: overlay PASS во всех migration-ветках; pre-existing product gate limitations сохранены отдельно;
-- stale global link audit migration-веток — PASS; новых `CONFLICT` и exact-global-duplicate нет;
-- защищённые и грязные checkout’ы получат ссылочные изменения только после явно разрешённого merge.
+После изменения глобального контекста обязательны `validate_context.py`, `validate_global_codex.py`, unit suite и проверка runtime Skill parity. Фактические команды и результаты фиксируются в handoff текущей задачи.
 
 ## Известные ограничения
 
-- прежний placeholder `dune-rts` не являлся Git repository; уникальный тестовый контракт объединён с `backlog/dune2-bot.md`, исходник архивирован;
-- project overlay gaps устранены в отдельных `chore/full-governance-migration` ветках и проверяются до merge;
-- основной worktree `receipt-scanner-ua` и `Task_21.07_Svelte` остаётся в незавершённом merge;
-- active `~/.codex` и runtime Skills validator проходят без drift;
-- machine-local root artifacts и старый root Node bundle сохранены в `~/.codex-local/workspace-legacy-20260824`;
-- legacy `codex-workspace/.git` остаётся единственным некарантинированным элементом из-за защищающего ACL и требует действия владельца;
-- временные worktrees и backup refs сохранены для последующего merge/проверки.
+- forward-only правило `docs/notes/` не переносит legacy files автоматически;
+- semantic classification существующего документа требует отдельного content/link audit;
+- внешняя визуализация может отставать от Git и должна обновляться как derived projection.
+- tracked `presets/`, `backlog/` и `skill-sources/dev-karkas/references/PROJECT_REGISTRY.md` остаются предметом отдельного decontamination audit из нового prompt; они не являются автоматически загружаемым active governance, но пока не соответствуют его целевой repository boundary.
 
 ## Следующее действие
 
-После отдельного разрешения интегрировать project migration-ветки, повторить gates на целевых branches и только затем удалить временные worktrees/migration backup.
+Сохранять project-agnostic boundary и применять новый Markdown layout при создании будущего контекста.

@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 from tools.normalize_user_codex import ConcurrentConfigUpdateError, normalize_text, write_atomic
-from tools.validate_global_codex import managed_files, validate_global_codex
+from tools.validate_global_codex import documentation_layout_issues, managed_files, validate_global_codex
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -155,6 +155,13 @@ trust_level = "trusted"
 
     def test_clean_installed_layer_passes(self) -> None:
         self.assertEqual(set(), self.issue_codes())
+
+    def test_missing_document_layout_policy_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            (workspace / "AGENTS.md").write_text("docs/notes/<topic>.md\n", encoding="utf-8")
+            issues = documentation_layout_issues(workspace)
+            self.assertIn("missing-document-layout-policy", {issue.code for issue in issues})
 
     def test_drift_is_reported(self) -> None:
         (self.codex_home / "hooks/session_context.py").write_text("drift\n", encoding="utf-8")
