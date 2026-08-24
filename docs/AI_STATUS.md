@@ -21,7 +21,14 @@
 
 ## Verification evidence
 
-После изменения глобального контекста обязательны `validate_context.py`, `validate_global_codex.py`, unit suite и проверка runtime Skill parity. Фактические команды и результаты фиксируются в handoff текущей задачи.
+Для dependency-policy branch подтверждены:
+
+- `py -3 -B -m unittest tools.test_validate_project_overlay tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_sync_global_skills` — PASS, 48 tests;
+- `py -3 -B tools/validate_context.py` — PASS, 189 files;
+- обновлённый project overlay validator — PASS на 12 фактических repositories, включая nested и multi-ecosystem manifests;
+- `git diff --check` — PASS.
+
+`validate_global_codex.py` до интеграции ветки показывает только ожидаемый runtime Skill drift для `bootstrap-project-framework` и `dev-karkas`: versioned sources новее активной проекции `~/.agents/skills`. Runtime sync выполняется только после merge, чтобы активная automation не опережала каноническую ветку.
 
 ## Результат decontamination
 
@@ -34,6 +41,7 @@
 
 ## Следующее действие
 
-Поддерживать dependency contract в project overlays и выполнять actual project
-migration только в отдельной repository-scoped работе с recovery point, clean restore
+После разрешённого merge синхронизировать runtime Skills, повторить
+`validate_global_codex.py` до полного PASS и далее поддерживать dependency contract
+в project overlays через repository-scoped migration с recovery point, clean restore
 и проверками.

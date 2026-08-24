@@ -1,7 +1,7 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: выполнено с сохранёнными BLOCKED-источниками
-Этап: Global governance decontamination
+Статус: dependency policy и validators реализованы; merge/runtime sync ожидают разрешения
+Этап: Dependency manager governance integration
 Дата: 2026-08-24
 
 ## Текущий ограниченный срез
@@ -28,14 +28,15 @@ checks. Не выполнять migration product repositories этим изме
 
 ## Проверки
 
-- repository manifest и context validator;
-- global Codex validator;
-- unit suite validators/sync/reconcile;
-- отсутствие drift у runtime-проекции `dev-karkas`;
-- одна локальная ветка `main` после интеграции.
+- repository manifest и context validator — PASS;
+- unit suite validators/sync/reconcile — PASS, 48 tests;
+- 12 project overlays с nested/multi-ecosystem inventory — PASS;
+- `git diff --check` — PASS;
+- runtime Skill parity и полный global validator — merge-gate: ожидаемый drift не устраняется до интеграции versioned sources.
 
 ## Следующее действие
 
-Проверить policy/validator delta, синхронизировать runtime Skill и зафиксировать
-evidence. Для снятия сохранённых `BLOCKED` требуется доказанный repository mapping
-либо отдельное разрешение на точное внешнее архивирование исходных bundles.
+После явного разрешения: слить `chore/dependency-manager-policy`, синхронизировать
+runtime Skills, повторить полный global validator и удалить временный worktree.
+Для снятия сохранённых `BLOCKED` требуется доказанный repository mapping либо
+отдельное разрешение на точное внешнее архивирование исходных bundles.
