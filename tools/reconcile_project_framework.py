@@ -138,62 +138,82 @@ def _git_tracked_paths(project: Path) -> tuple[str, ...]:
     return tuple(sorted((line.replace("\\", "/") for line in completed.stdout.splitlines()), key=str.casefold))
 
 
+def _git_visible_paths(project: Path) -> tuple[str, ...]:
+    command = [
+        "git", "-c", f"safe.directory={project}", "-C", str(project),
+        "ls-files", "--cached", "--others", "--exclude-standard",
+    ]
+    try:
+        completed = subprocess.run(
+            command, check=False, capture_output=True, text=True, encoding="utf-8"
+        )
+    except FileNotFoundError:
+        return ()
+    if completed.returncode != 0:
+        return ()
+    return tuple(sorted((line.replace("\\", "/") for line in completed.stdout.splitlines()), key=str.casefold))
+
+
 def dependency_inventory(project_path: Path) -> DependencyInventory:
     project = project_path.expanduser().resolve()
-    manifest_candidates = [
-        "package.json", "pyproject.toml", "Cargo.toml", "go.mod", "composer.json", "pubspec.yaml", "Package.swift",
-        "vcpkg.json", "conanfile.py", "conanfile.txt",
-    ]
-    manifest_candidates.extend(path.name for path in project.glob("*.csproj"))
-    manifest_candidates.extend(path.name for path in project.glob("build.gradle*"))
-    manifests = tuple(relative for relative in manifest_candidates if (project / relative).is_file())
-    lockfiles = tuple(relative for relative in (
+    visible = _git_visible_paths(project)
+    generated = GENERATED_DEPENDENCY_DIRECTORIES | {".git"}
+    visible = tuple(path for path in visible if not any(part in generated for part in Path(path).parts))
+    manifest_names = {
+        "package.json", "pyproject.toml", "Cargo.toml", "go.mod", "composer.json",
+        "pubspec.yaml", "Package.swift", "vcpkg.json", "conanfile.py", "conanfile.txt",
+    }
+    lock_names = {
         "pnpm-lock.yaml", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb",
         "uv.lock", "Cargo.lock", "go.sum", "composer.lock", "pubspec.lock", "Package.resolved", "conan.lock", "packages.lock.json",
-    ) if (project / relative).is_file())
-    manager: str | None = None
-    package_json = project / "package.json"
-    if package_json.is_file():
+    }
+    manifests = tuple(path for path in visible if Path(path).name in manifest_names or Path(path).suffix == ".csproj" or Path(path).name.startswith("build.gradle"))
+    lockfiles = tuple(path for path in visible if Path(path).name in lock_names)
+    managers: set[tuple[str, str]] = set()
+    for relative in (path for path in manifests if Path(path).name == "package.json"):
+        package_json = project / relative
+        root = Path(relative).parent
         try:
             package = json.loads(package_json.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError):
             package = {}
         pinned = package.get("packageManager") if isinstance(package, dict) else None
-        if isinstance(pinned, str) and pinned.casefold().startswith("pnpm@") or "pnpm-lock.yaml" in lockfiles:
-            manager = "pnpm"
-    if manager is None and "pyproject.toml" in manifests:
-        pyproject = (project / "pyproject.toml").read_text(encoding="utf-8-sig", errors="replace").casefold()
-        if "uv.lock" in lockfiles or "[tool.uv" in pyproject:
-            manager = "uv"
-    if manager is None and "Cargo.toml" in manifests:
-        manager = "cargo"
-    if manager is None and "go.mod" in manifests:
-        manager = "go-modules"
-    if manager is None and any(path.endswith(".csproj") for path in manifests):
-        manager = "nuget"
-    if manager is None and any(path.startswith("build.gradle") for path in manifests):
-        manager = "gradle"
-    if manager is None and "vcpkg.json" in manifests:
-        manager = "vcpkg"
-    if manager is None and ("conanfile.py" in manifests or "conanfile.txt" in manifests):
-        manager = "conan"
-    if manager is None and "composer.json" in manifests:
-        manager = "composer"
-    if manager is None and "pubspec.yaml" in manifests:
-        manager = "pub"
-    if manager is None and "Package.swift" in manifests:
-        manager = "swiftpm"
+        if isinstance(pinned, str) and pinned.casefold().startswith("pnpm@") or (root / "pnpm-lock.yaml").as_posix() in lockfiles:
+            managers.add(("pnpm", root.as_posix()))
+    for relative in (path for path in manifests if Path(path).name == "pyproject.toml"):
+        root = Path(relative).parent
+        pyproject = (project / relative).read_text(encoding="utf-8-sig", errors="replace").casefold()
+        if (root / "uv.lock").as_posix() in lockfiles or "[tool.uv" in pyproject:
+            managers.add(("uv", root.as_posix()))
+    generic = {
+        "Cargo.toml": "cargo", "go.mod": "go-modules", "composer.json": "composer",
+        "pubspec.yaml": "pub", "Package.swift": "swiftpm", "vcpkg.json": "vcpkg",
+        "conanfile.py": "conan", "conanfile.txt": "conan",
+    }
+    for relative in manifests:
+        name = Path(relative).name
+        root = Path(relative).parent.as_posix()
+        if name in generic:
+            managers.add((generic[name], root))
+        elif name.endswith(".csproj"):
+            managers.add(("nuget", root))
+        elif name.startswith("build.gradle"):
+            managers.add(("gradle", root))
+    manager = ", ".join(sorted({name for name, _ in managers})) or None
     tracked_generated = tuple(path for path in _git_tracked_paths(project) if any(part in GENERATED_DEPENDENCY_DIRECTORIES for part in Path(path).parts))
     drift: list[str] = []
-    if manager == "pnpm":
-        competing = {"package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb"}
-        if any(lockfile in competing for lockfile in lockfiles):
-            drift.append("competing-node-lockfile")
-    if manager == "uv" and "uv.lock" not in lockfiles:
-        drift.append("missing-uv-lockfile")
+    for name, root in managers:
+        prefix = "" if root == "." else f"{root}/"
+        scope = "" if root == "." else f":{root}"
+        if name == "pnpm":
+            competing = {f"{prefix}{filename}" for filename in ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb")}
+            if any(lockfile in competing for lockfile in lockfiles):
+                drift.append(f"competing-node-lockfile{scope}")
+        if name == "uv" and f"{prefix}uv.lock" not in lockfiles:
+            drift.append(f"missing-uv-lockfile{scope}")
     if tracked_generated:
         drift.append("tracked-generated-dependency-path")
-    if manager is not None:
+    if managers:
         dependency_docs = (project / "docs/DEPENDENCIES.md", project / "docs/ARCHITECTURE.md")
         documented = False
         for candidate in dependency_docs:

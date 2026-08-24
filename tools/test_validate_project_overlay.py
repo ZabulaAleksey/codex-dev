@@ -201,6 +201,26 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         self.assertIn("missing-canonical-lockfile", codes)
         self.assertIn("missing-dependency-contract", codes)
 
+    def test_nested_multi_ecosystem_dependencies_are_validated(self) -> None:
+        project = self.make_project()
+        frontend = project / "apps/frontend"
+        frontend.mkdir(parents=True)
+        (frontend / "package.json").write_text('{"packageManager":"pnpm@11.23.0"}\n', encoding="utf-8")
+        (frontend / "pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n", encoding="utf-8")
+        (frontend / "package-lock.json").write_text("{}\n", encoding="utf-8")
+        backend = project / "apps/backend"
+        backend.mkdir(parents=True)
+        (backend / "pyproject.toml").write_text("[tool.uv]\n", encoding="utf-8")
+        codes = self.issue_codes(project)
+        self.assertIn("competing-lockfile", codes)
+        self.assertIn("missing-canonical-lockfile", codes)
+        self.assertIn("missing-dependency-contract", codes)
+
+    def test_generic_manifests_require_dependency_contract(self) -> None:
+        project = self.make_project()
+        (project / "Cargo.toml").write_text("[package]\nname='demo'\nversion='0.1.0'\n", encoding="utf-8")
+        self.assertIn("missing-dependency-contract", self.issue_codes(project))
+
 
 if __name__ == "__main__":
     unittest.main()

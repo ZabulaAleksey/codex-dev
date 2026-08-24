@@ -239,25 +239,65 @@ def _dependency_documented(project: Path) -> bool:
     return False
 
 
-def _declared_manager(project: Path) -> str | None:
-    package_json = project / "package.json"
-    if package_json.is_file():
+def _git_visible_paths(project: Path) -> tuple[Path, ...]:
+    command = [
+        "git", "-c", f"safe.directory={project}", "-C", str(project),
+        "ls-files", "--cached", "--others", "--exclude-standard",
+    ]
+    try:
+        completed = subprocess.run(
+            command, check=False, capture_output=True, text=True, encoding="utf-8"
+        )
+    except FileNotFoundError:
+        return ()
+    if completed.returncode != 0:
+        return ()
+    paths: list[Path] = []
+    for relative in completed.stdout.splitlines():
+        candidate = project / relative
+        if any(part in GENERATED_DEPENDENCY_DIRECTORIES or part == ".git" for part in Path(relative).parts):
+            continue
+        if candidate.is_file():
+            paths.append(candidate)
+    return tuple(sorted(paths, key=lambda path: _posix_relative(path, project).casefold()))
+
+
+def _declared_managers(project: Path) -> tuple[tuple[str, Path], ...]:
+    visible = _git_visible_paths(project)
+    visible_set = {path.resolve() for path in visible}
+    managers: set[tuple[str, Path]] = set()
+    for package_json in (path for path in visible if path.name == "package.json"):
+        root = package_json.parent
         try:
             package = json.loads(package_json.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError):
             package = {}
         package_manager = package.get("packageManager") if isinstance(package, dict) else None
-        if isinstance(package_manager, str) and package_manager.casefold().startswith("pnpm@"):
-            return "pnpm"
-        if (project / "pnpm-lock.yaml").is_file():
-            return "pnpm"
-
-    pyproject = project / "pyproject.toml"
-    if pyproject.is_file():
+        if isinstance(package_manager, str) and package_manager.casefold().startswith("pnpm@") or (root / "pnpm-lock.yaml").resolve() in visible_set:
+            managers.add(("pnpm", root))
+    for pyproject in (path for path in visible if path.name == "pyproject.toml"):
+        root = pyproject.parent
         content = pyproject.read_text(encoding="utf-8-sig", errors="replace").casefold()
-        if (project / "uv.lock").is_file() or "[tool.uv" in content:
-            return "uv"
-    return None
+        if (root / "uv.lock").resolve() in visible_set or "[tool.uv" in content:
+            managers.add(("uv", root))
+    generic = {
+        "Cargo.toml": "cargo",
+        "go.mod": "go-modules",
+        "composer.json": "composer",
+        "pubspec.yaml": "pub",
+        "Package.swift": "swiftpm",
+        "vcpkg.json": "vcpkg",
+        "conanfile.py": "conan",
+        "conanfile.txt": "conan",
+    }
+    for manifest in visible:
+        if manifest.name in generic:
+            managers.add((generic[manifest.name], manifest.parent))
+        elif manifest.name.endswith(".csproj"):
+            managers.add(("nuget", manifest.parent))
+        elif manifest.name.startswith("build.gradle"):
+            managers.add(("gradle", manifest.parent))
+    return tuple(sorted(managers, key=lambda item: (item[0], _posix_relative(item[1], project).casefold())))
 
 
 def _tracked_generated_paths(project: Path) -> tuple[str, ...]:
@@ -283,23 +323,28 @@ def _ci_files(project: Path) -> Iterable[Path]:
 
 
 def _dependency_issues(project: Path) -> list[Issue]:
-    manager = _declared_manager(project)
-    if manager is None:
+    managers = _declared_managers(project)
+    if not managers:
         return []
     issues: list[Issue] = []
     exception = _dependency_exception(project)
-    if manager == "pnpm":
-        competing = ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb")
-        for relative in competing:
-            if (project / relative).is_file() and not exception:
-                issues.append(Issue("competing-lockfile", relative, "pnpm project has an undocumented competing lockfile"))
+    visible = set(_git_visible_paths(project))
+    for manager, root in managers:
+        root_relative = _posix_relative(root, project) or "."
+        if manager == "pnpm":
+            competing = ("package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "bun.lock", "bun.lockb")
+            for filename in competing:
+                candidate = root / filename
+                if candidate in visible and not exception:
+                    issues.append(Issue("competing-lockfile", _posix_relative(candidate, project), "pnpm project has an undocumented competing lockfile"))
+        elif manager == "uv" and (root / "uv.lock") not in visible:
+            issues.append(Issue("missing-canonical-lockfile", f"{root_relative}/uv.lock", "uv project requires uv.lock"))
+    if any(manager == "pnpm" for manager, _ in managers):
         for ci_file in _ci_files(project):
             content = ci_file.read_text(encoding="utf-8-sig", errors="replace")
             if re.search(r"\bnpm\s+(?:ci|install)\b", content) and not exception:
                 issues.append(Issue("manager-inconsistent-ci", _posix_relative(ci_file, project), "pnpm project CI installs with npm"))
-    elif manager == "uv":
-        if not (project / "uv.lock").is_file():
-            issues.append(Issue("missing-canonical-lockfile", "uv.lock", "uv project requires uv.lock"))
+    if any(manager == "uv" for manager, _ in managers):
         for ci_file in _ci_files(project):
             content = ci_file.read_text(encoding="utf-8-sig", errors="replace").casefold()
             if "python" in content and "uv " not in content and not exception:

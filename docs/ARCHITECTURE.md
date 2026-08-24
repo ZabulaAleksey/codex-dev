@@ -16,7 +16,7 @@ read-only validator
 детерминированный human/JSON результат
 ```
 
-`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
+`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Dependency discovery охватывает Git-visible manifests в корне и вложенных `apps/*`/`web/*`, включая multi-ecosystem repositories, но исключает ignored/generated и вложенные upstream assets. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
 
 `tools/reconcile_project_framework.py` является отдельным read-only gate перед bootstrap/refresh.
 Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility

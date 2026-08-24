@@ -49,7 +49,7 @@ Manifest и canonical lockfile являются source of truth. В project Git 
 
 ### FR-004 Drift checks
 
-Read-only project-overlay validator сообщает competing Node lockfiles для
+Read-only project-overlay validator обнаруживает Git-visible manifests в корне и вложенных project-модулях, включая несколько ecosystem в одном repository, и сообщает competing Node lockfiles для
 pnpm-declared project, missing uv lockfile для uv-declared project, tracked
 dependency/build-cache directories и отсутствие dependency source-of-truth / clean
 restore documentation, когда ecosystem определим по manifest. Reconciler показывает

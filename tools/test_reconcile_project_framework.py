@@ -154,6 +154,20 @@ class ReconciliationTests(unittest.TestCase):
         self.assertIn("competing-node-lockfile", inventory.drift)
         self.assertIn("missing-dependency-contract", inventory.drift)
 
+    def test_dependency_inventory_discovers_nested_multi_ecosystem_project(self) -> None:
+        project = self.make_project(files={
+            "apps/frontend/package.json": '{"packageManager":"pnpm@11.23.0"}\n',
+            "apps/frontend/pnpm-lock.yaml": "lockfileVersion: '9.0'\n",
+            "apps/backend/pyproject.toml": "[tool.uv]\n",
+            "apps/backend/uv.lock": "version = 1\n",
+            "go.mod": "module example.test/demo\n",
+        })
+        inventory = dependency_inventory(project)
+        self.assertEqual("go-modules, pnpm, uv", inventory.manager)
+        self.assertIn("apps/frontend/package.json", inventory.manifests)
+        self.assertIn("apps/backend/uv.lock", inventory.lockfiles)
+        self.assertIn("missing-dependency-contract", inventory.drift)
+
 
 if __name__ == "__main__":
     unittest.main()
