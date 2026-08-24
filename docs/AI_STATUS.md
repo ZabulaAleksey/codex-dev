@@ -28,7 +28,7 @@
 - обновлённый project overlay validator — PASS на 12 фактических repositories, включая nested и multi-ecosystem manifests;
 - `git diff --check` — PASS.
 
-`validate_global_codex.py` до интеграции ветки показывает только ожидаемый runtime Skill drift для `bootstrap-project-framework` и `dev-karkas`: versioned sources новее активной проекции `~/.agents/skills`. Runtime sync выполняется только после merge, чтобы активная automation не опережала каноническую ветку.
+После локальной интеграции в `main` runtime Skill `dev-karkas` синхронизирован из versioned source. Явная проверка `validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex` и runtime Skill parity — PASS; push не выполнялся.
 
 ## Результат decontamination
 
@@ -41,7 +41,6 @@
 
 ## Следующее действие
 
-После разрешённого merge синхронизировать runtime Skills, повторить
-`validate_global_codex.py` до полного PASS и далее поддерживать dependency contract
-в project overlays через repository-scoped migration с recovery point, clean restore
-и проверками.
+Поддерживать dependency contract в project overlays через repository-scoped
+migration с recovery point, clean restore и проверками; периодически повторять
+global/project validators после изменений manager или lockfile policy.

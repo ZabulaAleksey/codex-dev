@@ -1,7 +1,7 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: dependency policy и validators реализованы; merge/runtime sync ожидают разрешения
-Этап: Dependency manager governance integration
+Статус: dependency policy локально интегрирована в `main`, runtime Skills синхронизированы
+Этап: Dependency manager governance maintenance
 Дата: 2026-08-24
 
 ## Текущий ограниченный срез
@@ -32,11 +32,10 @@ checks. Не выполнять migration product repositories этим изме
 - unit suite validators/sync/reconcile — PASS, 48 tests;
 - 12 project overlays с nested/multi-ecosystem inventory — PASS;
 - `git diff --check` — PASS;
-- runtime Skill parity и полный global validator — merge-gate: ожидаемый drift не устраняется до интеграции versioned sources.
+- runtime Skill parity и полный global validator с явными `--workspace`/`--codex-home` — PASS.
 
 ## Следующее действие
 
-После явного разрешения: слить `chore/dependency-manager-policy`, синхронизировать
-runtime Skills, повторить полный global validator и удалить временный worktree.
+Периодически проверять manager/lockfile drift во внешних project repositories.
 Для снятия сохранённых `BLOCKED` требуется доказанный repository mapping либо
 отдельное разрешение на точное внешнее архивирование исходных bundles.
