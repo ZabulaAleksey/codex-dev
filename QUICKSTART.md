@@ -12,7 +12,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 py -3 .\tools\validate_context.py
 
 # 2b) Read-only проверка одного project overlay
-py -3 .\tools\validate_project_overlay.py ~\codex-workspace\projects\<project>
+py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project>
 
 # 3) Объединить предложенную конфигурацию с существующей, если она была
 notepad "$HOME\.codex\config.ai-dev-team.recommended.toml"

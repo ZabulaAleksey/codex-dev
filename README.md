@@ -111,14 +111,14 @@ py -3 .\tools\validate_context.py
 Затем проверь один независимый project overlay (команда ничего не изменяет):
 
 ```powershell
-py -3 .\tools\validate_project_overlay.py .\projects\<project>
-py -3 .\tools\validate_project_overlay.py .\projects\<project> --json
+py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project>
+py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project> --json
 ```
 
 Для brownfield repository сначала выполни read-only reconciliation gate:
 
 ```powershell
-py -3 .\tools\reconcile_project_framework.py .\projects\<project>
+py -3 .\tools\reconcile_project_framework.py ~\codex-workspace\<project>
 ```
 
 Из корня рабочего репозитория `~/codex-workspace/<project>`:
