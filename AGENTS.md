@@ -114,6 +114,18 @@ policy внутрь проекта без подтверждённой project-s
 Проект может расширять эту policy через свой `docs/FALLBACKS.md`,
 но не должен копировать глобальный контракт целиком.
 
+### Backend Developer Experience Policy
+
+<!-- AI-DEV-TEAM-BACKEND-DX-POLICY -->
+
+Для создания, аудита или изменения backend developer workflow прочитай
+`~/.codex/rules/backend-dx.md` и используй global Skill `backend-dx-audit`.
+Переиспользуй существующие package manager, task runner, test runner, ORM,
+migration и orchestration mechanisms. Project `AGENTS.md` только маршрутизирует к
+project-specific `Backend DX Delta` в `docs/project-context.md`; global policy не
+копируется. Материальные BDX requirements требуют evidence, а destructive
+DB/resource actions и production access остаются deny-by-default.
+
 ## Каскад и экономия контекста
 
 Для файловых инструкций используй каскад:

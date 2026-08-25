@@ -16,7 +16,7 @@ read-only validator
 детерминированный human/JSON результат
 ```
 
-`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Dependency discovery охватывает Git-visible manifests в корне и вложенных `apps/*`/`web/*`, включая multi-ecosystem repositories, но исключает ignored/generated и вложенные upstream assets. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
+`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Для явно объявленного `Backend DX Delta` он дополнительно проверяет applicability, project command/config/service contract, policy route, safe `.env.example`, guarded reset и generated-contract drift; проекты без delta не классифицируются эвристически. Dependency discovery охватывает Git-visible manifests в корне и вложенных `apps/*`/`web/*`, включая multi-ecosystem repositories, но исключает ignored/generated и вложенные upstream assets. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
 
 `tools/reconcile_project_framework.py` является отдельным read-only gate перед bootstrap/refresh.
 Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility
@@ -58,6 +58,21 @@ Fallback/retry/degradation contract:
 Dependency manager/cache/lockfile contract:
 
 `rules/dependency-management.md`
+
+Backend developer workflow contract:
+
+```text
+rules/backend-dx.md
+        ↓ procedural execution
+skill-sources/backend-dx-audit/SKILL.md → ~/.agents/skills/backend-dx-audit
+        ↓ project-specific facts
+docs/project-context.md / Backend DX Delta
+        ↓ read-only evidence
+tools/validate_project_overlay.py + neutral fixture tests
+```
+
+Backend DX ссылается на dependency, database/API, testing, security и fallback
+contracts, но не становится вторым владельцем их предметных инвариантов.
 
 Project-specific implementation:
 

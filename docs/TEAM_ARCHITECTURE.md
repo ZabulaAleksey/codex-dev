@@ -36,6 +36,13 @@
 
 Встроенные агенты Codex `explorer` и `worker` сохраняются и используются для общего исследования и реализации.
 
+Для Backend DX новые роли не создаются. `backend_engineer` владеет command/config/
+service/API/debug design, `database_engineer` — guarded DB lifecycle,
+`test_engineer` — tiers/isolation/CI evidence, `devops_engineer` — local services и
+readiness, `reviewer` — duplication/hidden steps/overengineering, а
+`security_reviewer` — secrets/redaction/production isolation/destructive guards.
+Процедурный entrypoint — Skill `backend-dx-audit`.
+
 ## 4. Проектные специалисты
 
 У каждого проекта есть 2–6 узких специалистов. Они находятся в `~/codex-workspace/<project>/.codex/agents/` и не засоряют остальные проекты.

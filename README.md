@@ -1,6 +1,6 @@
 # AI-команда разработки для Codex — набор для нескольких проектов
 
-Актуализировано: 2026-08-24.
+Актуализировано: 2026-08-25.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.
 
@@ -48,6 +48,9 @@
 - [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md) задаёт порядок загрузки, проектный overlay и канонические имена документов.
 - [`docs/CONTEXT_COMPATIBILITY.md`](docs/CONTEXT_COMPATIBILITY.md) используется перед добавлением agents, hooks, MCP, Skills или config.
 - [`docs/notes/AUTOMATION_EXTENSIONS.md`](docs/notes/AUTOMATION_EXTENSIONS.md) описывает опциональные расширения и условия, при которых они оправданы.
+- [`rules/backend-dx.md`](rules/backend-dx.md) задаёт адаптивный `BDX-L0..L3`
+  contract; Skill `backend-dx-audit` проектирует, проверяет и улучшает backend
+  workflow без копирования policy в product repository.
 
 Project-specific инструкции, архитектура, Skills и agents хранятся только в соответствующем project repository. Глобальный framework предоставляет schema, policies, validators и универсальные templates, но не ведёт библиотеку именованных проектов.
 
@@ -134,6 +137,7 @@ $fix-bug
 $review-change
 $explain-change
 $bootstrap-project-framework
+$backend-dx-audit
 ```
 
 ## Важное про расход лимита

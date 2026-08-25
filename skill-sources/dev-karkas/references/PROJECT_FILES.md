@@ -14,6 +14,7 @@
 | `docs/ROADMAP.md` | направления и крупные этапы | для существенного agent-driven проекта |
 | `docs/AI_PLAN.md` | ближайший исполнимый план | для существенного agent-driven проекта |
 | `docs/AI_STATUS.md` | подтверждённое текущее состояние | для существенного agent-driven проекта |
+| `docs/project-context.md` | устойчивые project facts, включая применимую Backend DX delta | для существенного project overlay; Backend DX section только при `BDX-L1..L3` |
 | `docs/DECISIONS.md` / ADR | журнал важных решений | решения имеют долгий хвост |
 | `prompts/STAGES.md` | единый detailed stage source | разработка ведётся этапами |
 | `docs/LEARNING_LOG.md` | повторно полезные выводы | есть диагностические/инженерные знания |

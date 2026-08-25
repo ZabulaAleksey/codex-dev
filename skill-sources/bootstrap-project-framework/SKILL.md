@@ -15,10 +15,11 @@ description: Создать или актуализировать проектн
 8. Спроектируй минимальную project delta: локальные инварианты, архитектурные границы, решения, контракты, security/testing по риску и самостоятельные stage prompts при реальной пользе.
 9. Перед добавлением agent, hook, MCP, Skill, config или workflow классифицируй его как `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`. Запиши нетривиальный результат в проектный `docs/CONTEXT_COMPATIBILITY.md`.
 10. Настрой в тонком `AGENTS.md` маршрутизацию от типа задачи к минимальному набору SPEC, architecture, decisions, security и tests. Не копируй глобальные правила.
-11. Для каждого этапа укажи цель, контекст, зависимости, scope, разрешённые/запрещённые файлы, tests, quality gates, DoD, acceptance artifacts и rollback/failure conditions.
-12. Проверь согласованность SPEC → contracts → stages → acceptance/tests, отсутствие дублирующих status/source-of-truth файлов и приемлемый context budget.
-13. Оформляй человекочитаемый контекст на русском языке по умолчанию; не переводи программные идентификаторы, API, команды, пути и машинные ключи.
-14. Обнови текущий status и остановись до реализации продукта, если пользователь явно не запросил код.
+11. Классифицируй backend applicability как `BDX-L0..L3`. Для `BDX-L1..L3` добавь в `docs/project-context.md` только project delta по `~/.codex/templates/BACKEND_DX_DELTA_TEMPLATE.md`; для `BDX-L0` не создавай пустой раздел.
+12. Для каждого этапа укажи цель, контекст, зависимости, scope, разрешённые/запрещённые файлы, tests, quality gates, DoD, acceptance artifacts и rollback/failure conditions.
+13. Проверь согласованность SPEC → contracts → stages → acceptance/tests, отсутствие дублирующих status/source-of-truth файлов и приемлемый context budget.
+14. Оформляй человекочитаемый контекст на русском языке по умолчанию; не переводи программные идентификаторы, API, команды, пути и машинные ключи.
+15. Обнови текущий status и остановись до реализации продукта, если пользователь явно не запросил код.
 
 ## Ограничения
 

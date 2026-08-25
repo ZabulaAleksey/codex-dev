@@ -11,3 +11,4 @@
 - [`features/global-codex-normalization.spec.md`](features/global-codex-normalization.spec.md) — безопасная синхронизация канонического и установленного пользовательского слоя Codex.
 - [`features/project-overlay-rollout.spec.md`](features/project-overlay-rollout.spec.md) — `SUPERSEDED` audit trail первого rollout project overlays; live inventory больше не хранится глобально.
 - [`features/dependency-manager-policy.spec.md`](features/dependency-manager-policy.spec.md) — canonical manager, lockfile, shared-cache и read-only drift contract.
+- [`features/backend-dx-policy.spec.md`](features/backend-dx-policy.spec.md) — адаптивный Backend DX contract, project delta, audit Skill и evidence gates.

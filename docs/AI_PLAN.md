@@ -1,41 +1,42 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: dependency policy локально интегрирована в `main`, runtime Skills синхронизированы
-Этап: Dependency manager governance maintenance
-Дата: 2026-08-24
+Статус: Backend DX реализован и локально проверен в feature-ветке; merge/push не выполнены
+Этап: Backend Developer Experience Policy integration
+Дата: 2026-08-25
 
 ## Текущий ограниченный срез
 
-Закрепить global dependency-manager policy и deterministic read-only inventory/drift
-checks. Не выполнять migration product repositories этим изменением global framework.
+Встроить один адаптивный Backend DX contract в global rules, Skills, agents,
+КАРКАС и существующий read-only project validator. Product repositories, hooks,
+dependencies и production systems не изменять.
 
-Связанная SPEC: `specs/features/dependency-manager-policy.spec.md`
-
-## Цель
-
-Фактически мигрировать накопленный project-specific контекст из глобального слоя, удалить только верифицированные исходники и закрепить project-agnostic boundary.
+Связанная SPEC: `specs/features/backend-dx-policy.spec.md`
 
 ## Выполнено
 
-1. Каждый backlog-файл полностью прочитан, дедуплицирован и перенесён в каноническую страницу идей Notion; read-back подтверждён, исходники удалены.
-2. Именованные presets классифицированы. Доказанно сопоставленные и superseded копии удалены после сверки с более свежими project-local контрактами.
-3. Универсальные правила научных вычислений, realtime audio и CRDT отделены от project-specific материала и обезличены.
-4. Неоднозначные или конфликтующие источники сохранены без удаления со статусом `BLOCKED`.
-5. `PROJECT_REGISTRY.md` очищен до schema/discovery contract без реальных project bindings.
-6. Вспомогательные Markdown-документы перенесены в `docs/notes/`; активные ссылки и validators обновлены.
-7. Установщик и документация project-named presets удалены из активной automation.
-8. Общие формы plan/status/decisions/spec index вынесены в project-agnostic `templates/`; точные дубликаты удалены из сохранённых quarantine sources.
+1. Создан канон `rules/backend-dx.md` с `BDX-L0..L3`, semantic commands,
+   `BDX-*` IDs, `BDX-GATE-01..12`, anti-patterns и clean-room contract.
+2. Добавлены thin routing, Skill `backend-dx-audit`, bounded responsibilities шести
+   existing agents и project delta template для `docs/project-context.md`.
+3. КАРКАС/bootstrap workflow учитывает Backend DX applicability без создания
+   пустого L0 section или нового runtime stack.
+4. Existing overlay validator расширен opt-in checks; neutral fixture и negative
+   cases добавлены отдельным test module без изменения принятых tests.
+5. Architecture, decision, security, testing, commands, framework, inventory,
+   learning log и roadmap documents синхронизированы.
+6. Runtime Skills `backend-dx-audit`, `bootstrap-project-framework` и `dev-karkas`
+   materialized штатным sync с recoverable backup; feature source/runtime parity PASS.
 
 ## Проверки
 
-- repository manifest и context validator — PASS;
-- unit suite validators/sync/reconcile — PASS, 48 tests;
-- 12 project overlays с nested/multi-ecosystem inventory — PASS;
-- `git diff --check` — PASS;
-- runtime Skill parity и полный global validator с явными `--workspace`/`--codex-home` — PASS.
+- `py -3 -B tools\validate_context.py` — PASS, 196 files;
+- полный validator/sync/reconcile/Backend DX unit suite — PASS, 65 tests;
+- `backend-dx-audit` quick validation и dev-karkas package validation — PASS;
+- runtime Skill parity — PASS, 9 sources;
+- `git diff --check`, conflict-marker и machine-path scans — PASS.
 
 ## Следующее действие
 
-Периодически проверять manager/lockfile drift во внешних project repositories.
-Для снятия сохранённых `BLOCKED` требуется доказанный repository mapping либо
-отдельное разрешение на точное внешнее архивирование исходных bundles.
+После явного разрешения слить `feature/backend-dx-policy` в `main`, повторить
+active `validate_global_codex.py` и удалить временный worktree. До merge active
+`main` закономерно сообщает drift двух runtime Skills относительно старых sources.

@@ -72,5 +72,9 @@ Feature SPEC
 - Если задача выбирает dependency manager, меняет lockfile, восстанавливает
   dependencies либо проверяет cache/build drift, загрузи
   `rules/dependency-management.md`.
+- Если задача создаёт, проверяет или меняет backend/runtime developer workflow,
+  command surface, config/services, database/API setup, test tiers, diagnostics
+  или local/CI parity, загрузи `rules/backend-dx.md` и используй Skill
+  `backend-dx-audit`.
 - Сквозная policy подключается только при наличии соответствующего риска;
   не загружай её автоматически для каждой простой задачи.

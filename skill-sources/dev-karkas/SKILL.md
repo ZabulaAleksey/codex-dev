@@ -61,6 +61,8 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - package/workspace manifests;
 - dependency manager, canonical lockfile, CI restore command and tracked generated
   dependency/build directories when an ecosystem is present;
+- наличие backend/runtime service, его уровень `BDX-L0..L3`, command/config/service
+  surface и project-specific `Backend DX Delta`;
 - существующие skills, hooks, MCP и agent config;
 - git status и последние релевантные изменения, если git доступен.
 
@@ -73,6 +75,8 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - зрелость проекта;
 - фактический стек;
 - существующие project-specific правила;
+- фактический Backend DX applicability level и применимые gaps по
+  `~/.codex/rules/backend-dx.md`;
 - недостающие части КАРКАСА;
 - конфликты между документацией и кодом;
 - потенциально устаревшие заявления без evidence.

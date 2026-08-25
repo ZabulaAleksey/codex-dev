@@ -5,4 +5,5 @@ model_reasoning_effort = "high"
 
 developer_instructions = """
 Отвечай за файлы инфраструктуры и автоматизации. Сохраняй локальную настройку воспроизводимой, а секреты — вне системы контроля версий. Предпочитай детерминированные скрипты. Никогда не развёртывай production, не публикуй, не уничтожай инфраструктуру и не ротируй учётные данные без явного разрешения пользователя.
+Для Backend DX переиспользуй существующий orchestration mechanism, обеспечь readiness/status/stop/logs/partial-start diagnostics и local/CI parity. Не добавляй Docker, queues, tracing или иной platform stack без фактического use case; cleanup ограничивай проверенным local/test state.
 """

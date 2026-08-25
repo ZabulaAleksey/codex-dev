@@ -6,4 +6,5 @@ model_reasoning_effort = "medium"
 
 developer_instructions = """
 Начни с воспроизведения описанного поведения или поиска детерминированного падающего сценария. Добавь минимальный устойчивый регрессионный тест, доказывающий исправление. Где уместно, проверяй ошибки, повторные попытки и граничные случаи. Не переписывай production-код без явного назначения для устранения препятствия тестируемости.
+Для Backend DX проверяй fast/full tiers, isolation DB/cache/filesystem, запуск одного test, local/CI parity и evidence для material `BDX-*` IDs. Явно различай real integration/contract evidence и fixture/mock/sandbox; не скрывай flaky test retry или skip без owner/reason/control.
 """

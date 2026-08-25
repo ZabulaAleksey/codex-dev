@@ -100,13 +100,26 @@ classification и CI clean-restore command. Следуй глобальной
 upstream/toolchain contract; exception требует причины, а migration — clean restore
 и проверки до удаления прежнего состояния.
 
-## 8. Fallback and resilience
+## 8. Backend Developer Experience
+
+Если проект содержит backend/runtime service, классифицируй его как `BDX-L1`,
+`BDX-L2` или `BDX-L3` по фактической архитектуре. Для проекта без backend используй
+`BDX-L0` и не создавай пустой раздел.
+
+Полный global contract находится в `~/.codex/rules/backend-dx.md`. Project хранит
+только `Backend DX Delta` в `docs/project-context.md`: support matrix, working root,
+toolchain/lockfile, semantic command map, config/services, API/DB/test/diagnostics,
+clean-room evidence, limitations и deviations. Используй
+`~/.codex/templates/BACKEND_DX_DELTA_TEMPLATE.md` и Skill `backend-dx-audit`; не
+копируй policy и не добавляй новый stack ради checklist.
+
+## 9. Fallback and resilience
 
 Для внешних сервисов, ускорителей, моделей, сетевых зависимостей и optional backends явно определи fallback policy.
 
 Следуй `FALLBACK_POLICY.md`.
 
-## 9. Prompts / staged implementation
+## 10. Prompts / staged implementation
 
 Если проект развивается этапами, используй `PROMPTS/` как очередь самодостаточных implementation prompts.
 
@@ -119,7 +132,7 @@ upstream/toolchain contract; exception требует причины, а migrati
 
 Следуй `PROMPT_TEMPLATE.md`.
 
-## 10. Decisions
+## 11. Decisions
 
 Фиксируй решения, когда выбор:
 
@@ -132,7 +145,7 @@ upstream/toolchain contract; exception требует причины, а migrati
 
 Запись решения должна содержать context, decision, rationale, alternatives, consequences и date/status при необходимости.
 
-## 11. Learning / development record
+## 12. Learning / development record
 
 Используй `LEARNING.md` и/или `DEV_LOG.md`, только если проект действительно получает ценность от истории:
 
@@ -143,7 +156,7 @@ upstream/toolchain contract; exception требует причины, а migrati
 
 Не превращай журнал в копию git history.
 
-## 12. Commercial/product policy
+## 13. Commercial/product policy
 
 Для коммерческого продукта при необходимости используй `COMMERCIAL_PRODUCT.md` или эквивалент для:
 
@@ -155,7 +168,7 @@ upstream/toolchain contract; exception требует причины, а migrati
 
 Не создавай его для лабораторного скрипта без коммерческого контекста.
 
-## 13. Tooling / automation
+## 14. Tooling / automation
 
 При необходимости КАРКАС может включать:
 

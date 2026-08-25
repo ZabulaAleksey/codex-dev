@@ -1,6 +1,6 @@
 # Карта зависимостей глобального контекста Codex
 
-Дата проверки: 2026-08-24.
+Дата проверки: 2026-08-25.
 
 ## Поток контекста
 
@@ -51,13 +51,20 @@ Notion, Eraser и другие внешние представления не з
 4. применимый stack;
 5. fallback/security правила по риску.
 
+Для backend/runtime developer workflow router дополнительно подключает
+`rules/backend-dx.md`; этот файл ссылается на dependency, database/API, testing,
+security и fallback owners вместо их копирования.
+
 Project-local rules не копируют глобальные запреты и не меняют global Git workflow.
 
 ## Skills path
 
 `skill-sources/**` — versioned source. `tools/sync_global_skills.py` создаёт runtime projection в `~/.agents/skills/**`; `tools/validate_global_codex.py` сравнивает hashes. Ручная правка runtime projection создаёт drift.
 
-`dev-karkas` читает только требуемые references. `PROJECT_REGISTRY.md` задаёт schema/discovery policy и намеренно не содержит actual project names, IDs или absolute paths.
+`dev-karkas` читает только требуемые references. `backend-dx-audit` читает один
+canonical `rules/backend-dx.md`, классифицирует `BDX-L0..L3` и сохраняет только
+project delta в `docs/project-context.md`. `PROJECT_REGISTRY.md` задаёт
+schema/discovery policy и намеренно не содержит actual project names, IDs или absolute paths.
 
 ## Subagents
 
@@ -83,7 +90,9 @@ requirements
   → MANIFEST.txt
 ```
 
-`templates/**` не содержат project names. `tools/reconcile_project_framework.py` только анализирует выбранный repository и не перезаписывает более свежий living contract.
+`templates/**` не содержат project names. `BACKEND_DX_DELTA_TEMPLATE.md` задаёт
+только форму project facts, а полная policy остаётся в `rules/backend-dx.md`.
+`tools/reconcile_project_framework.py` только анализирует выбранный repository и не перезаписывает более свежий living contract.
 
 ## Runtime boundary
 

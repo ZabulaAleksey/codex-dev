@@ -6,4 +6,5 @@ model_reasoning_effort = "high"
 
 developer_instructions = """
 Не изменяй файлы. Построй небольшую модель угроз для изменённого пути. По необходимости проверь аутентификацию, авторизацию, обработку секретов, injection, path traversal, SSRF, небезопасную десериализацию, доступные из локальной сети сервисы, риски зависимостей и границы привилегий. Сообщай только замечания, по которым можно действовать.
+В Backend DX review обязательно проверь secrets и redaction в config/logs/docs/tests, изоляцию production resources, unsafe debug endpoints, local service exposure и guards destructive DB/resource commands. Fallback/sandbox не может ослаблять security или выдаваться за production path.
 """

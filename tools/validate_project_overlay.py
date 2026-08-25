@@ -106,6 +106,54 @@ STALE_PATH_PATTERNS = (
     "codex-workspace\\projects\\",
 )
 
+BACKEND_DX_DELTA_HEADING = re.compile(r"(?im)^##[ \t]+Backend DX Delta[ \t]*$")
+BACKEND_DX_REQUIRED_FIELDS = (
+    "applicability level",
+    "supported local environments",
+    "canonical working directory",
+    "toolchain/runtime versions",
+    "package manager and lockfile",
+    "canonical commands",
+    "required local services",
+    "readiness/status command",
+    "ports and collision policy",
+    "config source, profiles and required variables",
+    "secret redaction/effective-config diagnostics",
+    "api docs/spec and generated-contract drift command",
+    "db migration/status/seed/reset-local commands",
+    "destructive command guard",
+    "worker/scheduler commands",
+    "external sandbox/stub/fallback modes",
+    "clean-room smoke command or documented manual scenario",
+    "project-specific quality gates",
+    "known limitations",
+    "explicit deviations from global backend dx policy",
+)
+BACKEND_DX_COMMAND_FIELDS = (
+    "bootstrap",
+    "doctor",
+    "dev",
+    "stop",
+    "check",
+    "test-fast",
+    "test-integration",
+    "build",
+    "logs",
+)
+BACKEND_DX_CORE_COMMANDS = {
+    "bootstrap", "doctor", "dev", "stop", "check", "test-fast", "logs",
+}
+SENSITIVE_ENV_KEY = re.compile(
+    r"(?i)(?:^|_)(?:API_KEY|ACCESS_KEY|TOKEN|PASSWORD|PASS|SECRET|PRIVATE_KEY|CLIENT_SECRET|DATABASE_URL)$"
+)
+SAFE_ENV_MARKERS = (
+    "${", "<", "example", "changeme", "change-me", "replace", "your_",
+    "your-", "dummy", "fake", "not-a-secret", "local", "localhost", "test",
+)
+DESTRUCTIVE_COMMAND = re.compile(r"(?i)\b(?:reset|drop|truncate|mass[ -]delete)\b")
+SAFE_RESET_SCOPE = re.compile(r"(?i)\b(?:local|test)\b")
+RESET_ENFORCEMENT = re.compile(r"(?i)\b(?:guard|deny|refus|reject|block|abort|only|fail[ -]closed)\w*\b")
+
 
 @dataclass(frozen=True)
 class Issue:
@@ -356,6 +404,189 @@ def _dependency_issues(project: Path) -> list[Issue]:
     return issues
 
 
+def _markdown_bullet_fields(content: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    pattern = re.compile(r"(?m)^[ \t]*-[ \t]+([^:\r\n]+):[ \t]*(.*)$")
+    for match in pattern.finditer(content):
+        label = re.sub(r"\s+", " ", match.group(1).strip().strip("`")).casefold()
+        fields[label] = match.group(2).strip().strip("`")
+    return fields
+
+
+def _unexplained_na(value: str) -> bool:
+    normalized = value.strip().strip("`").casefold()
+    if not normalized.startswith("n/a") and normalized != "not applicable":
+        return False
+    if normalized in {"n/a", "not applicable"}:
+        return True
+    return bool(re.search(r"(?i)\b(?:reason|if not applicable|if none|if no )\b", normalized))
+
+
+def _env_example_issues(project: Path) -> list[Issue]:
+    issues: list[Issue] = []
+    for candidate in _git_visible_paths(project):
+        if candidate.name.casefold() != ".env.example":
+            continue
+        content = candidate.read_text(encoding="utf-8-sig", errors="replace")
+        if "-----BEGIN " in content and " PRIVATE KEY-----" in content:
+            issues.append(Issue(
+                "env-example-secret",
+                _posix_relative(candidate, project),
+                ".env.example contains a private-key block",
+            ))
+            continue
+        for line in content.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            key, raw_value = stripped.split("=", 1)
+            value = raw_value.strip().strip("'\"")
+            if not SENSITIVE_ENV_KEY.search(key.strip()) or len(value) < 16:
+                continue
+            lowered = value.casefold()
+            if any(marker in lowered for marker in SAFE_ENV_MARKERS):
+                continue
+            issues.append(Issue(
+                "env-example-secret",
+                _posix_relative(candidate, project),
+                f"{key.strip()} has a credential-like value; use a safe placeholder",
+            ))
+            break
+    return issues
+
+
+def _backend_dx_issues(project: Path, workspace: Path) -> list[Issue]:
+    issues: list[Issue] = []
+    locations: list[tuple[Path, str]] = []
+    heading_occurrences = 0
+    for candidate in _project_text_files(project):
+        try:
+            content = candidate.read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            continue
+        matches = BACKEND_DX_DELTA_HEADING.findall(content)
+        if matches:
+            locations.append((candidate, content))
+            heading_occurrences += len(matches)
+
+    if not locations:
+        return issues
+
+    canonical = project / "docs/project-context.md"
+    canonical_entry = next((entry for entry in locations if entry[0] == canonical), None)
+    for path, _ in locations:
+        if path != canonical:
+            issues.append(Issue(
+                "misplaced-backend-dx-delta",
+                _posix_relative(path, project),
+                "Backend DX Delta belongs in docs/project-context.md",
+            ))
+    if heading_occurrences > 1:
+        issues.append(Issue(
+            "duplicate-backend-dx-delta",
+            "docs/project-context.md",
+            "declare one canonical Backend DX Delta",
+        ))
+    if canonical_entry is None:
+        return issues
+
+    _, content = canonical_entry
+    fields = _markdown_bullet_fields(content)
+    level_value = fields.get("applicability level", "")
+    levels = re.findall(r"\bBDX-L[0-3]\b", level_value.upper())
+    if len(levels) != 1 or "|" in level_value:
+        issues.append(Issue(
+            "invalid-backend-dx-level",
+            "docs/project-context.md",
+            "declare exactly one applicability level BDX-L1, BDX-L2 or BDX-L3",
+        ))
+    elif levels[0] == "BDX-L0":
+        issues.append(Issue(
+            "backend-dx-l0-has-delta",
+            "docs/project-context.md",
+            "BDX-L0 must not contain an empty Backend DX Delta",
+        ))
+        return issues
+
+    agents = project / "AGENTS.md"
+    agents_content = agents.read_text(encoding="utf-8-sig", errors="replace") if agents.is_file() else ""
+    if "rules/backend-dx.md" not in agents_content.replace("\\", "/").casefold():
+        issues.append(Issue(
+            "missing-backend-dx-route",
+            "AGENTS.md",
+            "route backend workflow tasks to ~/.codex/rules/backend-dx.md",
+        ))
+
+    for label in BACKEND_DX_REQUIRED_FIELDS:
+        if label not in fields:
+            issues.append(Issue(
+                "missing-backend-dx-field",
+                "docs/project-context.md",
+                f"Backend DX Delta is missing field: {label}",
+            ))
+        elif label != "canonical commands" and not fields[label]:
+            issues.append(Issue(
+                "empty-backend-dx-field",
+                "docs/project-context.md",
+                f"Backend DX Delta field has no value: {label}",
+            ))
+
+    for command in BACKEND_DX_COMMAND_FIELDS:
+        value = fields.get(command)
+        if value is None or not value or (command in BACKEND_DX_CORE_COMMANDS and value.casefold().startswith("n/a")):
+            issues.append(Issue(
+                "missing-backend-dx-command",
+                "docs/project-context.md",
+                f"declare applicable command or explained N/A: {command}",
+            ))
+
+    for label, value in fields.items():
+        if _unexplained_na(value):
+            issues.append(Issue(
+                "unexplained-backend-dx-na",
+                "docs/project-context.md",
+                f"N/A requires a project-specific reason: {label}",
+            ))
+
+    db_commands = fields.get("db migration/status/seed/reset-local commands", "")
+    reset_guard = fields.get("destructive command guard", "")
+    if DESTRUCTIVE_COMMAND.search(db_commands) and not (
+        SAFE_RESET_SCOPE.search(reset_guard) and RESET_ENFORCEMENT.search(reset_guard)
+    ):
+        issues.append(Issue(
+            "unsafe-backend-dx-reset",
+            "docs/project-context.md",
+            "destructive DB/resource command requires an enforced local/test guard",
+        ))
+
+    api_contract = fields.get("api docs/spec and generated-contract drift command", "")
+    if api_contract and not api_contract.casefold().startswith("n/a") and not re.search(
+        r"(?i)\b(?:check|verify|validate|diff|drift)\b", api_contract
+    ):
+        issues.append(Issue(
+            "missing-generated-contract-drift-check",
+            "docs/project-context.md",
+            "API/generated contract declaration needs a drift/check command",
+        ))
+
+    policy_path = workspace / "rules/backend-dx.md"
+    if policy_path.is_file():
+        normalized = re.sub(r"\s+", " ", content).casefold()
+        signature = (
+            "эта policy — единый глобальный контракт воспроизводимой, discoverable, "
+            "диагностируемой и безопасной разработки backend/runtime services"
+        ).casefold()
+        if signature in normalized:
+            issues.append(Issue(
+                "backend-dx-policy-copy",
+                "docs/project-context.md",
+                "project delta copies the canonical global policy instead of linking to it",
+            ))
+
+    issues.extend(_env_example_issues(project))
+    return issues
+
+
 def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) -> ValidationResult:
     project = project_path.expanduser().resolve()
     workspace = workspace_root.expanduser().resolve()
@@ -480,6 +711,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
             )
 
     issues.extend(_dependency_issues(project))
+    issues.extend(_backend_dx_issues(project, workspace))
     ordered = tuple(sorted(issues, key=lambda item: (item.code, item.path.casefold(), item.message)))
     return ValidationResult(str(project), not ordered, ordered)
 

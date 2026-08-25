@@ -1,6 +1,6 @@
 # Реестр файлов глобального контекста
 
-Дата проверки: 2026-08-24.
+Дата проверки: 2026-08-25.
 
 Точный пофайловый состав Git-контекста задаёт `MANIFEST.txt`. Этот документ объясняет роль каждого класса файлов; любой tracked-файл обязан одновременно присутствовать в manifest и в одной из категорий ниже.
 
@@ -26,7 +26,7 @@
 | `hooks/*.py` | bounded session context и safety checks |
 | `rules/ai-dev-team.rules` | shell command policy |
 | `rules/README.md` | router по режиму, домену, стеку и SDLC |
-| `rules/governance.md`, `rules/model-routing.md`, `rules/fallback-policy.md` | общие инженерные контракты |
+| `rules/governance.md`, `rules/model-routing.md`, `rules/fallback-policy.md`, `rules/dependency-management.md`, `rules/backend-dx.md` | общие инженерные контракты |
 | `rules/modes/*.md` | режим выполнения |
 | `rules/domains/*.md` | универсальные доменные ограничения |
 | `rules/stacks/*.md` | правила применимого технологического стека |
@@ -44,14 +44,16 @@
 | `skill-sources/<skill>/README.md` | human documentation |
 | `~/.agents/skills/<skill>/**` | runtime projection, не tracked этим repository |
 
-`tools/sync_global_skills.py` и tests обеспечивают hash parity source/runtime. Project-specific Skills принадлежат project repository.
+`tools/sync_global_skills.py` и tests обеспечивают hash parity source/runtime.
+`backend-dx-audit` является procedural consumer канонического
+`rules/backend-dx.md`, а не второй копией policy. Project-specific Skills принадлежат project repository.
 
 ## Канонические документы
 
 | Путь | Роль |
 |---|---|
 | `docs/AI_STATUS.md`, `docs/AI_PLAN.md` | текущее состояние и ближайший план |
-| `docs/ARCHITECTURE.md`, `docs/SECURITY.md`, `docs/DESIGN.md` | устойчивые глобальные границы |
+| `docs/ARCHITECTURE.md`, `docs/SECURITY.md`, `docs/DESIGN.md`, `docs/TESTING.md` | устойчивые глобальные границы и verification contract |
 | `docs/PROJECT_FRAMEWORK.md` | contract project КАРКАСА |
 | `docs/CONTEXT_POLICY.md`, `docs/CONTEXT_COMPATIBILITY.md` | загрузка и reconciliation |
 | `docs/HOOK_POLICY.md`, `docs/MCP_CATALOG.md` | governance hooks/MCP |
@@ -80,7 +82,7 @@
 | `specs/system.spec.md` | system contract глобального framework |
 | `specs/README.md` | индекс SPEC |
 | `specs/features/*.spec.md` | проверяемая история изменения framework |
-| `templates/*.md` | project-agnostic формы SPEC, AI plan/status, decisions и журналов |
+| `templates/*.md` | project-agnostic формы SPEC, AI plan/status, decisions, журналов и Backend DX delta |
 
 Historical `SUPERSEDED` SPEC сохраняет audit trail, но не управляет новой реализацией.
 

@@ -41,6 +41,23 @@ Implementation → tests → state update
 
 Stage prompts могут храниться в `prompts/`, если проекту нужна библиотека самостоятельных этапов. Они не заменяют SPEC, ROADMAP или текущий `AI_PLAN`.
 
+### Backend DX profile
+
+Во время bootstrap/audit определи, содержит ли project backend/runtime service, и
+классифицируй его по `~/.codex/rules/backend-dx.md`:
+
+- `BDX-L0` — backend отсутствует; пустой Backend DX section не создаётся;
+- `BDX-L1` — basic backend;
+- `BDX-L2` — stateful/integrated backend;
+- `BDX-L3` — distributed/production-critical backend.
+
+Для `BDX-L1..L3` заполни только project-specific delta из
+`~/.codex/templates/BACKEND_DX_DELTA_TEMPLATE.md` в `docs/project-context.md`.
+Project `AGENTS.md` маршрутизирует backend workflow к delta, global policy и Skill
+`backend-dx-audit`, но не копирует их. Existing command/tooling stack остаётся
+source of truth; applicability не используется как повод добавить Docker, БД,
+OpenAPI, queue или tracing.
+
 ### Каталог дополнительных Markdown-файлов
 
 До создания нового документа определи его роль. Если содержание относится к существующим SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `AI_PLAN.md`, `AI_STATUS.md`, `ROADMAP.md` или другому каноническому контракту, обнови этот источник вместо создания параллельного файла.
@@ -77,11 +94,12 @@ implementation/tests фактическое состояние и доказат
 10. Определи dependency ecosystem и зафиксируй canonical manager, manifest,
     lockfile, штатный cache/store, project-local materialization, cleanup, CI clean
     restore и exception rationale по `rules/dependency-management.md`.
-11. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
-12. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
-13. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
-14. Зафиксируй текущее состояние и следующий этап.
-15. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
+11. Классифицируй Backend DX как `BDX-L0..L3`; для `BDX-L1..L3` добавь только delta в `docs/project-context.md`.
+12. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
+13. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
+14. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
+15. Зафиксируй текущее состояние и следующий этап.
+16. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
 
 Готовый overlay проверяется без изменений repository:
 

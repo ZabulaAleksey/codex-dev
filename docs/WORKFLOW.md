@@ -52,6 +52,14 @@ Feature flag, benchmark, ADR и план отката добавляй проп�
 
 Перед `STANDARD` или `COMPLEX` задачей определи режим, этап SDLC, домен, стек и соответствующую SPEC. Загружай только относящиеся к задаче файлы из `rules/` согласно `rules/README.md`.
 
-## H. Завершение этапа
+## H. Backend developer workflow
+
+Для bootstrap, audit или изменения backend command/config/service/API/DB/test DX
+используй `rules/backend-dx.md` и Skill `backend-dx-audit`. Project facts хранятся
+только как `Backend DX Delta` в `docs/project-context.md`. Завершение требует
+применимых `BDX-GATE-01..12` с command evidence; `N/A` без причины и fixture/mock
+как production evidence запрещены.
+
+## I. Завершение этапа
 
 Этап считается завершённым, когда выполнены критерии приёмки, пройдены релевантные проверки, проведён требуемый review, а SPEC и проектная документация отражают фактическое состояние. Только после проверенной интеграции обновляй `docs/AI_STATUS.md` как завершённый результат. Merge и push выполняются только в рамках явного разрешения пользователя и Git-правил проекта.

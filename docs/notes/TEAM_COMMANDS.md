@@ -38,6 +38,15 @@ $implement-stage
 Используй docs_researcher. Проверь актуальную официальную документацию <технология>, совместимость с нашим стеком и предложи минимальный эксперимент. Не добавляй зависимость.
 ```
 
+## Проверить или улучшить Backend DX
+
+```text
+$backend-dx-audit
+Классифицируй project как BDX-L0..L3, составь gap matrix, сопоставь semantic
+commands с existing tooling и проверь применимые BDX-GATE-01..12. Не добавляй
+новый stack без доказанного gap и не выполняй destructive/production actions.
+```
+
 ## Проверить изменение
 
 ```text

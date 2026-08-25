@@ -97,6 +97,9 @@ domain requirement → data contract → canonical schema/model
 - Выбор manager, manifest/lockfile, штатного shared cache/store, clean restore и
   documented exception регулирует [`dependency-management.md`](dependency-management.md).
   Не коммить dependency trees или rebuildable caches без stack-specific contract.
+- Backend/runtime project классифицирует developer workflow по
+  [`backend-dx.md`](backend-dx.md). `BDX-L1..L3` хранит только project delta в
+  `docs/project-context.md`; `BDX-L0` не создаёт пустой section.
 - Performance change требует baseline → profile → targeted optimization → correctness parity → benchmark → regression guard.
 - Model routing и global reusable agents не дублируются в project overlays.
 

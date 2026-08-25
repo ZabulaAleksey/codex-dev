@@ -8,6 +8,7 @@
 - read-only project-overlay validator;
 - canonical Fallback Policy;
 - canonical Node package-management policy;
+- canonical Backend Developer Experience Policy и audit Skill;
 - отделение состояния ДЕВ от live-состояния product repositories.
 
 ## Дальнейшие направления

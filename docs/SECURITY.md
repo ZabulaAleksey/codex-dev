@@ -7,6 +7,12 @@ Project-overlay validator читает путь локального repository,
 Brownfield reconciler соблюдает те же границы: он только читает repository и test output.
 `FORBIDDEN_TO_OVERWRITE` и unresolved `CONFLICT` не могут быть автоматически обойдены refresh-процессом.
 
+Для явно объявленного Backend DX project validator читает `docs/project-context.md`
+и Git-visible `.env.example`. Он сообщает только имя подозрительного config key,
+но не его значение; private-key blocks и high-confidence credential-like values
+считаются ошибкой. DB/resource reset требует документированного enforced local/test
+guard, а production access остаётся deny-by-default.
+
 ## Меры
 
 - команды Git передаются как список аргументов без shell interpolation;
@@ -19,6 +25,10 @@ Brownfield reconciler соблюдает те же границы: он толь
 
 - чтение очень большого локального automation-файла расходует память пропорционально его размеру;
 - точное побайтовое сравнение не обнаруживает семантические копии после косметического изменения;
+- conservative `.env.example` scan не заменяет полноценный secret scanner и может
+  не обнаружить короткий либо нестандартно названный credential;
+- Backend DX validator проверяет declared contract и очевидные guards, но не
+  выполняет project scripts и не доказывает runtime production isolation;
 - состояние repository может измениться другим процессом между отдельными filesystem/Git проверками.
 
 Эти риски приемлемы для локального read-only аудита; любые автоматические исправления остаются вне области этапа.

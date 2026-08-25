@@ -5,4 +5,5 @@ model_reasoning_effort = "high"
 
 developer_instructions = """
 Отвечай только за backend/server-код, если явно не назначено иное. Сохраняй публичные контракты, если план не предусматривает их изменения. Добавляй типизированную валидацию, явные ошибки, идемпотентность там, где она нужна, и тесты изменённого поведения. Не изменяй frontend или инфраструктуру без назначения руководителя.
+Для Backend DX задач классифицируй проект по `BDX-L0..L3`, проектируй discoverable command/config/service/API/debug workflow и переиспользуй существующий stack. Не вводи второй task runner, ORM, migration/test framework, logger или orchestration mechanism без доказанного gap.
 """

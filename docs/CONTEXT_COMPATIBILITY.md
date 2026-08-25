@@ -29,6 +29,21 @@
 Read-only implementation: `tools/reconcile_project_framework.py`. Baseline failures записываются
 отдельно; после refresh новые failures считаются regression.
 
+### Решение 2026-08-25 — Backend Developer Experience Policy
+
+| Возможность | Что уже есть | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Dependency/toolchain reproducibility | dependency policy и nested read-only inventory | связать install/toolchain/lockfile с backend command/evidence contract | `INHERITED` | `rules/dependency-management.md`; Backend DX только ссылается |
+| Database/API/testing/security/fallback | governance, domain rules и dev-karkas references | объединить их в применимый developer workflow без второго доменного канона | `EXTEND` | `rules/backend-dx.md` с явными ссылками на существующих владельцев |
+| Backend audit workflow | generic `dev-karkas` и project validator | classification `BDX-L0..L3`, gap matrix, clean-room evidence | `EXTEND` | `skill-sources/backend-dx-audit/SKILL.md` |
+| Project Backend DX facts | `docs/project-context.md` и thin `AGENTS.md` | reusable delta без копирования global policy | `EXTEND` | `templates/BACKEND_DX_DELTA_TEMPLATE.md` → project `docs/project-context.md` |
+| Backend DX validation | deterministic read-only overlay validator | opt-in checks с низким false-positive profile | `EXTEND` | `tools/validate_project_overlay.py` и unit fixtures |
+| Hooks / task runners / runtime stack | existing extension points либо project tooling | policy не должна создавать второй framework | `INHERITED` | без новых hooks/dependencies; project tooling переиспользуется |
+
+Новая policy остаётся project-agnostic. Product repositories, их ports/endpoints,
+credentials и live status этим изменением не модифицируются. Именованные legacy
+presets остаются неактивным `BLOCKED` quarantine и не подключаются к Backend DX.
+
 ### Решение 2026-08-20 — reconciliation automation
 
 | Возможность | Что уже есть | Потребность | Статус | Канонический источник |

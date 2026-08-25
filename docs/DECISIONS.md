@@ -1,5 +1,22 @@
 # Существенные решения
 
+## 2026-08-25 — Один канонический Backend DX contract с opt-in validation
+
+- Решение: полный Backend Developer Experience contract хранится только в
+  `rules/backend-dx.md`; `AGENTS.md` и framework docs содержат routing, Skill —
+  процедуру, project `docs/project-context.md` — только delta.
+- Applicability: `BDX-L0..L3` определяется фактической архитектурой. Validator не
+  угадывает backend по Python/Node manifests и включается только при явном
+  `## Backend DX Delta`.
+- Автоматизация: расширяется существующий read-only project validator; новый hook,
+  task runner, runtime dependency и devops/platform role не создаются.
+- Причина: policy должна выявлять hidden setup, unsafe reset, stale config/docs и
+  CI drift без создания второго framework или false positives для non-backend
+  проектов.
+- Последствия: reusable template хранится в `templates/`, runtime Skill синхронизируется
+  штатным source/runtime flow, а fixture evidence доказывает только framework
+  contract и не считается production clean-room evidence конкретного backend.
+
 ## 2026-08-20 — Brownfield Reconciliation Gate
 
 - Решение: перед bootstrap/refresh классифицировать repository и для brownfield выполнять отдельный read-only reconciliation.
