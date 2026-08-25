@@ -1,14 +1,14 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: Backend DX реализован и локально проверен в feature-ветке; merge/push не выполнены
-Этап: Backend Developer Experience Policy integration
+Статус: Backend DX локально слит в `main`, runtime Skills синхронизированы; push не выполнен
+Этап: Backend Developer Experience Policy integration — завершён
 Дата: 2026-08-25
 
 ## Текущий ограниченный срез
 
-Встроить один адаптивный Backend DX contract в global rules, Skills, agents,
-КАРКАС и существующий read-only project validator. Product repositories, hooks,
-dependencies и production systems не изменять.
+Поддерживать один адаптивный Backend DX contract в global rules, Skills, agents,
+КАРКАС и существующем read-only project validator. Product repositories, hooks,
+dependencies и production systems этой интеграцией не изменены.
 
 Связанная SPEC: `specs/features/backend-dx-policy.spec.md`
 
@@ -24,8 +24,9 @@ dependencies и production systems не изменять.
    cases добавлены отдельным test module без изменения принятых tests.
 5. Architecture, decision, security, testing, commands, framework, inventory,
    learning log и roadmap documents синхронизированы.
-6. Runtime Skills `backend-dx-audit`, `bootstrap-project-framework` и `dev-karkas`
-   materialized штатным sync с recoverable backup; feature source/runtime parity PASS.
+6. Commit `17debb4` fast-forward слит в локальную `main`; remote не изменялся.
+7. Runtime Skills `backend-dx-audit`, `bootstrap-project-framework` и `dev-karkas`
+   materialized штатным sync из active `main`; source/runtime parity PASS.
 
 ## Проверки
 
@@ -34,9 +35,11 @@ dependencies и production systems не изменять.
 - `backend-dx-audit` quick validation и dev-karkas package validation — PASS;
 - runtime Skill parity — PASS, 9 sources;
 - `git diff --check`, conflict-marker и machine-path scans — PASS.
+- active `validate_global_codex.py` — `BLOCKED` только прежним
+  `unmatched-browser-client-hash`; Backend DX/runtime Skill diagnostics отсутствуют.
 
 ## Следующее действие
 
-После явного разрешения слить `feature/backend-dx-policy` в `main`, повторить
-active `validate_global_codex.py` и удалить временный worktree. До merge active
-`main` закономерно сообщает drift двух runtime Skills относительно старых sources.
+Обязательных этапов интеграции Backend DX больше нет. Следующее возможное действие —
+отдельный opt-in audit выбранного product repository через `$backend-dx-audit`.
+`unmatched-browser-client-hash` относится к отдельной maintenance-задаче runtime Browser.

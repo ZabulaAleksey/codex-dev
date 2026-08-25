@@ -33,11 +33,12 @@ py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_
 python -X utf8 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skill-sources/backend-dx-audit
 powershell -NoProfile -ExecutionPolicy Bypass -File skill-sources/dev-karkas/scripts/validate.ps1
 py -3 -B tools\sync_global_skills.py --source skill-sources --destination ~/.agents/skills
+py -3 -B tools\sync_global_skills.py --apply --source skill-sources --destination ~/.agents/skills
 git diff --check
 ```
 
-Локальный результат до commit: context validation — 196 файлов; полный suite —
-65 тестов; Skill/package validation и runtime parity — PASS.
+Локальный результат после commit и fast-forward merge: context validation — 196
+файлов; полный suite — 65 тестов; Skill/package validation и runtime parity — PASS.
 
 ### Решения и trade-offs
 
@@ -50,11 +51,12 @@ git diff --check
 
 ### Проблемы и способы исправления
 
-- Runtime Skills синхронизированы из feature worktree до merge. Поэтому validator
-  активной `main` временно видит drift двух ранее существовавших Skills; после
-  разрешённого merge нужно повторить active-global validation.
-- Исходный `unmatched-browser-client-hash` исчез после внешнего изменения runtime
-  state. Интеграция Backend DX не заявляет этот baseline-сигнал своим исправлением.
+- После checkout слитых sources active `main` временно отличалась от runtime-копий
+  трёх Skills на уровне materialized content. Штатный sync с `--apply` восстановил
+  parity 9/9; после merge всегда проверяй parity именно из active source.
+- `unmatched-browser-client-hash` остаётся внешним baseline-сигналом runtime Browser.
+  Он блокирует общий global validator, но не связан с Backend DX и требует отдельной
+  maintenance-задачи вместо молчаливого расширения текущего scope.
 
 ### Как повторить самостоятельно
 
