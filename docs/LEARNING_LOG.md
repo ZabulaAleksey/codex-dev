@@ -31,8 +31,9 @@ python -X utf8 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py s
 git diff --check
 ```
 
-Результат feature branch: context validation — 197 files; unit suite — 70 tests;
-обе Skill-проверки и diff check — PASS. Runtime parity проверяется после merge из active source.
+Результат target `main`: context validation — 197 files; unit suite — 70 tests;
+обе Skill-проверки и diff check — PASS; runtime parity — 9/9. Global validator
+`BLOCKED` только прежним `unmatched-browser-client-hash` без documentation/Skill drift.
 
 ### Как повторить самостоятельно
 

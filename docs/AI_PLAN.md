@@ -1,8 +1,8 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: Completion Documentation Synchronization Gate реализован и validated в
-`chore/documentation-sync-gate`; merge и runtime materialization не выполнены
-Этап: обязательная синхронизация документации при task/stage/merge closeout — готов к интеграции
+Статус: Completion Documentation Synchronization Gate fast-forward слит в локальную `main`,
+runtime Skills синхронизированы; push не выполнен
+Этап: обязательная синхронизация документации при task/stage/merge closeout — завершён
 Дата: 2026-08-26
 
 ## Текущий ограниченный срез
@@ -23,6 +23,9 @@ target branch.
    README capabilities и неподтверждённые merge/release/deploy claims.
 5. README, roadmap, decision, compatibility, framework и learning sources синхронизированы.
 6. Добавлен отдельный structural contract test без изменения принятых tests.
+7. Feature commit `b4d8565` fast-forward слит в локальную `main`.
+8. Runtime Skills `dev-karkas` и `implement-stage` materialized из active `main`;
+   source/runtime parity — PASS, 9 sources.
 
 ## Проверки
 
@@ -31,23 +34,23 @@ target branch.
 - `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
 - `quick_validate.py` для `dev-karkas` и `implement-stage` через штатный `python` — PASS;
 - `git diff --check` и conflict-marker scan — PASS;
-- feature-worktree `validate_global_codex.py` — ожидаемо `BLOCKED` drift трёх ещё не
-  materialized sources; active `main` сохраняет только прежний
-  `unmatched-browser-client-hash`.
+- target `main` source/runtime parity — PASS, 9 sources;
+- target `main` `validate_global_codex.py` — `BLOCKED` только прежним
+  `unmatched-browser-client-hash`; documentation/Skill drift отсутствует.
 
 ## Documentation audit
 
 - Обновлены: root и `dev-karkas` README, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, system SPEC,
   governance, decisions, compatibility, framework/workflow/testing, learning log, Skills,
   AI templates, validator inventory и contract tests.
-- Проверены без изменений: `ARCHITECTURE.md`, `DESIGN.md`, `SECURITY.md`; их
-  архитектурные, UI и security-факты этим этапом не изменены.
+- После merge повторно обновлены `AI_PLAN`, `AI_STATUS` и merge evidence в learning log.
+- На target `main` проверены без дополнительных изменений: root/Skill README, `ROADMAP`,
+  system SPEC, governance, decisions, compatibility, framework/workflow/testing,
+  `ARCHITECTURE.md`, `DESIGN.md` и `SECURITY.md`.
 - Не используются этим repository: `prompts/STAGES.md`, `TRACEABILITY.md`, `CHANGELOG.md`,
   `DEV_LOG.md`; параллельные placeholders не создавались.
 
 ## Следующее действие
 
-После явного разрешения пользователя слить `chore/documentation-sync-gate` в `main`,
-синхронизировать runtime `dev-karkas` и `implement-stage`, повторить global validator и
-Completion Documentation Synchronization Gate по target branch. Browser hash repair остаётся
-отдельной maintenance-задачей.
+Обязательных действий по Completion Documentation Synchronization Gate больше нет.
+Следующая возможная задача — отдельный repair `unmatched-browser-client-hash` runtime Browser.
