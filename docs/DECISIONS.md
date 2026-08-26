@@ -1,5 +1,17 @@
 # Существенные решения
 
+## 2026-08-26 — Обязательный documentation audit без формального churn
+
+- Решение: перед завершением task/stage и после merge всегда выполнять Completion
+  Documentation Synchronization Gate для `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`,
+  stage tracker и других state-bearing документов.
+- Причина: условное «обновить документацию при необходимости» не выявляло stale plan/status,
+  старое verification evidence и возможности README, уже не совпадающие с кодом.
+- Альтернатива: обновлять все документы и даты после каждой задачи; отклонена, потому что
+  создаёт шум и скрывает содержательные изменения.
+- Последствия: аудит обязателен, mutation зависит от фактов; после merge gate повторяется по
+  target branch, а handoff различает обновлённые и проверенные без изменений документы.
+
 ## 2026-08-25 — Один канонический Backend DX contract с opt-in validation
 
 - Решение: полный Backend Developer Experience contract хранится только в

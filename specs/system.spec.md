@@ -1,7 +1,7 @@
 # Системная спецификация AI Dev Team Codex
 
 Статус: Действует
-Версия: 1.0
+Версия: 1.1
 
 ## 1. Назначение
 
@@ -41,6 +41,17 @@ Codex должен загружать ближайшие инструкции и
 До refresh фиксируется baseline тестов. Pre-existing failures сохраняются отдельно; новый failure
 после refresh является regression и проваливает gate.
 
+### FR-006 Completion Documentation Synchronization Gate
+
+Перед завершением задачи или этапа и после разрешённого merge Codex должен проверить все
+существующие источники, которые описывают возможности, выполненные шаги, текущий статус и
+следующие действия. Обязательный минимум: `README.md`, `docs/AI_PLAN.md`,
+`docs/AI_STATUS.md`, `docs/ROADMAP.md`, stage tracker и затронутые канонические документы.
+
+Проверка обязательна всегда; изменение содержимого обязательно только тогда, когда изменились
+подтверждённые факты. Gate должен устранять устаревшие задачи, этапы, blockers, test evidence и
+ложные уровни интеграции, не создавая timestamp-only churn и не выдумывая evidence.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -48,7 +59,10 @@ Codex должен загружать ближайшие инструкции и
 - AC-003 Активный repository можно подключить одной ограниченной project delta без копирования generic agents и workflow.
 - AC-004 Brownfield reconciliation read-only, идемпотентен и не меняет product code или Git status.
 - AC-005 Reconciliation report содержит классификацию, compatibility matrix и различает pre-existing failures и regressions.
+- AC-006 Stage/task/merge нельзя объявить завершённым, пока state-bearing документы не проверены,
+  изменившиеся факты не синхронизированы, а неизменённые документы не признаны актуальными.
 
 ## 4. История изменений
 
 - 2026-08-13 — создана начальная системная SPEC для модели `global framework → project overlay`.
+- 2026-08-26 — добавлен обязательный Completion Documentation Synchronization Gate.

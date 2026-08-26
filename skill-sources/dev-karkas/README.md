@@ -38,6 +38,11 @@ $dev-karkas синхронизируй статус после завершён�
 
 Skill также разрешает implicit invocation через `agents/openai.yaml`.
 
+При завершении задачи или этапа Skill всегда проверяет `README`, `AI_PLAN`,
+`AI_STATUS`, `ROADMAP`, stage tracker и другие state-bearing документы по
+`references/STATUS_WORKFLOW.md`. Изменившиеся факты обновляются; точные документы
+остаются без timestamp-only churn. После merge gate повторяется по target branch.
+
 ## Что является «промптом КАРКАСА»
 
 `SKILL.md` — orchestration-инструкция: когда и как применять КАРКАС.

@@ -42,14 +42,43 @@
 
 `implemented` не означает автоматически `validated`.
 
+## Completion Documentation Synchronization Gate
+
+Перед `DONE`, commit handoff или заявлением о завершении всегда проверь существующие:
+
+- `README.md`;
+- `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`;
+- `prompts/STAGES.md` или принятый stage tracker;
+- `docs/TRACEABILITY.md`, `CHANGELOG.md`, `docs/DEV_LOG.md`, если они используются;
+- затронутые SPEC, architecture, decisions, design, security, testing, API, data,
+  dependencies и fallback documents.
+
+Проверка обязательна всегда. Меняй файл только при изменении фактов; вместо timestamp-only
+правки зафиксируй в handoff `checked, still accurate`.
+
+Ищи и устраняй stale claims:
+
+- завершённые действия в current/future plan;
+- старый указатель этапа или status `in progress`;
+- уже снятые blockers и ограничения;
+- старые test counts, команды и verification results;
+- неподтверждённые `merged`, `released`, `deployed`;
+- README-команды, возможности и ограничения, которым противоречит реализация.
+
+Gate не пройден, если изменившийся факт остался несинхронизированным или отсутствующее evidence
+заменено предположением.
+
 ## После merge / завершения этапа
 
 1. Проверь фактическое состояние target branch, если доступно.
-2. Зафиксируй выполненный stage в AI_STATUS.
-3. Удали из AI_PLAN только уже неактуальные действия, не уничтожая будущий план.
-4. Перенеси указатель на первый незавершённый этап.
-5. Если возникло новое архитектурное решение — обнови decision/design.
-6. Если выяснился повторяемый lesson — обнови LEARNING.
+2. Повтори Completion Documentation Synchronization Gate по target branch.
+3. Зафиксируй выполненный stage в AI_STATUS.
+4. Удали из AI_PLAN только уже неактуальные действия, не уничтожая будущий план.
+5. Перенеси указатель на первый незавершённый этап.
+6. Если изменились roadmap или stage tracker — синхронизируй их статусы и диапазоны.
+7. Если возникло новое архитектурное решение — обнови decision/design.
+8. Если выяснился повторяемый lesson — обнови LEARNING.
+9. В handoff перечисли обновлённые документы и проверенные документы без изменений.
 
 ## Запрет на ложную синхронизацию
 

@@ -132,7 +132,12 @@ nearest instructions
 
 Не загружай автоматически все prompts, roadmap, fixtures, logs и общую библиотеку. Маршрутизация должна быть предметной, например изменение публичного API подтягивает API-контракт, compatibility decision и contract tests, а изменение хранения — data model, security/retention rules и migration plan.
 
-После этапа обновляй только документы, чья фактическая информация изменилась. Merge может быть контрольной точкой синхронизации, но не заменяет review и явное разрешение пользователя.
+После этапа всегда проверяй `README.md`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, stage tracker и
+другие state-bearing документы по Completion Documentation Synchronization Gate из
+`rules/governance.md`. Обновляй только документы, чья фактическая информация изменилась;
+для остальных достаточно подтверждения `checked, still accurate` без timestamp-only churn.
+После merge повторяй gate по target branch. Merge остаётся контрольной точкой синхронизации,
+но не заменяет review и явное разрешение пользователя.
 
 ## Закон отсутствия дубликатов
 

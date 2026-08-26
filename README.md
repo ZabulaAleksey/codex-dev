@@ -1,6 +1,6 @@
 # AI-команда разработки для Codex — набор для нескольких проектов
 
-Актуализировано: 2026-08-25.
+Актуализировано: 2026-08-26.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.
 
@@ -48,11 +48,21 @@
 - [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md) задаёт порядок загрузки, проектный overlay и канонические имена документов.
 - [`docs/CONTEXT_COMPATIBILITY.md`](docs/CONTEXT_COMPATIBILITY.md) используется перед добавлением agents, hooks, MCP, Skills или config.
 - [`docs/notes/AUTOMATION_EXTENSIONS.md`](docs/notes/AUTOMATION_EXTENSIONS.md) описывает опциональные расширения и условия, при которых они оправданы.
+- [`rules/governance.md`](rules/governance.md) задаёт lifecycle/evidence contracts и
+  обязательный Completion Documentation Synchronization Gate.
 - [`rules/backend-dx.md`](rules/backend-dx.md) задаёт адаптивный `BDX-L0..L3`
   contract; Skill `backend-dx-audit` проектирует, проверяет и улучшает backend
   workflow без копирования policy в product repository.
 
 Project-specific инструкции, архитектура, Skills и agents хранятся только в соответствующем project repository. Глобальный framework предоставляет schema, policies, validators и универсальные templates, но не ведёт библиотеку именованных проектов.
+
+## Синхронизация завершения
+
+Перед завершением задачи или этапа всегда проверяются существующие `README.md`,
+`docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, stage tracker и другие
+документы, которые отражают выполненные шаги или текущее состояние. Изменившиеся факты
+обновляются, а точные документы остаются без timestamp-only churn. После merge эта
+проверка повторяется по target branch до фиксации merge-level status.
 
 ## Установка на Windows
 
@@ -125,7 +135,7 @@ codex mcp list
 Для большого этапа:
 
 ```text
-Реализуй следующий этап из docs/ROADMAP.md. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Обнови docs/AI_STATUS.md.
+Реализуй следующий этап из docs/ROADMAP.md. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Перед DONE проверь README, AI_PLAN, AI_STATUS, ROADMAP, stage tracker и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
 ```
 
 Или явно вызови skill:

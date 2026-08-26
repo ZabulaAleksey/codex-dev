@@ -9,6 +9,7 @@
 - canonical Fallback Policy;
 - canonical Node package-management policy;
 - canonical Backend Developer Experience Policy и audit Skill;
+- Completion Documentation Synchronization Gate для task/stage/merge closeout;
 - отделение состояния ДЕВ от live-состояния product repositories.
 
 ## Дальнейшие направления

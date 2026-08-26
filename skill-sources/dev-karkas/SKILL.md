@@ -109,6 +109,11 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - идея;
 - неизвестно / требует evidence.
 
+Перед завершением выполни Completion Documentation Synchronization Gate из
+`references/STATUS_WORKFLOW.md`: всегда проверь README, AI_PLAN, AI_STATUS, ROADMAP,
+stage tracker и другие state-bearing документы; обнови изменившиеся факты, а точные
+документы оставь без churn. После merge повтори gate по target branch.
+
 ### 7. Report
 
 В конце кратко сообщи:
@@ -116,6 +121,7 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - что изменено;
 - что проверено;
 - какие проверки не удалось выполнить;
+- какие state-bearing документы обновлены или проверены без изменений;
 - какой следующий шаг является первым ещё не выполненным.
 
 ## Notion

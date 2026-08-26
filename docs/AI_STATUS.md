@@ -1,53 +1,66 @@
 # Текущее состояние ДЕВ / КАРКАС
 
-Дата: 2026-08-25
+Дата: 2026-08-26
 
 ## Статус
 
-Глобальный ДЕВ хранится в единственном Git root `~/.codex`. Backend Developer
-Experience Policy реализована, validated и fast-forward слита в локальную `main`
-commit `17debb4`. Runtime Skills materialized из active source; push не выполнялся.
-Product repositories не изменялись.
+Completion Documentation Synchronization Gate реализован и validated в изолированной ветке
+`chore/documentation-sync-gate`. Стабильный requirement принадлежит `specs/system.spec.md`,
+каноническая policy — `rules/governance.md`, исполняемый workflow —
+`dev-karkas/references/STATUS_WORKFLOW.md`. Merge в `main` и runtime materialization ещё не
+выполнялись.
+
+## Сохраняющееся подтверждённое состояние
+
+- глобальный ДЕВ остаётся в единственном Git root `~/.codex`;
+- Backend Developer Experience Policy ранее validated и слита в active `main`;
+- product repositories этой задачей не изменялись;
+- runtime parity новых Skill sources будет проверена только после merge из active source.
 
 ## Подтверждённые инварианты
 
-- один canonical Backend DX source — `rules/backend-dx.md`;
-- applicability `BDX-L0..L3` зависит от фактической backend surface, а не от
-  желаемого stack;
-- project `AGENTS.md` остаётся thin router, а `Backend DX Delta` принадлежит
-  `docs/project-context.md`; L0 не создаёт пустой section;
-- versioned Skill source — `skill-sources/backend-dx-audit`, runtime projection —
-  `~/.agents/skills/backend-dx-audit`;
-- existing package/task/test/ORM/migration/orchestration mechanisms сохраняются;
-- destructive DB/resource actions и production access deny-by-default;
-- project validator read-only и включает Backend DX checks только при явной delta;
-- dependency, database/API, testing, security и fallback contracts сохраняют
-  собственных canonical owners.
+- перед `DONE` всегда проверяются существующие `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`,
+  stage tracker и другие документы, отражающие выполненные шаги или состояние;
+- audit обязателен, но mutation выполняется только при изменении фактов;
+- timestamp-only churn и выдуманное evidence запрещены;
+- stale actions, stage pointers, blockers, test results и capability claims должны быть
+  устранены или явно классифицированы;
+- статус `merged`, `released` или `deployed` соответствует только подтверждённому уровню;
+- после merge gate повторяется по фактическому target branch;
+- итоговый handoff различает обновлённые и проверенные без изменений документы.
 
 ## Verification evidence
 
-- `py -3 -B tools\validate_context.py` — PASS, 196 files;
-- `py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy` — PASS, 65 tests;
-- neutral `BDX-L2` clean-room fixture и 16 additional Backend DX/global contract cases — PASS;
-- `python -X utf8 ...\quick_validate.py skill-sources\backend-dx-audit` — PASS;
+- `py -3 -B tools\validate_context.py` — PASS, 197 files;
+- полный validator/sync/reconcile/Backend DX/documentation unit suite — PASS, 70 tests;
 - `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
-- `tools\sync_global_skills.py` parity — PASS, 9 sources;
-- `git diff --check`, conflict-marker, machine-specific path и tracked secret-assignment scans — PASS.
-- active `tools\validate_global_codex.py` не сообщает Backend DX или Skill drift,
-  но остаётся `BLOCKED` прежним `unmatched-browser-client-hash` runtime Browser.
+- `quick_validate.py` для `skill-sources/dev-karkas` и
+  `skill-sources/implement-stage` через штатный `python` — PASS;
+- `git diff --check` и conflict-marker scan — PASS.
+
+## Синхронизация документации
+
+- Обновлены: root и `skill-sources/dev-karkas/README.md`, `docs/AI_PLAN.md`,
+  `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `specs/system.spec.md`, `rules/governance.md`,
+  `docs/DECISIONS.md`,
+  `docs/CONTEXT_COMPATIBILITY.md`, `docs/PROJECT_FRAMEWORK.md`, `docs/WORKFLOW.md`,
+  `docs/TESTING.md`, `docs/LEARNING_LOG.md`, Skills, templates, validator inventory и
+  contract tests.
+- Проверены без изменений: `docs/ARCHITECTURE.md`, `docs/DESIGN.md`,
+  `docs/SECURITY.md`; их предметные факты не изменились.
+- Не применяются / отсутствуют: `prompts/STAGES.md`, `docs/TRACEABILITY.md`,
+  `CHANGELOG.md`, `docs/DEV_LOG.md`.
 
 ## Ограничения
 
-- fixture доказывает framework/validator contract, но не E2E или production
-  clean-room конкретного backend;
-- полный active global validator не имеет PASS из-за baseline
-  `unmatched-browser-client-hash`; эта интеграция не изменяет Browser runtime/config;
-- inactive project-specific quarantine/presets не подключены к Backend DX и не
-  изменялись.
+- До merge active `~/.codex/AGENTS.md` и runtime Skills закономерно отличаются от feature sources;
+  это не устраняется преждевременной установкой из неслитой ветки.
+- Active `main` global validator остаётся `BLOCKED` прежним
+  `unmatched-browser-client-hash`; изменение документационного workflow его не затрагивает.
+- Gate проверяет смысл human/agent review и не заявляется как автоматический semantic validator.
 
 ## Следующее действие
 
-Обязательных этапов интеграции Backend DX больше нет. Подтверждённые уровни:
-`implemented`, `validated`, `committed`, `merged locally`, `materialized globally`.
-`pushed`, `released` и `deployed` не заявляются. Product rollout выполняется только
-отдельной opt-in задачей; Browser hash repair остаётся отдельной maintenance-задачей.
+После явного разрешения слить ветку в `main`, materialize изменённые runtime Skills,
+повторить проверки и documentation gate по target branch. `pushed`, `released` и `deployed`
+не заявляются.

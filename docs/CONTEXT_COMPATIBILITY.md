@@ -10,6 +10,16 @@
 - `CONFLICT` — определения дублируются или задают несовместимое поведение; выбери один канонический источник.
 - `OBSOLETE` — возможность больше не используется и должна быть удалена отдельным согласованным изменением.
 
+## Решение 2026-08-26 — Completion Documentation Synchronization Gate
+
+| Возможность | Что уже есть | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Синхронизация завершения | conditional updates в governance и status workflow | обязательный audit README/plan/status/roadmap/stage/evidence без формального churn | `EXTEND` | `rules/governance.md`; `dev-karkas/references/STATUS_WORKFLOW.md` |
+| Hooks и внешняя automation | существующие механизмы не отслеживают семантическую актуальность docs | не добавлять недостоверную автоматическую проверку смысла | `INHERITED` | human/agent evidence gate, без нового hook или runtime dependency |
+
+Новых hooks, MCP, agents, dependencies и внешних write-интеграций не требуется. Existing
+`dev-karkas` и `implement-stage` расширяются ссылкой на один канонический gate.
+
 ## Brownfield Reconciliation Gate
 
 Для каждого brownfield bootstrap/refresh сначала создаётся read-only matrix текущего repository.

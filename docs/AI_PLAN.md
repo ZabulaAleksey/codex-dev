@@ -1,45 +1,53 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: Backend DX локально слит в `main`, runtime Skills синхронизированы; push не выполнен
-Этап: Backend Developer Experience Policy integration — завершён
-Дата: 2026-08-25
+Статус: Completion Documentation Synchronization Gate реализован и validated в
+`chore/documentation-sync-gate`; merge и runtime materialization не выполнены
+Этап: обязательная синхронизация документации при task/stage/merge closeout — готов к интеграции
+Дата: 2026-08-26
 
 ## Текущий ограниченный срез
 
-Поддерживать один адаптивный Backend DX contract в global rules, Skills, agents,
-КАРКАС и существующем read-only project validator. Product repositories, hooks,
-dependencies и production systems этой интеграцией не изменены.
+Закрепить единый обязательный audit существующих `README`, `AI_PLAN`, `AI_STATUS`,
+`ROADMAP`, stage tracker и других state-bearing документов. Проверка выполняется всегда,
+mutation — только при изменении подтверждённых фактов; после merge gate повторяется по
+target branch.
 
-Связанная SPEC: `specs/features/backend-dx-policy.spec.md`
+Связанная SPEC: `specs/system.spec.md`, `FR-006`, `AC-006`.
 
 ## Выполнено
 
-1. Создан канон `rules/backend-dx.md` с `BDX-L0..L3`, semantic commands,
-   `BDX-*` IDs, `BDX-GATE-01..12`, anti-patterns и clean-room contract.
-2. Добавлены thin routing, Skill `backend-dx-audit`, bounded responsibilities шести
-   existing agents и project delta template для `docs/project-context.md`.
-3. КАРКАС/bootstrap workflow учитывает Backend DX applicability без создания
-   пустого L0 section или нового runtime stack.
-4. Existing overlay validator расширен opt-in checks; neutral fixture и negative
-   cases добавлены отдельным test module без изменения принятых tests.
-5. Architecture, decision, security, testing, commands, framework, inventory,
-   learning log и roadmap documents синхронизированы.
-6. Commit `17debb4` fast-forward слит в локальную `main`; remote не изменялся.
-7. Runtime Skills `backend-dx-audit`, `bootstrap-project-framework` и `dev-karkas`
-   materialized штатным sync из active `main`; source/runtime parity PASS.
+1. Requirement и acceptance criterion добавлены в системную SPEC.
+2. Канонический gate добавлен в `rules/governance.md` и global `AGENTS.md`.
+3. Процедура встроена в `dev-karkas`, `implement-stage`, общий workflow и AI templates.
+4. Gate выявляет stale current/future actions, stage pointers, blockers, test evidence,
+   README capabilities и неподтверждённые merge/release/deploy claims.
+5. README, roadmap, decision, compatibility, framework и learning sources синхронизированы.
+6. Добавлен отдельный structural contract test без изменения принятых tests.
 
 ## Проверки
 
-- `py -3 -B tools\validate_context.py` — PASS, 196 files;
-- полный validator/sync/reconcile/Backend DX unit suite — PASS, 65 tests;
-- `backend-dx-audit` quick validation и dev-karkas package validation — PASS;
-- runtime Skill parity — PASS, 9 sources;
-- `git diff --check`, conflict-marker и machine-path scans — PASS.
-- active `validate_global_codex.py` — `BLOCKED` только прежним
-  `unmatched-browser-client-hash`; Backend DX/runtime Skill diagnostics отсутствуют.
+- `py -3 -B tools\validate_context.py` — PASS, 197 files;
+- полный validator/sync/reconcile/Backend DX/documentation unit suite — PASS, 70 tests;
+- `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
+- `quick_validate.py` для `dev-karkas` и `implement-stage` через штатный `python` — PASS;
+- `git diff --check` и conflict-marker scan — PASS;
+- feature-worktree `validate_global_codex.py` — ожидаемо `BLOCKED` drift трёх ещё не
+  materialized sources; active `main` сохраняет только прежний
+  `unmatched-browser-client-hash`.
+
+## Documentation audit
+
+- Обновлены: root и `dev-karkas` README, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, system SPEC,
+  governance, decisions, compatibility, framework/workflow/testing, learning log, Skills,
+  AI templates, validator inventory и contract tests.
+- Проверены без изменений: `ARCHITECTURE.md`, `DESIGN.md`, `SECURITY.md`; их
+  архитектурные, UI и security-факты этим этапом не изменены.
+- Не используются этим repository: `prompts/STAGES.md`, `TRACEABILITY.md`, `CHANGELOG.md`,
+  `DEV_LOG.md`; параллельные placeholders не создавались.
 
 ## Следующее действие
 
-Обязательных этапов интеграции Backend DX больше нет. Следующее возможное действие —
-отдельный opt-in audit выбранного product repository через `$backend-dx-audit`.
-`unmatched-browser-client-hash` относится к отдельной maintenance-задаче runtime Browser.
+После явного разрешения пользователя слить `chore/documentation-sync-gate` в `main`,
+синхронизировать runtime `dev-karkas` и `implement-stage`, повторить global validator и
+Completion Documentation Synchronization Gate по target branch. Browser hash repair остаётся
+отдельной maintenance-задачей.

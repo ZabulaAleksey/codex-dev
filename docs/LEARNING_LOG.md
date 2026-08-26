@@ -3,6 +3,46 @@
 Здесь хранятся воспроизводимые объяснения существенных изменений. Журнал не
 дублирует оперативный статус и не содержит скрытых рассуждений модели.
 
+## 2026-08-26 — синхронизация документации при завершении работы
+
+### Что изменено
+
+- В `rules/governance.md` добавлен единый Completion Documentation Synchronization Gate.
+- `dev-karkas`, `implement-stage`, общий workflow и templates теперь требуют проверять
+  README, план, статус, roadmap, stage tracker и другие документы выполнения.
+- Проверка отделена от mutation: точный документ не меняется только ради даты, но его
+  актуальность должна быть подтверждена в handoff.
+
+### Почему прежнего правила было недостаточно
+
+Формулировка «обновляй документ, если информация изменилась» предполагала, что агент уже
+обнаружил изменение. Без явного обязательного списка легко пропустить завершённую задачу в
+`AI_PLAN`, старый blocker в `AI_STATUS`, устаревшую возможность README или неверный статус
+merge/deploy. Новый gate сначала требует аудит, а затем решает, нужна ли запись.
+
+### Проверка
+
+```text
+py -3 -B tools\validate_context.py
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy
+powershell -NoProfile -ExecutionPolicy Bypass -File skill-sources\dev-karkas\scripts\validate.ps1
+python -X utf8 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skill-sources/dev-karkas
+python -X utf8 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skill-sources/implement-stage
+git diff --check
+```
+
+Результат feature branch: context validation — 197 files; unit suite — 70 tests;
+обе Skill-проверки и diff check — PASS. Runtime parity проверяется после merge из active source.
+
+### Как повторить самостоятельно
+
+1. Перед `DONE` открой diff и фактические результаты проверок.
+2. Проверь `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP` и stage tracker.
+3. Проверь затронутые SPEC, architecture, decisions, design, security и testing docs.
+4. Удали завершённые будущие шаги, снятые blockers и старое verification evidence.
+5. Не меняй точные документы ради даты; отметь их как проверенные без изменений.
+6. После merge повтори проверку по target branch и только затем фиксируй merge-level status.
+
 ## 2026-08-25 — единый Backend Developer Experience contract
 
 ### Что и зачем изменено

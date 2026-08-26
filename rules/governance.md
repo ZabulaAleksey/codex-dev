@@ -58,7 +58,40 @@
 
 `prompts/STAGES.md` — единственный detailed stage source. Стабильный stage включает status, goal, context, preconditions, dependencies, scope, out-of-scope, invariants, tasks, contracts, tests, documentation/security/performance/fallback/migration impact, DoD, verification и handoff.
 
-Stage не становится `DONE`, пока не обновлены `AI_PLAN` и `AI_STATUS`, не проверен Documentation Impact, не выполнены или явно заблокированы gates с evidence и не просмотрен Git diff.
+Stage не становится `DONE`, пока не пройден Completion Documentation Synchronization Gate,
+не выполнены или явно заблокированы остальные gates с evidence и не просмотрен Git diff.
+
+## Completion Documentation Synchronization Gate
+
+Перед объявлением задачи или этапа завершённым и после разрешённого merge всегда проводи
+аудит существующих документов, которые отражают возможности, выполненные шаги, текущее
+состояние, evidence и дальнейший план.
+
+Обязательный минимум проверки:
+
+- `README.md`;
+- `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`;
+- `prompts/STAGES.md` или другой принятый stage tracker;
+- `docs/TRACEABILITY.md`, `CHANGELOG.md` и `docs/DEV_LOG.md`, если проект их использует;
+- затронутые SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`,
+  `TESTING.md`, `API.md`, `DATA_MODEL.md`, `DEPENDENCIES.md` и `FALLBACKS.md`.
+
+Проверка обязательна, но mutation условна: меняй только документы, факты в которых действительно
+изменились. Не создавай timestamp-only churn и не переписывай точный документ ради отметки о
+проверке. В handoff или final report укажи, какие источники обновлены, а какие проверены и остались
+актуальными.
+
+Во время аудита устрани или явно классифицируй:
+
+- выполненные действия, всё ещё записанные как текущие или будущие;
+- устаревшие stage ranges, указатели следующего этапа и статусы `in progress`;
+- разрешённые blockers и ограничения, которые больше не действуют;
+- старые test counts, команды и verification evidence;
+- заявления `merged`, `released` или `deployed`, не подтверждённые target branch или внешним evidence;
+- пользовательские возможности, команды запуска и ограничения README, которым уже противоречит код.
+
+После merge повтори аудит по фактическому состоянию target branch. Предварительная синхронизация
+feature branch не доказывает, что merge-level status и следующий шаг отражены корректно.
 
 ## Contract-first и testing
 

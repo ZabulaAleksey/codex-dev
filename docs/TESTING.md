@@ -10,7 +10,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -35,6 +35,13 @@ git diff --check
 Fixture доказывает read-only deterministic contract validator-а. Он не запускает
 реальную DB, service, provider или production clean-room и не должен описываться
 как E2E конкретного product backend.
+
+## Documentation synchronization contract
+
+`tools.test_documentation_sync_policy` проверяет стабильные `FR-006` / `AC-006`,
+обязательный список state-bearing sources, routing Skills и поддержку AI templates.
+Это structural contract test: смысловую актуальность проектной документации подтверждает
+Completion Documentation Synchronization Gate, а не эвристический semantic validator.
 
 ## Evidence policy
 
