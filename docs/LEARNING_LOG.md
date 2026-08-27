@@ -50,7 +50,7 @@ caveat: structural framework contract, не product translation E2E
 command / check: py -3 -B -m unittest discover -s tools -p "test_*.py"
 result: PASS — 101 tests
 scope: полный global unit/contract suite
-caveat: active runtime integration проверяется отдельно после разрешённого merge
+caveat: internal global suite, не product translation E2E
 
 command / check: py -3 -B tools\validate_context.py
 result: PASS — 201 files
@@ -61,6 +61,16 @@ command / check: py -3 -B tools\sync_global_skills.py
 result: PASS — 9 sources
 scope: active Skill parity
 caveat: Skill sources не менялись
+
+command / check: git merge --ff-only feature/global-i18n-l10n-policy
+result: PASS — policy commit ee3ea8a integrated в локальную main
+scope: local Git integration и повторный Completion Documentation Synchronization Gate
+caveat: push, product rollout и external writes не выполнялись
+
+command / check: py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
+result: BLOCKED — только pre-existing unmatched-browser-client-hash
+scope: active global layer после merge
+caveat: i18n/l10n managed-file drift отсутствует; Browser hash не входит в scope policy
 ```
 
 ### Prevention

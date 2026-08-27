@@ -4,10 +4,10 @@
 
 ## Статус
 
-- Lifecycle: global i18n/l10n policy `completed` / `validated locally`.
-- Evidence level: feature-worktree structural consumer path и полный global test suite — PASS.
-- Integration: `feature/global-i18n-l10n-policy`; merge в active local `main`, push и external
-  writes не выполнялись.
+- Lifecycle: global i18n/l10n policy `completed`.
+- Evidence level: `merged locally`; policy commit `ee3ea8a` fast-forward integrated в active
+  `main`, полный global test suite после merge — PASS.
+- Integration: active local `main` обновлена; push и external writes не выполнялись.
 - Runtime: Skill sources, hooks, MCP, dependencies и config не менялись; active Skill parity —
   PASS, 9/9.
 
@@ -37,10 +37,10 @@ products. Product repositories наследуют contract и хранят то�
 - `py -3 -B -m unittest tools.test_i18n_l10n_policy` — PASS, 7 tests;
 - `py -3 -B tools\validate_context.py` — PASS, 201 files;
 - active `tools\sync_global_skills.py` read-enabled check — PASS, 9 sources;
-- active global validator baseline — `BLOCKED` только pre-existing
+- active global validator после merge — `BLOCKED` только pre-existing
   `unmatched-browser-client-hash`;
-- validation feature source против active unmerged layer ожидаемо сообщает
-  `managed-file-drift: AGENTS.md`; это pending integration evidence, не runtime regression;
+- fast-forward merge `96e948b → ee3ea8a` — PASS; managed-file drift между feature source и active
+  `AGENTS.md` устранён интеграцией;
 - `git diff --check` — PASS; line-ending warnings informational.
 - independent read-only re-review — PASS без blockers; P2 про отсутствие uniqueness assertion
   исправлен negative test-ом второго rules owner и копирования нормативных headings в routers.
@@ -62,15 +62,14 @@ Structural framework PASS подтверждает доставку global requi
 
 ## Ограничения
 
-- Feature ещё не integrated в `main`; active global layer продолжает использовать прежний
-  `AGENTS.md` до разрешённого merge.
 - Active global validator сохраняет pre-existing `unmatched-browser-client-hash`; policy его не
   меняет.
 - Product rollout, brownfield string migration, реальные translations и product E2E не выполнялись
   и не являются evidence текущего internal policy slice.
-- Push, branch/worktree deletion, external Ideas/Notion writes и release/deploy не выполнялись.
+- Push, external Ideas/Notion writes и release/deploy не выполнялись.
 
 ## Следующее действие
 
-После feature commit следующий уровень интеграции — merge в `main` только по явному разрешению.
-Затем Completion Documentation Synchronization Gate повторяется по target branch.
+Post-merge Completion Documentation Synchronization Gate выполнен. Обязательного следующего
+implementation stage нет; push, product rollout, Browser hash repair и external sync являются
+самостоятельными последующими действиями.

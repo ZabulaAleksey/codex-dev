@@ -1,7 +1,7 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: global i18n/l10n policy — `completed` / `validated locally` в
-`feature/global-i18n-l10n-policy`; integration в `main` не выполнялась
+Статус: global i18n/l10n policy — `completed` / `merged locally`; feature commit `ee3ea8a`
+fast-forward integrated в active `main`, push не выполнялся
 Рабочий item: межпроектный стандарт internationalization/localization для user-facing products
 Дата: 2026-08-27
 
@@ -80,10 +80,9 @@ runtime service или product rollout. Он не выдаёт structural PASS �
 - `py -3 -B -m unittest tools.test_i18n_l10n_policy` — PASS, 7 tests;
 - `py -3 -B tools\validate_context.py` — PASS, 201 files;
 - active `~/.codex` ↔ `~/.agents/skills` parity — PASS, 9/9; Skill sources не менялись;
-- active global validator baseline — `BLOCKED` только pre-existing
+- active global validator после merge — `BLOCKED` только pre-existing
   `unmatched-browser-client-hash`;
-- feature source против active unmerged layer ожидаемо показывает `managed-file-drift` для
-  `AGENTS.md`; active files не перезаписывались;
+- fast-forward merge `96e948b → ee3ea8a` — PASS; active `main` содержит policy и новый router;
 - `git diff --check` — PASS, только line-ending informational warnings.
 - independent read-only re-review — PASS без blockers; первичный P2 про uniqueness gate устранён
   отдельной negative owner/router-copy проверкой.
@@ -97,7 +96,7 @@ policy slice временных заглушек нет: policy, routes и execu
 
 ## Deferred / не входит
 
-- merge в `main`, push, branch/worktree deletion и release;
+- push и release;
 - rollout либо mass migration конкретных brownfield product repositories;
 - реальные переводы, locale switch и product E2E каждого отдельного продукта;
 - repair pre-existing Browser client hash;
@@ -117,5 +116,6 @@ policy slice временных заглушек нет: policy, routes и execu
 
 ## Следующее действие
 
-Feature slice реализован и проверен локально. После commit следующий integration level — только
-явно разрешённый merge в `main`; push и external/runtime writes не выполняются автоматически.
+Feature slice реализован, проверен и fast-forward merged в локальную `main` commit-ом `ee3ea8a`.
+Обязательного следующего implementation stage нет. Push, product rollout, Browser hash repair и
+external writes остаются отдельными действиями с собственным разрешением.
