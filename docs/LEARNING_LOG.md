@@ -3,6 +3,86 @@
 Здесь хранятся воспроизводимые объяснения существенных изменений. Журнал не
 дублирует оперативный статус и не содержит скрытых рассуждений модели.
 
+## 2026-08-27 — единый workflow без второго global source
+
+### Problem
+
+- Workflow brief предполагал canonical source `~/codex-workspace/global/codex`, хотя фактический
+  ДЕВ уже консолидирован непосредственно в `~/.codex`. Lifecycle-команды, external sync,
+  cross-device handoff, monitoring и learning format не имели одной согласованной operational
+  projection.
+
+### Symptom
+
+- Вызов `validate_global_codex.py --workspace ~/codex-workspace` завершался необработанным
+  `FileNotFoundError` на отсутствующем workspace `AGENTS.md` вместо диагностического результата.
+- Создание предполагаемого global root или нового workspace `AGENTS.md` восстановило бы два
+  sources of truth. Structural project validator также мог быть green при stale semantic links.
+
+### Root cause
+
+- Legacy option `--workspace` пережил консолидацию и не проверял наличие canonical managed source
+  перед hash digest. Политики описывали отдельные части workflow, но не назначали полный owner/
+  projection contract для новых lifecycle-сценариев.
+
+### Failed attempts
+
+- N/A — crash был воспроизведён baseline-вызовом; повторять его или обходить созданием второго
+  `AGENTS.md` не потребовалось.
+
+### Fix
+
+- Сохранён единственный global root `~/.codex`; полный contract расширен в
+  `rules/governance.md`, а восемь copy-ready запросов размещены в существующем
+  `docs/WORKFLOW.md`.
+- Validator теперь возвращает `missing-canonical-source` и продолжает формировать sorted issues.
+- LEARNING template нормализован; external services остаются explicit derived projections;
+  Skills/hooks/MCP/runtime не менялись.
+
+### Verification
+
+```text
+command / check: py -3 -B -m unittest discover -s tools -p "test_*.py"
+result: PASS — 94 tests
+scope: global tools, hooks, policies and validators
+caveat: internal policy/validator E2E, не product E2E
+
+command / check: py -3 -B tools\validate_context.py
+result: PASS — 199 files
+scope: global Git/manifest context
+caveat: semantic project links проверяются отдельно
+
+command / check: validate_global_codex.py с неверным canonical source root
+result: expected structured FAIL, no traceback
+scope: source-root failure path
+caveat: active global validator отдельно сохраняет pre-existing unmatched-browser-client-hash
+
+command / check: active Skill parity + active global validator
+result: PASS 9/9 parity; validator BLOCKED только unmatched-browser-client-hash
+scope: read-enabled installed layer ~/.codex → ~/.agents/skills вне feature worktree
+caveat: sandbox без чтения runtime дал ложный drift; синхронизация по такому сигналу запрещена
+
+command / check: electro-tutor overlay/reconciliation/SessionStart restore
+result: PASS — structural PASS, BROWNFIELD/pnpm/no dependency drift, active route audit selects TUTOR-02
+scope: один real project без старого чата
+caveat: TUTOR-01 уже завершён другим project-owned workflow; unrelated dirty work не изменялся
+```
+
+### Prevention
+
+- Негативный source-root regression test обязателен; `--workspace` документирован как legacy name
+  canonical source root. Architecture assumption сначала сверяется с installer/DECISIONS, а не
+  материализуется вслепую. Structural PASS не заменяет semantic link/status audit.
+
+### Links
+
+- [System SPEC](../specs/system.spec.md)
+- [Governance](../rules/governance.md)
+- [Operational workflow](WORKFLOW.md)
+- [Compatibility decision](CONTEXT_COMPATIBILITY.md)
+- [Global validator](../tools/validate_global_codex.py)
+- [Regression test](../tools/test_unified_project_workflow_policy.py)
+
 ## 2026-08-27 — архитектурно завершённые этапы
 
 ### Что изменено

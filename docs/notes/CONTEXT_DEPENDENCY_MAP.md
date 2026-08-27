@@ -36,8 +36,11 @@
 | Stage lifecycle/evidence | `rules/governance.md` | selected project `prompts/STAGES.md` record, AI plan/status |
 | Project facts | project repository | external projections |
 | Project bindings | внешний project-aware слой | schema `PROJECT_REGISTRY.md` |
+| Unified workflow policy | `rules/governance.md` | `docs/WORKFLOW.md`, templates, project handoff |
 
-Notion, Eraser и другие внешние представления не заменяют Git-канон.
+Notion, Airtable, Eraser, Figma и другие внешние представления не заменяют Git-канон. Их owner,
+sync direction, pending state и read-back contract определены в `rules/governance.md`; этот note
+не является второй таблицей правил.
 
 ## Hook path
 
@@ -108,6 +111,17 @@ requirements
 ## Runtime boundary
 
 Не входят в active governance: credentials, `config.toml`, sessions, SQLite, caches, downloaded plugins, attachments, logs и generated artifacts. `.gitignore` использует deny-by-default allowlist, чтобы эти данные не попали в Git.
+
+## Cross-device path
+
+```text
+Git ~/.codex → install/validate → Skill parity
+Git ~/codex-workspace/<project> → branch/status → dependencies/secrets
+project docs/evidence → restored Codex session
+```
+
+`~/codex-workspace/global/codex`, history старого чата и ручное копирование отдельных context-файлов
+не входят в supported recovery path. Полный checklist находится в `docs/WORKFLOW.md`.
 
 ## Project boundary
 

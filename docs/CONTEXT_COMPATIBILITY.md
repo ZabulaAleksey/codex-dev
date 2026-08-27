@@ -10,6 +10,25 @@
 - `CONFLICT` — определения дублируются или задают несовместимое поведение; выбери один канонический источник.
 - `OBSOLETE` — возможность больше не используется и должна быть удалена отдельным согласованным изменением.
 
+## Решение 2026-08-27 — единый project workflow без второго global layer
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Global DEV root | prompt предполагал `~/codex-workspace/global/codex`; installer и решения требуют непосредственный `~/.codex` | один переносимый Git-канон без installed-копии | `CONFLICT` → `INHERITED` | `~/.codex`; предполагаемый workspace path отклонён |
+| Runtime Skills | `skill-sources/**` materialize в `~/.agents/skills/**` и hash-проверяются | не редактировать runtime вручную | `INHERITED` | source/runtime split не меняется; Skills этой задачей не затронуты |
+| Lifecycle-команды | stage/resume Skills и разрозненные workflow sections без полного human command set | восемь copy-ready сценариев | `EXTEND` | `docs/WORKFLOW.md` как operational projection `rules/governance.md` |
+| Documentation triggers | Completion Gate существовал без полной event/action table | однозначное условие записи без timestamp churn | `EXTEND` | `rules/governance.md` |
+| Learning format | canonical log и template имели разные исторические формы | единые новые entries без переписывания истории | `CONFLICT` → `EXTEND` | governance trigger + `templates/LEARNING_LOG_TEMPLATE.md`; `docs/notes/LEARNING_LOG.md` frozen legacy |
+| External services | services объявлены projections, Notion имел intake, остальные не имели owner/sync triggers | owner, direction, pending sync и read-back | `EXTEND` | `rules/governance.md`; connector/automation не добавляются |
+| Device handoff | portable paths и clone/pull invariant существовали без исполнимого checklist | computer↔laptop restore без старого чата | `EXTEND` | governance + `docs/CONTEXT_POLICY.md` + operational `docs/WORKFLOW.md` |
+| Monitoring classes | global live inventory запрещён, классы отсутствовали | `active` / `event-driven` / `frozen` как project fact | `EXTEND` | `rules/governance.md`; project mapping, не global registry |
+| Global validator source argument | legacy `--workspace` можно было ошибочно передать как `~/codex-workspace`; missing source завершался `FileNotFoundError` | fail-visible structured diagnostic | `CONFLICT` → `EXTEND` | `tools/validate_global_codex.py`; option означает canonical source root |
+| Legacy named presets | tracked `presets/*` не входят в active router/installer и не имеют доказанного project destination | не считать вторым overlay/framework | `OBSOLETE` / `BLOCKED` quarantine | сохранить без mutation до отдельного mapping/deletion approval |
+
+Новые `AGENTS.md`, hooks, MCP, agents, Skills, dependencies и external write-интеграции не
+добавляются. Полная норма остаётся у существующих owners; project overlays получают только ссылки
+и свои facts. Текущая задача не materialize-ит uncommitted feature content в active runtime.
+
 ## Решение 2026-08-27 — архитектурно завершённые stages
 
 | Возможность | Что уже есть | Потребность | Статус | Канонический источник |

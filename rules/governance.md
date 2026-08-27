@@ -6,9 +6,32 @@
 
 1. Фактическое состояние определяют repository, текущий worktree/branch и результаты проверок.
 2. Утверждённая SPEC/ADR определяет требуемый контракт; статусные документы не могут переопределять код или evidence.
-3. Notion, Airtable, Eraser, Figma, презентации и чаты — derived projections, а не repository truth.
+3. Notion, Airtable, Eraser, Figma, презентации и чаты не переопределяют repository truth. Они
+   являются derived projections, кроме узкого внешнего артефакта, которому project mapping явно
+   назначил собственную роль и направление синхронизации.
 4. Product repository располагается непосредственно в `~/codex-workspace/<project>` и не зависит от абсолютного пути. Scripts определяют root через Git или эквивалентный безопасный механизм.
 5. Critical context должен восстанавливаться после clone/pull без старого чата и machine-local файлов.
+
+### Матрица ответственности
+
+| Тип информации | Канонический владелец | Допустимые projections |
+|---|---|---|
+| Общие правила, agents, hooks, validators и versioned Skills | Git repository `~/.codex`; Skill source — `~/.codex/skill-sources` | `~/.agents/skills` только как hash-verified runtime materialization; docs summaries |
+| Product implementation и фактическое поведение | `<project>` Git repository, текущий worktree/branch, production code и migrations | build/release artifacts, GitHub views |
+| Требования и acceptance contract | утверждённые `specs/system.spec.md` / `specs/features/*` и согласованные ADR | stage prompts, plans, issues, human summaries |
+| Архитектурные границы и решения | `docs/ARCHITECTURE.md` и `docs/DECISIONS.md` | Eraser/другие диаграммы после подтверждённого изменения |
+| Подробный stage contract | `prompts/STAGES.md` | selected record в session context, `ROADMAP` index |
+| Текущий исполнимый slice | `docs/AI_PLAN.md` | handoff/чат текущей сессии |
+| Подтверждённое состояние, blockers и следующий факт | `docs/AI_STATUS.md` | Notion/project overview, handoff |
+| Назначение, setup, запуск и публичный developer workflow | `README.md` | внешняя onboarding-страница |
+| Повторно полезная диагностика | `docs/LEARNING_LOG.md` | краткая ссылка/итог в `AI_STATUS.md` |
+| Сырая идея до approval | назначенный Notion/backlog source | `PROMPT_READY` draft; после approval контракт переносится в repository |
+| Операционный реестр | Airtable или другой сервис только при явном project mapping | repository-ссылка/schema; не product requirement |
+| UI contract | project `docs/DESIGN.md`, код и явный mapping design artifact | Figma после подтверждённого изменения; Figma не доказывает implementation |
+
+Если две поверхности претендуют на одну роль, зафиксируй `CONFLICT`, выбери владельца по типу
+информации и синхронизируй производную поверхность только после проверки фактического состояния.
+Наличие текста в чате, Notion, Figma или диаграмме не повышает lifecycle/evidence level.
 
 ## Context inheritance
 
@@ -150,6 +173,32 @@ vertical slice, обязательной инфраструктуры, PASS-кр
 После merge повтори аудит по фактическому состоянию target branch. Предварительная синхронизация
 feature branch не доказывает, что merge-level status и следующий шаг отражены корректно.
 
+### Триггеры обновления документации
+
+| Событие | Обязательное действие |
+|---|---|
+| Изменился detailed stage contract, его DAG, scope или PASS criteria | обновить единственный `prompts/STAGES.md`; `ROADMAP` и `AI_PLAN` менять только если изменились порядок или активный slice |
+| Изменился состав, порядок, dependencies или содержание текущей работы | обновить `docs/AI_PLAN.md` и ссылку на canonical stage record |
+| Выполнена работа, изменился progress, появился blocker или следующий шаг | обновить `docs/AI_STATUS.md`; `AI_PLAN` — если изменилась следующая работа |
+| Изменились назначение, setup, запуск, публичный интерфейс или user/developer workflow | обновить `README.md` |
+| Принято архитектурное решение | обновить `ARCHITECTURE.md` и/или `DECISIONS.md`; plan/status — только по затронутым фактам |
+| Возникла значимая нетривиальная ошибка с повторно полезным выводом | добавить evidence-backed запись в `LEARNING_LOG.md`; в status оставить краткий blocker и ссылку, если он активен |
+| Ошибка исправлена и проверена | дополнить ту же learning entry полями `Verification` и `Prevention`; закрыть blocker в status |
+| Выполнен разрешённый merge | повторить documentation gate по target branch; не создавать формальную правку без изменения фактов |
+| Изменился общий межпроектный стандарт | обновить его единственного global owner, связанные validators/tests и только затем projections; не копировать policy в проекты |
+
+### Контракт LEARNING_LOG
+
+Новая запись создаётся только для существенного, нетривиального и повторно полезного случая:
+диагностической ошибки, неверной архитектурной гипотезы, regression/recovery, сложной миграции или
+вывода, который предотвращает повторение проблемы. Обычный успешный task, список commits и
+оперативный progress туда не копируются.
+
+Новые entries используют ровно следующие смысловые поля: `Problem`, `Symptom`, `Root cause`,
+`Failed attempts`, `Fix`, `Verification`, `Prevention`, `Links`. Если неудачных попыток не было,
+пиши `N/A`, не выдумывай их. `Verification` содержит воспроизводимую command/check, result, scope
+и caveat. Исторические записи не переписываются задним числом только ради нового формата.
+
 ## Contract-first и testing
 
 ```text
@@ -197,7 +246,47 @@ domain requirement → data contract → canonical schema/model
 
 Используй только уровни, подтверждённые фактом: `implemented locally`, `validated locally`, `committed`, `pushed`, `PR opened`, `merged`, `released`. Для каждого gate фиксируй command/check, result, scope, commit/environment и caveat. Не запущенное обозначается `NOT RUN`, недоступное — `BLOCKED / NOT VERIFIED`.
 
-External projection синхронизируется из Git. Недоступность внешнего сервиса создаёт pending sync, но не меняет repository truth и не откатывает корректную локальную реализацию.
+Базовое направление: `canonical source → dependent projection`. До write определи владельца,
+направление, разрешение, idempotency/read-back и поведение при недоступности. Запись во внешний
+сервис не подразумевается обычным documentation update и требует действующей авторизации.
+
+| Сервис | Когда обновлять | Что не делать |
+|---|---|---|
+| GitHub | только через фактические push/PR/merge/issue/release/CI операции с требуемым approval | не повышать local evidence до pushed/merged без remote evidence |
+| Notion | после refinement/approval идеи, изменения межпроектного human context или подготовки human review | не превращать сырую идею в SPEC/DONE и не копировать полный governance |
+| Airtable | при изменении явно назначенных operational records/registry и после проверки project mapping | не использовать как скрытый источник requirements/status |
+| Eraser | после подтверждённого архитектурного изменения из repository | не обновлять после каждого локального refactor и не делать диаграмму каноном |
+| Figma | после подтверждённого изменения UI/design system и сверки `DESIGN.md`/implementation | не считать mockup evidence реализованного интерфейса |
+| Другой сервис | только после явного назначения ответственности и направления данных | не добавлять синхронизацию ради самой синхронизации |
+
+Недоступность projection создаёт `pending sync` / `BLOCKED / NOT VERIFIED`, но не меняет
+repository truth и не откатывает корректную локальную реализацию. После разрешённой записи нужен
+read-back; без него синхронизация остаётся непроверенной.
+
+## Переключение устройств и восстановление
+
+Перед сменой компьютера безопасно останови работу, проверь Git status/diff, выполни применимые
+checks и обнови `AI_STATUS` только если иначе потеряется существенное состояние. Commit и push
+выполняются лишь при явном разрешении и по Git policy; без них незакоммиченный worktree не считается
+перенесённым на другое устройство, а handoff получает явный blocker.
+
+На другом устройстве сначала восстанови/обнови Git repository глобального ДЕВ непосредственно в
+`~/.codex`, выполни штатные install/validation и Skill parity checks, затем clone/pull нужного
+`~/codex-workspace/<project>`. После проверки branch/status восстанови dependencies и локальные
+secrets штатными механизмами проекта, прочитай context по `docs/CONTEXT_POLICY.md` и продолжай
+только после согласования локального состояния с repository evidence. История чата и ручное
+копирование отдельных файлов не являются recovery path.
+
+## Классы monitoring проекта
+
+- `active` — проверки и документация обновляются во время активной разработки;
+- `event-driven` — проверки запускаются по push/PR/merge или явной команде;
+- `frozen` — автоматический monitoring выключен до явного возобновления.
+
+Класс хранится как project fact в `docs/project-context.md` либо во внешнем project mapping, но не
+в global live inventory. Он задаёт частоту проверок, не разрешает внешние writes/deploy и не
+заменяет status/evidence. Для `frozen` не расходуй автоматические проверки без явного события;
+экспериментальный проект не становится `active` автоматически.
 
 ## Context integrity validator
 

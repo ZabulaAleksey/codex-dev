@@ -10,7 +10,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -55,6 +55,18 @@ missing и ambiguous degraded-сценарии.
 Policy-часть остаётся structural contract test глобальной автоматизации, а hook-часть — internal
 E2E context-projection path. Она не валидирует семантику произвольного project
 `prompts/STAGES.md`, не исполняет product path и не превращает mocks/stubs в E2E evidence.
+
+## Unified project workflow contract
+
+`tools.test_unified_project_workflow_policy` проверяет `FR-008..009` / `AC-009..012`, единственного
+policy owner, восемь copy-ready lifecycle requests, новый LEARNING shape, external/device/monitoring
+markers и фактический `~/.codex` source root. Его executable consumer path передаёт отсутствующий
+canonical root в production validator и требует structured issues вместо traceback.
+
+Это internal policy/validator E2E, а не product E2E. Восстановление реального project repository
+проверяется отдельно read-only командами `reconcile_project_framework.py` и
+`validate_project_overlay.py` плюс semantic link/status audit; structural PASS не маскирует stale
+references.
 
 ## Evidence policy
 

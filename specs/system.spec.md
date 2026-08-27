@@ -1,7 +1,7 @@
 # Системная спецификация AI Dev Team Codex
 
 Статус: Действует
-Версия: 1.2
+Версия: 1.3
 
 ## 1. Назначение
 
@@ -80,6 +80,33 @@ Codex должен загружать ближайшие инструкции и
 Mocks, stubs, fakes и заранее подготовленные интерфейсы подтверждают только scaffold/локальный
 контракт и не являются evidence завершённого пользовательского или production-пути.
 
+### FR-008 Единый воспроизводимый workflow проекта
+
+Глобальный ДЕВ должен предоставлять один операционный workflow для начала проекта, выполнения и
+закрытия stage, архитектурного изменения, pre-merge review, паузы, возобновления и обработки новой
+идеи. Готовые пользовательские запросы являются проекцией канонического governance, а не вторым
+источником требований.
+
+Новый Codex-сеанс должен восстанавливать состояние из Git, глобального ДЕВ, project overlay,
+`README.md`, `AI_PLAN.md`, `AI_STATUS.md`, архитектурных документов и релевантных записей
+`LEARNING_LOG.md`. Старый чат и machine-local файлы не являются обязательной предпосылкой.
+Перенос между компьютером и ноутбуком выполняется через независимые Git repositories, штатную
+установку/валидацию глобального ДЕВ и восстановление project dependencies/secrets; ручное
+копирование отдельных context-файлов не является основным механизмом.
+
+### FR-009 Ответственность источников, projections и monitoring
+
+Каждый тип информации должен иметь одного назначенного владельца. External service по умолчанию
+является derived projection; он может владеть только явно назначенным ограниченным внешним
+артефактом, если project mapping фиксирует направление синхронизации и repository-ссылку.
+Сначала изменяется канонический источник, затем зависимые representations. Недоступная projection
+получает `pending sync`/`BLOCKED`, но не меняет repository truth.
+
+Project monitoring классифицируется как `active`, `event-driven` или `frozen` без создания
+глобального live inventory. `LEARNING_LOG.md` получает только evidence-backed повторно полезные
+записи в едином формате `Problem / Symptom / Root cause / Failed attempts / Fix / Verification /
+Prevention / Links` и не дублирует Git history либо `AI_STATUS.md`.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -94,9 +121,23 @@ Mocks, stubs, fakes и заранее подготовленные интерф�
   `completed`, `verified` или `DONE`.
 - AC-008 Канонический stage contract, planning/execution Skills, templates и status workflow
   структурно согласованы и не превращают tests или status documents в источник требований.
+- AC-009 Единственный Git-канон глобального ДЕВ находится непосредственно в `~/.codex`;
+  `~/codex-workspace/global/codex` не является поддерживаемым source root, а `~/.agents/skills`
+  остаётся только hash-verified runtime projection.
+- AC-010 `docs/WORKFLOW.md` содержит copy-ready запросы для восьми lifecycle-сценариев,
+  cross-device handoff и ссылки на один канонический documentation/learning contract без его
+  копирования в project overlays.
+- AC-011 Governance однозначно назначает владельцев информации, триггеры документации,
+  направления external sync и monitoring classes; недоступный внешний сервис не выдаётся за
+  синхронизированный.
+- AC-012 Global validator возвращает структурированную ошибку для неверного canonical source root,
+  а не необработанный exception; read-only восстановление выбранного real project возвращает
+  честный `PASS`, `DEGRADED` или `BLOCKED` с evidence без старого чата.
 
 ## 4. История изменений
 
 - 2026-08-13 — создана начальная системная SPEC для модели `global framework → project overlay`.
 - 2026-08-26 — добавлен обязательный Completion Documentation Synchronization Gate.
 - 2026-08-27 — добавлен контракт архитектурно завершённых этапов и непротиворечивого контекста.
+- 2026-08-27 — формализован единый project workflow, source ownership, cross-device restore,
+  external projections, monitoring и единый формат learning evidence.

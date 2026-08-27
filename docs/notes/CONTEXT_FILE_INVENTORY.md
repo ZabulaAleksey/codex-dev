@@ -102,10 +102,17 @@ Historical `SUPERSEDED` SPEC сохраняет audit trail, но не упра�
 | `tools/sync_global_skills.py` | versioned source → runtime projection |
 | `tools/test_*.py` | regression coverage соответствующего tool |
 | `tools/test_stage_completion_policy.py` | structural consistency Stage contract, routes, templates и status/evidence vocabulary |
+| `tools/test_unified_project_workflow_policy.py` | source ownership, lifecycle prompts, learning format, external/device/monitoring policy и fail-visible source-root validation |
 
 ## Quarantine / BLOCKED
 
 Project-specific источники с недоказанным mapping не являются active governance и не загружаются router-ом. Они сохраняются без mutation до доказанного project destination либо отдельно разрешённого внешнего архива с exact read-back. Их наличие — осознанный `BLOCKED`, а не шаблон для новых проектов.
+
+Текущие tracked `presets/field-lab`, `presets/music-sequencer` и `presets/tutor-platform` относятся
+именно к этому legacy quarantine. Installer, global router, Skills discovery и project registry их
+не подключают. Они не являются поддерживаемым способом bootstrap и не получают обновления global
+policy; перенос или удаление требует отдельного project mapping, проверки уникального содержания и
+явного разрешения.
 
 ## Контроль полноты
 

@@ -110,6 +110,10 @@ def validate_global_codex(workspace: Path, codex_home: Path) -> tuple[Issue, ...
     for skill_issue in compare_skills(workspace / "skill-sources", codex_home.parent / ".agents" / "skills"):
         issues.append(Issue(skill_issue.code, f"skills/{skill_issue.path}", "runtime Skill differs from versioned source"))
     for source in managed_files(workspace):
+        source_label = source.relative_to(workspace).as_posix()
+        if not source.is_file():
+            issues.append(Issue("missing-canonical-source", source_label, "canonical managed source is missing"))
+            continue
         destination = installed_path(source, workspace, codex_home)
         label = destination.relative_to(codex_home).as_posix()
         if not destination.is_file():
@@ -203,7 +207,12 @@ def validate_global_codex(workspace: Path, codex_home: Path) -> tuple[Issue, ...
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Read-only audit of the installed global Codex layer.")
-    parser.add_argument("--workspace", type=Path, default=ROOT)
+    parser.add_argument(
+        "--workspace",
+        type=Path,
+        default=ROOT,
+        help="canonical source root (legacy option name; default: repository containing this tool)",
+    )
     parser.add_argument("--codex-home", type=Path, default=Path.home() / ".codex")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

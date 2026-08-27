@@ -77,3 +77,130 @@ record в `prompts/STAGES.md`; degraded hook context требует ручной
 документы оставь без формального churn. После merge повтори gate по target branch и только
 тогда фиксируй интеграцию как завершённую. Merge и push выполняются только в рамках явного
 разрешения пользователя и Git-правил проекта.
+
+## J. Готовые запросы к Codex
+
+Эти формулировки — операционная проекция `rules/governance.md`. Они не создают новый источник
+требований и не отменяют более локальный project `AGENTS.md`.
+
+### Начать работу с проектом
+
+```text
+Открой проект <project> в ~/codex-workspace. Прочитай глобальный ДЕВ из ~/.codex,
+project AGENTS.md, README.md, docs/AI_PLAN.md, docs/AI_STATUS.md, относящиеся к задаче
+SPEC/архитектурные документы и только релевантные записи docs/LEARNING_LOG.md. Проверь
+Git branch/status/diff и определи последний подтверждённый результат, blockers, monitoring class
+и первый незавершённый шаг. Старый чат не используй как source of truth. Сначала дай компактный
+evidence-backed снимок; не начинай новую реализацию, пока не установлен допустимый slice.
+```
+
+### Выполнить stage
+
+```text
+Выполни следующий явно выбранный stage из project docs/AI_PLAN.md и единственного
+prompts/STAGES.md. До кода проверь dependency DAG, completed prerequisites, входные
+предпосылки, runnable vertical slice, concrete end-to-end scenario, PASS criteria/evidence,
+допустимую полностью рабочую temporary implementation и deferred scope. Реализуй и проверь slice
+без зависимости от будущего stage. Mock/stub/interface-only путь не закрывай как completed.
+Запусти применимые unit, integration и component-проверки. Для product/user-facing stage выполни
+живой E2E по пути `client → API/CLI → backend`; если обязательный backend отсутствует, поставь
+`BLOCKED_BY_BACKEND` и не закрывай stage. Для internal/docs/policy stage допустим исполнимый
+structural consumer path, который подтверждает действие правила или валидатора без mock. Затем
+выполни documentation synchronization gate и покажи evidence.
+```
+
+### Завершить stage
+
+```text
+Проверь Definition of Done, acceptance criteria, dependency DAG, primary runnable slice и
+stage-specific end-to-end evidence. Для product/user-facing stage требуй живой путь
+`client → API/CLI → backend`; отсутствие обязательного backend означает `BLOCKED_BY_BACKEND`, а не
+завершение. Для internal/docs/policy stage прими исполнимый structural consumer path. Проверь также
+tests/linters/build/migrations и Git diff. Выполни Completion Documentation
+Synchronization Gate: проверь README.md, AI_PLAN.md, AI_STATUS.md, ROADMAP.md, prompts/STAGES.md и
+затронутые canonical docs; изменяй только устаревшие факты. Значимую нетривиальную ошибку оформи
+в LEARNING_LOG.md по формату Problem/Symptom/Root cause/Failed attempts/Fix/Verification/
+Prevention/Links. Отдельно укажи lifecycle и evidence level. Не делай commit, push или merge без
+явного разрешения.
+```
+
+### Провести архитектурное изменение
+
+```text
+Сравни изменение с утверждённой SPEC, текущими ARCHITECTURE.md/DECISIONS.md, глобальным ДЕВ и
+project compatibility mapping. Определи затронутые boundaries, contracts, migrations, security,
+fallback, rollback и альтернативы. Зафиксируй принятое решение только в каноническом
+architecture/ADR owner, затем синхронизируй зависимые plan/status/schema representations.
+Не копируй одно решение в несколько независимых sources of truth и не делай внешние записи без
+отдельного разрешения.
+```
+
+### Проверить перед merge
+
+```text
+Проведи read-only pre-merge review текущей ветки относительно target branch: scope/SPEC,
+тесты, lint/static checks, build, migrations, security, документация, AI_PLAN.md, AI_STATUS.md и
+Git diff. Покажи команды, результаты, scope, commit/environment и caveats; отдельно перечисли
+blockers и deferred items. Не называй локальную проверку merged evidence и не выполняй merge,
+push, PR или удаление ветки без отдельного разрешения.
+```
+
+### Поставить проект на паузу
+
+```text
+Подготовь project к паузе. Зафиксируй в AI_STATUS.md только изменившиеся факты: текущую branch,
+последний подтверждённый результат, незавершённый slice, blockers, выполненные checks, monitoring
+class и точный следующий шаг. Сверь AI_PLAN.md и Git status/diff; важный контекст не оставляй
+только в чате. Commit/push выполняй лишь по отдельному разрешению; если его нет, явно укажи, что
+dirty worktree не перенесён на другое устройство.
+```
+
+### Возобновить проект
+
+```text
+Восстанови project без истории старого чата. Проверь Git root, branch/status/log, затем прочитай
+глобальный ~/.codex/AGENTS.md, project AGENTS.md, README.md, AI_STATUS.md, AI_PLAN.md, выбранную
+SPEC, architecture/decisions, exact STAGES record и релевантные learning entries. Сверь ссылки,
+dependency/toolchain state и external pending sync. Если источник отсутствует или расходится,
+верни DEGRADED/BLOCKED с точным gap; не выбирай следующий stage наугад.
+```
+
+### Обработать новую идею
+
+```text
+Не превращай идею автоматически в глобальное правило, утверждённую SPEC или implementation
+stage. Сначала сопоставь её с существующим кодом, SPEC, DESIGN/ARCHITECTURE, ROADMAP, AI_PLAN,
+AI_STATUS, prompts/STAGES.md и decisions. Классифицируй как IDEA/REFINED/PROMPT_READY,
+NEEDS_RESEARCH, NEEDS_DECISION, DUPLICATE, ALREADY_IMPLEMENTED или BLOCKED; определи, относится ли
+она к существующему project или требует отдельного Git repository. Подготовь запись для
+назначенного Notion/backlog source, но выполняй внешнюю запись и реализацию только при явном
+разрешении/approval policy.
+```
+
+## K. Компьютер ↔ ноутбук
+
+Перед переключением устройства:
+
+1. останови текущую операцию в консистентной точке и проверь `git status`/`git diff`;
+2. выполни применимые checks и обнови `AI_STATUS.md`, только если изменились важные факты;
+3. commit/push завершённого или сохранение незавершённого в отдельной ветке выполняй только при
+   явном разрешении; без push зафиксируй, что другое устройство не получит dirty worktree;
+4. если менялся глобальный ДЕВ, переноси его отдельным Git lifecycle от product repository;
+5. не используй экспорт чата или ручное копирование отдельных Markdown как основной handoff.
+
+На другом устройстве:
+
+1. clone/pull глобальный ДЕВ непосредственно в `~/.codex`;
+2. запусти `install-global.ps1`, `tools/validate_context.py`, Skill parity и global validator;
+3. clone/pull `~/codex-workspace/<project>`, проверь branch/status и восстанови dependencies;
+4. восстанови локальные secrets через разрешённый machine-local механизм, не из Git/чата;
+5. используй запрос «Возобновить проект» выше и продолжай только после совпадения local state с
+   repository evidence.
+
+## L. External projections и monitoring
+
+Полные владельцы, sync triggers, degraded behavior и классы `active` / `event-driven` / `frozen`
+заданы только в `rules/governance.md`. Project сохраняет monitoring class и внешние mappings в
+`docs/project-context.md` либо назначенном external registry; глобальный ДЕВ не ведёт live inventory
+проектов. Ни monitoring class, ни наличие connector не являются разрешением на запись, deploy или
+синхронизацию.

@@ -8,6 +8,11 @@
 
 Более локальное правило уточняет общее только в своей области. Прямая инструкция пользователя для текущей задачи имеет высший приоритет, если не нарушает ограничения безопасности.
 
+Глобальный Git-канон и active operational layer находятся непосредственно в `~/.codex`.
+`~/codex-workspace/global/codex` не является поддерживаемым source root. Product repositories
+располагаются как независимые Git roots в `~/codex-workspace/<project>`; runtime Skills в
+`~/.agents/skills` являются только проверяемой projection `~/.codex/skill-sources`.
+
 ## Порядок загрузки
 
 1. Ближайший относящийся к задаче `AGENTS.md` / `AGENTS.override.md`.
@@ -26,6 +31,23 @@
 SessionStart/SubagentStart hook проецирует bounded запись первой. Без selector catalog не читается;
 invalid, missing, ambiguous или oversized selector даёт видимый `DEGRADED` context. В этом случае
 открой полный record вручную и не используй completion claim до проверки.
+
+## Восстановление новой сессии
+
+Восстанавливай project в следующем порядке:
+
+1. Git root, current branch/status/diff/log и подтверждённый target/upstream;
+2. global `~/.codex/AGENTS.md` и только применимые global rules/Skills;
+3. project `AGENTS.md` / ближайший `AGENTS.override.md`;
+4. `README.md`, компактный `AI_STATUS.md`, затем текущий `AI_PLAN.md`;
+5. затронутая SPEC, canonical architecture/decisions и один exact `prompts/STAGES.md` record;
+6. target code/tests/manifests и только релевантные `LEARNING_LOG.md` entries;
+7. явно назначенные external mappings и их `synced | pending sync | blocked` state.
+
+Старый чат, search snippet, local cache и внешняя projection не заменяют этот порядок. Broken link,
+missing selector, dirty state без provenance или противоречие docs с code/evidence дают видимый
+`DEGRADED`/`BLOCKED`; не подставляй предполагаемый stage и не объявляй восстановление успешным.
+Практический computer↔laptop handoff и copy-ready запросы находятся в `docs/WORKFLOW.md`.
 
 ## Закон проектного overlay
 

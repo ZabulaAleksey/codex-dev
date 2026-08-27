@@ -1,5 +1,10 @@
 # Учебный журнал
 
+> Legacy historical journal, frozen для новых записей. Канонический active owner —
+> [`../LEARNING_LOG.md`](../LEARNING_LOG.md), новые entries создаются только там по
+> `templates/LEARNING_LOG_TEMPLATE.md`. Этот файл сохранён без переписывания истории и не является
+> вторым source of truth.
+
 ## 2026-08-20 — Brownfield Reconciliation Gate
 
 Добавлен read-only `tools/reconcile_project_framework.py` с классификацией greenfield/brownfield,

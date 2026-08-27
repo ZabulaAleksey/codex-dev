@@ -1,5 +1,34 @@
 # Существенные решения
 
+## 2026-08-27 — Один global root и один операционный project workflow
+
+**Статус:** принято.
+
+**Контекст:** новый workflow brief предполагал отдельный source
+`~/codex-workspace/global/codex` и installed runtime в `~/.codex`. Фактическая архитектура уже
+консолидирована: `~/.codex` является Git-корнем и direct operational layer, а только Skills имеют
+managed projection в `~/.agents/skills`. Создание предполагаемого root восстановило бы два
+глобальных lifecycle и конфликтующие `AGENTS.md`. Одновременно lifecycle-команды, external sync,
+device handoff, documentation triggers и monitoring были распределены по существующим policies без
+одной human-readable operational projection.
+
+**Решение:** сохранить `~/.codex` единственным global source/operational root. Полный policy owner
+для source responsibility, docs/learning triggers, external projections, device restore и
+monitoring — `rules/governance.md`; system requirements — `specs/system.spec.md`; copy-ready
+формулировки — существующий `docs/WORKFLOW.md`; context loading — `docs/CONTEXT_POLICY.md`.
+Projects наследуют правило и не копируют его. Skills/hooks/MCP/runtime не расширяются, потому что
+для workflow достаточно существующих routes.
+
+**Альтернативы:** отдельный `~/codex-workspace/global/codex`, новый workspace `AGENTS.md`, новый
+prompt catalog и автоматическая синхронизация всех external services отклонены как конкурирующие
+sources и необоснованные write surfaces.
+
+**Последствия:** cross-device restore использует два независимых Git lifecycle — global DEV и
+выбранный product repository. External service без approval/read-back остаётся `pending sync`.
+Legacy `presets/*` остаётся неактивным `BLOCKED` quarantine до отдельного mapping/deletion решения.
+Global validator обязан fail visibly при неверном source root. Uncommitted feature branch не
+materialize-ится в active runtime до разрешённой интеграции.
+
 ## 2026-08-27 — Один канонический контракт архитектурно завершённых этапов
 
 **Статус:** принято.

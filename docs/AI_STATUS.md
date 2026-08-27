@@ -4,49 +4,53 @@
 
 ## Статус
 
-- Lifecycle: `completed` на `main`.
-- Evidence level: `merged locally`, feature commits `8c05d0f` / `41612d0`.
-- Integration: fast-forward merge подтверждён; не pushed, не released/deployed.
-- Runtime: пять изменённых Skill sources materialized из active `main` в `~/.agents/skills`;
-  source/runtime parity — PASS, 9/9.
+- Lifecycle: unified project workflow `completed` в feature worktree.
+- Evidence level: `validated locally`; commit отсутствует по прямому запрету пользователя.
+- Integration: active `main`, runtime, remote и external services не изменялись.
+- Runtime: active `~/.codex` ↔ `~/.agents/skills` parity — PASS, 9/9 при baseline и финальном
+  read-enabled check; Skill sources feature не менялись и не materialize-ились из uncommitted
+  worktree.
 
-Глобальный ДЕВ теперь имеет один канонический Stage contract в `rules/governance.md`. Он запрещает
-forward dependency, ложный completion по scaffold evidence и перенос обязательного gate в будущий
-stage. Planning/execution Skills и templates собирают операционные поля, но не копируют policy.
+Единый global policy owner теперь формализует source responsibility, documentation/learning
+triggers, external projections, device restore и monitoring. `docs/WORKFLOW.md` даёт восемь
+copy-ready lifecycle requests как operational projection, а не второй governance layer.
 
 ## Реализованный vertical slice
 
-- `specs/system.spec.md` содержит `FR-007`/`AC-007` и cross-surface consistency `AC-008`;
-- governance разделяет lifecycle и evidence/integration, определяет internal/product E2E и
-  terminal gate;
-- full staged overlay baseline, architecture/ADR mapping и SPEC/test authority согласованы;
-- `docs/AI_PLAN.md` stable `Stage ID` выбирает exact unique heading record в
-  `prompts/STAGES.md` через существующий SessionStart/SubagentStart hook;
-- no-selector сохраняет compact snapshot; invalid, duplicate, missing, ambiguous или oversized
-  input выдаёт visible `DEGRADED`, не случайный fallback;
-- structural и subprocess contract tests защищают global surfaces и internal hook path.
+- `specs/system.spec.md` содержит `FR-008..009` / `AC-009..012`;
+- фактический канон `~/.codex` отделён от Skill runtime `~/.agents/skills`; предполагаемый
+  `~/codex-workspace/global/codex` явно отклонён;
+- governance содержит responsibility matrix, documentation trigger table, единый LEARNING shape,
+  external sync/read-back policy, computer↔laptop contract и `active/event-driven/frozen`;
+- workflow содержит start/stage/completion/architecture/pre-merge/pause/resume/idea prompts;
+- global validator возвращает structured issues для missing canonical source вместо traceback;
+- legacy `docs/notes/LEARNING_LOG.md` и named `presets/*` явно классифицированы как frozen/quarantine,
+  а не конкурирующие active sources;
+- hooks, Skills, MCP, agents, config и product repositories не модифицированы.
 
 ## Verification evidence
 
-- `py -3 -B -m unittest discover -s tools -p "test*.py"` — PASS, 88 tests;
-- canonical explicit unit/contract suite — PASS, 88 tests;
-- `py -3 -B tools\validate_context.py` — PASS, 198 files;
-- `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
-- `quick_validate.py` через `python -X utf8` — PASS для пяти изменённых Skills;
-- post-merge runtime Skill parity — PASS, 9/9;
-- hook compile и subprocess primary/degraded paths — PASS;
-- `git diff --check`, cached diff check, conflict-marker и semantic conflict scans — PASS;
-- initial и follow-up reviewer findings устранены; финальный state-aware reviewer —
-  `No blocking findings`.
+- `py -3 -B -m unittest discover -s tools -p "test_*.py"` — PASS, 94 tests;
+- `py -3 -B tools\validate_context.py` — PASS, 199 files;
+- wrong-root `validate_global_codex.py` — expected structured FAIL, traceback отсутствует;
+- active `tools\sync_global_skills.py` read-enabled check — PASS, 9 sources; sandbox без доступа к
+  runtime не используется как authoritative evidence;
+- active global validator — `BLOCKED` только pre-existing `unmatched-browser-client-hash`;
+- `validate_project_overlay.py electro-tutor --json` — structural PASS;
+- `reconcile_project_framework.py electro-tutor --json` — `BROWNFIELD`, pnpm, drift none;
+- real SessionStart hook восстановил project status/SPEC/plan; semantic route audit — PASS:
+  `TUTOR-01` завершён, следующий stage `TUTOR-02`, активных маршрутов на `STAGED_PROMPTS.md` нет;
+- повторный read-only reviewer — прежние blockers закрыты, новых blocking findings нет;
+- `git diff --check` — PASS; line-ending сообщения являются informational.
 
 ## Синхронизация документации
 
-- Обновлены: `README.md`, `QUICKSTART.md`, `AGENTS.md`, system SPEC, governance/SDLC rules,
-  `ARCHITECTURE.md`, `DECISIONS.md`, `CONTEXT_POLICY.md`, `CONTEXT_COMPATIBILITY.md`,
-  `PROJECT_FRAMEWORK.md`, `HOOK_POLICY.md`, `TESTING.md`, `VERIFY_SETUP.md`, `WORKFLOW.md`,
-  context inventory/maps, Skills/references, AI templates и state docs.
-- Проверены и остались точными: `DESIGN.md`, `SECURITY.md`, feature SPECs,
-  `docs/project-context.md`.
+- Обновлены: system SPEC, `rules/governance.md`, `README.md`, `ARCHITECTURE.md`, `DECISIONS.md`,
+  `CONTEXT_POLICY.md`, `CONTEXT_COMPATIBILITY.md`, `TESTING.md`, `VERIFY_SETUP.md`, `WORKFLOW.md`,
+  context inventory/maps, learning template/legacy marker, validator/test/manifest и state docs.
+- Проверены и остались точными: `AGENTS.md`, `QUICKSTART.md`, `PROJECT_FRAMEWORK.md`, `DESIGN.md`,
+  `SECURITY.md`, `HOOK_POLICY.md`, `MCP_CATALOG.md`, feature SPECs, `docs/project-context.md`,
+  Skills/hooks/installer.
 - Не применяются в этом global infrastructure repository: project `prompts/STAGES.md`,
   `TRACEABILITY.md`, `CHANGELOG.md`, `DEV_LOG.md`.
 
@@ -54,12 +58,19 @@ stage. Planning/execution Skills и templates собирают операцио�
 
 - Active `main` global validator по-прежнему `BLOCKED` pre-existing сигналом
   `unmatched-browser-client-hash`; feature его не меняет.
-- Semantic parser project DAG/evidence намеренно не добавлен без versioned schema/migration;
-  истинность project completion остаётся evidence/review gate.
-- Push/release/deploy не выполнялись и требуют отдельного разрешения.
+- Feature не committed/merged, поэтому новый workflow ещё не является active `main`/runtime
+  evidence. Runtime sync из uncommitted worktree намеренно не выполнялся.
+- Real project restoration — PASS: `electro-tutor` восстанавливает текущий plan/status и выбирает
+  `TUTOR-02` без старого чата. Unrelated dirty worktree сохранён read-only и не считается дефектом
+  восстановления; исторические/отрицательные упоминания `STAGED_PROMPTS.md` не являются active
+  stage routes.
+- Legacy named presets остаются `BLOCKED` quarantine; mapping/удаление требует отдельного scope и
+  разрешения. Semantic link/stage parser не добавлен без versioned schema.
+- Commit, push, merge, deletion, external writes, release/deploy не выполнялись.
 
 ## Следующее действие
 
-Обязательных действий по этому stage больше нет. Optional maintenance: repair pre-existing Browser
-client hash; push выполняется только по отдельному запросу. Чистый временный worktree удаляется как
-локальный closeout без изменения project state.
+Read-only review завершён без blocking findings. Пользователь может отдельно разрешить commit
+feature-ветки. Merge, push, runtime
+materialization, Browser hash repair, product `TUTOR-02`, legacy preset cleanup и external sync —
+самостоятельные последующие действия и не выполняются автоматически.

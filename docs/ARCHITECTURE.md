@@ -4,6 +4,15 @@
 
 `~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно active operational layer Codex. `agents/`, `hooks/` и `rules/` используются непосредственно. Versioned source Skills находится в `skill-sources/`, а единственная active runtime-проекция — в `~/.agents/skills/`. `docs/`, `templates/`, `tools/` и `specs/` образуют project-agnostic инженерную библиотеку. Project-specific контекст хранится только в независимых repositories под `~/codex-workspace/*`.
 
+`~/codex-workspace/global/codex` не является source root и не создаётся как installed-копия.
+
+| Слой | Путь | Роль |
+|---|---|---|
+| Global canonical + direct operational layer | `~/.codex` | Git, AGENTS, agents, hooks, rules, docs, tools, templates, specs |
+| Versioned Skill source | `~/.codex/skill-sources` | единственный редактируемый source reusable Skills |
+| Managed Skill runtime | `~/.agents/skills` | hash-verified materialization; не второй lifecycle/source |
+| Product repositories | `~/codex-workspace/<project>` | независимый Git root и project-specific overlay |
+
 ## Project-framework контур
 
 ```text
@@ -22,6 +31,26 @@ read-only validator
 Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility
 matrix, принимает explicit conflict resolutions, добавляет read-only dependency inventory/drift и сравнивает test baseline с post-refresh run.
 Он не пишет файлы, не выполняет product code и не изменяет Git status.
+
+Единый lifecycle workflow использует существующие owners:
+
+```text
+user lifecycle intent
+      ↓
+docs/WORKFLOW.md (copy-ready operational request)
+      ↓
+rules/governance.md + SPEC (canonical contract)
+      ↓
+project AGENTS / STAGES / AI_PLAN / AI_STATUS
+      ↓
+implementation + evidence + documentation gate
+      ↓
+optional external projection after approval/read-back
+```
+
+Чат и `docs/WORKFLOW.md` не становятся требованиями: они только маршрутизируют к SPEC/governance.
+Context recovery следует Git → global instructions → project overlay → state/plan → selected
+contracts/evidence. External service outage даёт visible pending sync, а не обратную запись в Git.
 
 Stage lifecycle проходит через отдельный policy/evidence contour:
 
@@ -82,7 +111,7 @@ Dependency DAG, исполнимость slice и истинность end-to-en
 managed-файлы + безопасные инварианты config.toml
 ```
 
-`install-global.ps1` проверяет каноническое расположение repository и не перезаписывает активный `config.toml`. `tools/normalize_user_codex.py` выполняет ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без вывода секретов. `tools/validate_global_codex.py` проверяет managed-файлы активного слоя и статические границы безопасности.
+`install-global.ps1` проверяет каноническое расположение repository и не перезаписывает активный `config.toml`. `tools/normalize_user_codex.py` выполняет ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без вывода секретов. `tools/validate_global_codex.py` проверяет managed-файлы активного слоя и статические границы безопасности. Legacy option `--workspace` означает canonical source root (обычно `~/.codex`), а не parent product workspace; отсутствующий source возвращает структурированную issue вместо exception.
 
 Host-managed runtime bindings не подменяются угаданными путями: отсутствующая browser service удаляется, `sky` binding сохраняется, а browser client hash допускается только при совпадении с фактически установленным client-файлом.
 

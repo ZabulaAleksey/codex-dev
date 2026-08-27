@@ -1,6 +1,6 @@
 # AI-команда разработки для Codex — набор для нескольких проектов
 
-Актуализировано: 2026-08-26.
+Актуализировано: 2026-08-27.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.
 
@@ -8,6 +8,10 @@
 
 - `~/.codex` — этот Git repository, общая AI-инфраструктура и активный пользовательский слой Codex.
 - `~/codex-workspace/<project>` — рабочий Git-репозиторий конкретного проекта.
+
+Путь `~/codex-workspace/global/codex` не поддерживается как второй source: он конфликтует с
+консолидированным Git-root `~/.codex`. В `~/.agents/skills` находится только проверяемая runtime-
+проекция Skills, а не ещё один канонический repository.
 
 Такая схема позволяет переносить домашний каталог между компьютерами без изменения документации и не смешивает шаблоны с рабочими проектами.
 
@@ -53,6 +57,9 @@
 - [`rules/backend-dx.md`](rules/backend-dx.md) задаёт адаптивный `BDX-L0..L3`
   contract; Skill `backend-dx-audit` проектирует, проверяет и улучшает backend
   workflow без копирования policy в product repository.
+- [`docs/WORKFLOW.md`](docs/WORKFLOW.md) содержит copy-ready запросы для старта, stage,
+  completion, архитектурного изменения, pre-merge, паузы, возобновления и новой идеи, а также
+  computer↔laptop handoff.
 
 Project-specific инструкции, архитектура, Skills и agents хранятся только в соответствующем project repository. Глобальный framework предоставляет schema, policies, validators и универсальные templates, но не ведёт библиотеку именованных проектов.
 
@@ -160,6 +167,11 @@ $explain-change
 $bootstrap-project-framework
 $backend-dx-audit
 ```
+
+При смене компьютера сначала синхронизируй отдельный Git repository ДЕВ в `~/.codex` и выполни
+`install-global.ps1`, затем clone/pull нужный product repository в
+`~/codex-workspace/<project>`. Рабочее состояние восстанавливается из Git и project docs по
+[`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md), не из истории чата или ручных копий файлов.
 
 ## Важное про расход лимита
 
