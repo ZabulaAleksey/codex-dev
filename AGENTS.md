@@ -126,6 +126,17 @@ project-specific `Backend DX Delta` в `docs/project-context.md`; global policy 
 копируется. Материальные BDX requirements требуют evidence, а destructive
 DB/resource actions и production access остаются deny-by-default.
 
+### Internationalization / Localization Policy
+
+Для architecture, specification, design, implementation или review продукта с пользовательской
+поверхностью обязательно прочитай `~/.codex/rules/i18n-l10n.md`. Глобальный контракт различает
+`i18n`, `l10n`, `language` и `locale`, требует resource-based пользовательские строки,
+locale-aware данные, fallback locale и проверяемые text expansion / RTL guarantees.
+
+Project `DESIGN.md`, SPEC и архитектура содержат только поддерживаемые locales, выбранную
+реализацию, обоснованные исключения и acceptance evidence; полный глобальный контракт не
+копируется. Язык проектного контекста не определяет язык пользовательского продукта.
+
 ## Каскад и экономия контекста
 
 Для файловых инструкций используй каскад:

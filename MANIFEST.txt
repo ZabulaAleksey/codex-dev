@@ -103,6 +103,7 @@ rules/domains/scientific-computing.md
 rules/domains/security.md
 rules/fallback-policy.md
 rules/governance.md
+rules/i18n-l10n.md
 rules/model-routing.md
 rules/modes/prototype.md
 rules/modes/standard.md
@@ -188,6 +189,7 @@ tools/reconcile_project_framework.py
 tools/sync_global_skills.py
 tools/test_backend_dx_policy.py
 tools/test_documentation_sync_policy.py
+tools/test_i18n_l10n_policy.py
 tools/test_reconcile_project_framework.py
 tools/test_stage_completion_policy.py
 tools/test_sync_global_skills.py

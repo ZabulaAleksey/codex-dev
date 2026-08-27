@@ -34,6 +34,7 @@
 | Current state/plan | `docs/AI_STATUS.md`, `docs/AI_PLAN.md` | handoff |
 | Framework contract | `docs/PROJECT_FRAMEWORK.md`, `specs/**` | project overlay |
 | Stage lifecycle/evidence | `rules/governance.md` | selected project `prompts/STAGES.md` record, AI plan/status |
+| Product i18n/l10n | `rules/i18n-l10n.md` | project SPEC, DESIGN, architecture и testing delta |
 | Project facts | project repository | external projections |
 | Project bindings | внешний project-aware слой | schema `PROJECT_REGISTRY.md` |
 | Unified workflow policy | `rules/governance.md` | `docs/WORKFLOW.md`, templates, project handoff |
@@ -59,7 +60,7 @@ warning без retry или произвольного fallback. События 
 2. текущий SDLC stage;
 3. релевантный domain;
 4. применимый stack;
-5. fallback/security правила по риску.
+5. сквозные fallback/security/i18n-l10n правила по применимости и риску.
 
 Для stage-bound задачи router обязательно добавляет Stage contract из `rules/governance.md` и
 только выбранный project record из `prompts/STAGES.md`; весь stage catalog не загружается.
@@ -67,6 +68,10 @@ warning без retry или произвольного fallback. События 
 Для backend/runtime developer workflow router дополнительно подключает
 `rules/backend-dx.md`; этот файл ссылается на dependency, database/API, testing,
 security и fallback owners вместо их копирования.
+
+Для architecture, design, implementation или review user-facing продукта router подключает
+`rules/i18n-l10n.md`. Project overlay хранит supported locales, stack, UX, исключения и evidence,
+но не копирует полный global contract.
 
 Project-local rules не копируют глобальные запреты и не меняют global Git workflow.
 

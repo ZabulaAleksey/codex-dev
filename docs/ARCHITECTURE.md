@@ -154,6 +154,22 @@ tools/validate_project_overlay.py + neutral fixture tests
 Backend DX ссылается на dependency, database/API, testing, security и fallback
 contracts, но не становится вторым владельцем их предметных инвариантов.
 
+Internationalization/localization contract пользовательских продуктов:
+
+```text
+specs/system.spec.md (FR-010 / AC-013)
+        ↓ global invariant
+rules/i18n-l10n.md
+        ↓ applicability и thin project delta
+project SPEC + DESIGN / ARCHITECTURE / TESTING
+        ↓ evidence
+resource lookup + fallback + locale-aware formatting + applicable RTL/E2E checks
+```
+
+Policy не добавляет новый hook, Skill, MCP или runtime service. `rules/README.md`, `AGENTS.md` и
+`docs/PROJECT_FRAMEWORK.md` только маршрутизируют к единственному канону; язык documentation
+context остаётся независимым от product `language` / `locale`.
+
 Project-specific implementation:
 
 `~/codex-workspace/<project>/docs/FALLBACKS.md`

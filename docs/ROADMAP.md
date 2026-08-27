@@ -19,6 +19,13 @@
   classes и fail-visible global source-root validation — 94 tests PASS, 199-file manifest PASS;
   feature commit `4bcdf32` fast-forward merged в локальную `main`, push не выполнялся.
 
+## Проверено в feature-ветке
+
+- global i18n/l10n standard для всех user-facing products: один canonical policy owner,
+  language/locale separation, translation resources, locale-aware formats, fallback, text
+  expansion/RTL и self-contained initial slice; 101 tests PASS, 201-file manifest PASS. Merge в
+  `main` и product-specific rollout ещё не выполнялись.
+
 ## Дальнейшие направления
 
 - развитие model/tool routing;

@@ -3,6 +3,80 @@
 Здесь хранятся воспроизводимые объяснения существенных изменений. Журнал не
 дублирует оперативный статус и не содержит скрытых рассуждений модели.
 
+## 2026-08-27 — i18n/l10n как global policy, а не project copy
+
+### Problem
+
+- Пользовательские products могли реализовывать translations локально, но глобальный ДЕВ не
+  гарантировал различие `i18n`, `l10n`, `language` и `locale`, locale-aware formatting, fallback,
+  text expansion или RTL с первого самостоятельного slice.
+
+### Symptom
+
+- Global audit не нашёл канонического i18n/l10n owner. Существовали только отдельные product
+  implementations и независимое правило русского языка project context, которое можно было
+  ошибочно принять за язык продукта.
+- Копирование checklist в project DESIGN/SPEC либо frontend-only rule создало бы расходящиеся
+  стандарты и не охватило бы public CLI, уведомления и отчёты.
+
+### Root cause
+
+- Cross-cutting product localization не была представлена в global policy layer и context router.
+  Stage contract также не определял, какая минимальная i18n implementation уже работоспособна, а
+  какая остаётся mock/interface-only scaffold.
+
+### Failed attempts
+
+- N/A — competing owners были выявлены до mutation. Полный текст в governance, frontend domain,
+  новом Skill и project overlays отклонён на compatibility audit.
+
+### Fix
+
+- Создан единственный `rules/i18n-l10n.md`; `FR-010` / `AC-013` закрепляют стабильное требование.
+- Global routers и `PROJECT_FRAMEWORK.md` доставляют policy в user-facing architecture, а project
+  SPEC/DESIGN/architecture/testing хранят только supported locales, stack, исключения и evidence.
+- Initial slice допускает одну production locale только вместе с real resources, fallback,
+  locale-aware formatting и pseudo-locale либо alternate test locale. Future translations
+  расширяют l10n, но не разблокируют прошлый stage.
+
+### Verification
+
+```text
+command / check: py -3 -B -m unittest tools.test_i18n_l10n_policy
+result: PASS — 7 tests, включая uniqueness/anti-copy gate
+scope: canonical policy, routers, system SPEC and context-validator registration
+caveat: structural framework contract, не product translation E2E
+
+command / check: py -3 -B -m unittest discover -s tools -p "test_*.py"
+result: PASS — 101 tests
+scope: полный global unit/contract suite
+caveat: active runtime integration проверяется отдельно после разрешённого merge
+
+command / check: py -3 -B tools\validate_context.py
+result: PASS — 201 files
+scope: Git-visible context and manifest
+caveat: semantic quality подтверждена policy review, а не manifest alone
+
+command / check: py -3 -B tools\sync_global_skills.py
+result: PASS — 9 sources
+scope: active Skill parity
+caveat: Skill sources не менялись
+```
+
+### Prevention
+
+- Любой новый user-facing КАРКАС проверяет применимость через global router и создаёт только thin
+  project delta. Structural test не выдаётся за живой product E2E, а brownfield migration не
+  выполняется массово без repository-specific gap audit.
+
+### Links
+
+- [Global i18n/l10n policy](../rules/i18n-l10n.md)
+- [System SPEC](../specs/system.spec.md)
+- [Project framework](PROJECT_FRAMEWORK.md)
+- [Compatibility decision](CONTEXT_COMPATIBILITY.md)
+- [Contract test](../tools/test_i18n_l10n_policy.py)
+
 ## 2026-08-27 — единый workflow без второго global source
 
 ### Problem

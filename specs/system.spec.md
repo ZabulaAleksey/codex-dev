@@ -1,7 +1,7 @@
 # Системная спецификация AI Dev Team Codex
 
 Статус: Действует
-Версия: 1.3
+Версия: 1.4
 
 ## 1. Назначение
 
@@ -107,6 +107,25 @@ Project monitoring классифицируется как `active`, `event-driv
 записи в едином формате `Problem / Symptom / Root cause / Failed attempts / Fix / Verification /
 Prevention / Links` и не дублирует Git history либо `AI_STATUS.md`.
 
+### FR-010 Глобальная готовность пользовательских продуктов к i18n / l10n
+
+Каждый продукт с пользовательской поверхностью должен наследовать один глобальный архитектурный
+контракт internationalization (`i18n`) и localization (`l10n`). `i18n` обеспечивает добавление
+языков и локалей без переписывания business logic и компонентов; `l10n` адаптирует конкретные
+resources, formats и региональное поведение. `language` и `locale` различаются: например, `en-US`
+и `en-GB` используют один язык, но разные региональные правила.
+
+Пользовательские строки должны находиться в translation resources (`t("...")`, locale-файлы или
+stack equivalent), а locale-dependent представление должно учитывать даты/время, числа, валюты,
+единицы, plural rules, sorting/collation, адреса/телефоны, часовые пояса и применимые региональные
+данные. Проект обязан задать fallback locale, поведение неполного перевода, text expansion и RTL,
+когда такие языки заявлены.
+
+Project SPEC/DESIGN/architecture хранят только поддерживаемые locales, реализацию, исключения и
+acceptance evidence. Начальный stage может выпускать одну production locale, только если реальная
+resource/fallback infrastructure и pseudo-locale либо alternate test locale уже доказывают
+расширяемость без будущего обязательного компонента.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -133,6 +152,10 @@ Prevention / Links` и не дублирует Git history либо `AI_STATUS.m
 - AC-012 Global validator возвращает структурированную ошибку для неверного canonical source root,
   а не необработанный exception; read-only восстановление выбранного real project возвращает
   честный `PASS`, `DEGRADED` или `BLOCKED` с evidence без старого чата.
+- AC-013 Единственный глобальный i18n/l10n contract маршрутизируется во все user-facing product
+  architectures без копирования в project overlay; contract test подтверждает различие
+  `language`/`locale`, resource-based строки, locale-aware форматы, fallback locale, text expansion,
+  RTL и самостоятельный initial slice, не зависящий от будущей translation infrastructure.
 
 ## 4. История изменений
 
@@ -141,3 +164,4 @@ Prevention / Links` и не дублирует Git history либо `AI_STATUS.m
 - 2026-08-27 — добавлен контракт архитектурно завершённых этапов и непротиворечивого контекста.
 - 2026-08-27 — формализован единый project workflow, source ownership, cross-device restore,
   external projections, monitoring и единый формат learning evidence.
+- 2026-08-27 — добавлен межпроектный i18n/l10n contract для всех пользовательских продуктов.

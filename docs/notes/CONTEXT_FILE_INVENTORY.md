@@ -26,7 +26,7 @@
 | `hooks/*.py` | bounded session context и safety checks |
 | `rules/ai-dev-team.rules` | shell command policy |
 | `rules/README.md` | router по режиму, домену, стеку и SDLC |
-| `rules/governance.md`, `rules/model-routing.md`, `rules/fallback-policy.md`, `rules/dependency-management.md`, `rules/backend-dx.md` | общие инженерные контракты |
+| `rules/governance.md`, `rules/model-routing.md`, `rules/fallback-policy.md`, `rules/dependency-management.md`, `rules/backend-dx.md`, `rules/i18n-l10n.md` | общие инженерные контракты |
 | `rules/modes/*.md` | режим выполнения |
 | `rules/domains/*.md` | универсальные доменные ограничения |
 | `rules/stacks/*.md` | правила применимого технологического стека |
@@ -103,6 +103,7 @@ Historical `SUPERSEDED` SPEC сохраняет audit trail, но не упра�
 | `tools/test_*.py` | regression coverage соответствующего tool |
 | `tools/test_stage_completion_policy.py` | structural consistency Stage contract, routes, templates и status/evidence vocabulary |
 | `tools/test_unified_project_workflow_policy.py` | source ownership, lifecycle prompts, learning format, external/device/monitoring policy и fail-visible source-root validation |
+| `tools/test_i18n_l10n_policy.py` | global i18n/l10n owner, routes, project delta, locale/fallback/RTL и self-contained initial slice |
 
 ## Quarantine / BLOCKED
 

@@ -1,5 +1,33 @@
 # Существенные решения
 
+## 2026-08-27 — Один глобальный i18n/l10n contract и thin project delta
+
+**Статус:** принято.
+
+**Контекст:** отдельные product repositories уже могут иметь собственные translation resources,
+но глобальный ДЕВ не задавал общей границы между `i18n`, `l10n`, documentation language и product
+locale. Размещение полного правила в каждом `DESIGN.md`, frontend domain rule либо project
+`AGENTS.md` создало бы расходящиеся копии и не охватило бы public CLI, отчёты и другие
+user-facing surfaces. Перенос полного списка в `rules/governance.md` заставил бы загружать общий
+lifecycle contract для каждой locale-задачи.
+
+**Решение:** единственный предметный владелец — `rules/i18n-l10n.md`; стабильное системное
+требование — `specs/system.spec.md` (`FR-010` / `AC-013`). `AGENTS.md`, `rules/README.md` и
+`docs/PROJECT_FRAMEWORK.md` являются только routers, а project SPEC, DESIGN, architecture и testing
+хранят поддерживаемые locales, stack, исключения и evidence. Initial product slice может иметь
+одну production locale, но обязан содержать реальный resource/fallback path и pseudo-locale либо
+alternate test locale, чтобы будущий stage расширял l10n content, а не впервые разблокировал i18n.
+
+**Альтернативы:** полный контракт в `rules/governance.md`, только в
+`rules/domains/frontend.md`, новый Skill/hook и копирование checklist в каждый project overlay
+отклонены. Governance остаётся владельцем lifecycle/evidence, Fallback Policy — retry/degraded
+semantics, а product localization policy ссылается на них без дублирования.
+
+**Последствия:** все новые user-facing architectures получают общий standard независимо от
+стека; brownfield проекты проходят gap audit без автоматической массовой замены строк. Язык
+проектной документации не считается product locale. Новые runtime services, dependencies,
+hooks, MCP и Skills не добавляются; product repositories этим решением не модифицируются.
+
 ## 2026-08-27 — Один global root и один операционный project workflow
 
 **Статус:** принято.

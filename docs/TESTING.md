@@ -10,7 +10,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -67,6 +67,17 @@ canonical root в production validator и требует structured issues вм�
 проверяется отдельно read-only командами `reconcile_project_framework.py` и
 `validate_project_overlay.py` плюс semantic link/status audit; structural PASS не маскирует stale
 references.
+
+## Global i18n/l10n contract
+
+`tools.test_i18n_l10n_policy` проверяет `FR-010` / `AC-013`, единственного policy owner,
+global routers, различие `language` / `locale`, resource-based строки, полный класс
+locale-dependent данных, fallback locale, text expansion, RTL и self-contained initial slice с
+pseudo-locale либо alternate test locale.
+
+Это structural contract test global framework. Он подтверждает, что КАРКАС доставляет требование
+в user-facing product architecture, но не заменяет project unit/component/integration/E2E evidence
+конкретных переводов, форматирования и locale switch.
 
 ## Evidence policy
 

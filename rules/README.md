@@ -80,5 +80,8 @@ Feature SPEC
   command surface, config/services, database/API setup, test tiers, diagnostics
   или local/CI parity, загрузи `rules/backend-dx.md` и используй Skill
   `backend-dx-audit`.
+- Если repository имеет или проектирует пользовательскую поверхность либо задача меняет
+  пользовательские строки, locale-dependent данные, layout для переводов или RTL, загрузи
+  `rules/i18n-l10n.md`.
 - Сквозная policy подключается только при наличии соответствующего риска;
   не загружай её автоматически для каждой простой задачи.

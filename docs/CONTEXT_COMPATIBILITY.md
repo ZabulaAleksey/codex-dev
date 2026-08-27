@@ -10,6 +10,22 @@
 - `CONFLICT` — определения дублируются или задают несовместимое поведение; выбери один канонический источник.
 - `OBSOLETE` — возможность больше не используется и должна быть удалена отдельным согласованным изменением.
 
+## Решение 2026-08-27 — глобальный i18n/l10n standard
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Product i18n/l10n | project-specific resources встречаются в отдельных products; общей нормы нет | наследуемая stack-independent архитектурная готовность всех user-facing продуктов | `EXTEND` | `rules/i18n-l10n.md` + `FR-010` / `AC-013` |
+| Documentation language vs product locale | русский project context задан глобально, но не отделён от языка продукта | не смешивать authoring language с `language` / `locale` runtime | `CONFLICT` → `EXTEND` | i18n/l10n policy явно разделяет контракты; `AGENTS.md` остаётся владельцем языка контекста |
+| Frontend/mobile/desktop/public CLI | domain rules не имеют единого владельца locale invariants | охватить все user-facing surfaces без frontend-only копии | `EXTEND` | один cross-cutting rule; domains/stacks только уточняют реализацию |
+| Fallback и stage lifecycle | общие fallback и architecturally complete stage contracts уже существуют | locale fallback и initial i18n slice без второго lifecycle owner | `INHERITED` | `rules/i18n-l10n.md` ссылается на `fallback-policy.md` и governance, не копируя их |
+| Project DESIGN/SPEC | проекты могут иметь собственные supported locales и UX | хранить только конкретную delta и acceptance evidence | `INHERITED` | project SPEC/DESIGN/architecture/testing; глобальный список не копируется |
+| Automation/runtime | существующих routers и structural tests достаточно | автоматическое наследование без нового service/dependency/write surface | `INHERITED` | `AGENTS.md`, `rules/README.md`, `PROJECT_FRAMEWORK.md`; новый hook/Skill/MCP не добавляется |
+
+Конфликтов с активными Skills, hooks, MCP, config и product repositories не обнаружено. Новая
+policy расширяет global rule layer, не меняет runtime projection и не выполняет массовый rollout в
+brownfield projects. Project-specific реализации остаются источниками факта текущего поведения,
+но не конкурирующими владельцами межпроектного стандарта.
+
 ## Решение 2026-08-27 — единый project workflow без второго global layer
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический источник |

@@ -57,6 +57,9 @@
 - [`rules/backend-dx.md`](rules/backend-dx.md) задаёт адаптивный `BDX-L0..L3`
   contract; Skill `backend-dx-audit` проектирует, проверяет и улучшает backend
   workflow без копирования policy в product repository.
+- [`rules/i18n-l10n.md`](rules/i18n-l10n.md) задаёт наследуемую архитектурную готовность
+  пользовательских продуктов к нескольким языкам и локалям, locale-aware данным, fallback,
+  text expansion и RTL; проекты хранят только конкретную delta в SPEC/DESIGN/architecture.
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md) содержит copy-ready запросы для старта, stage,
   completion, архитектурного изменения, pre-merge, паузы, возобновления и новой идеи, а также
   computer↔laptop handoff.
