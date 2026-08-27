@@ -1,7 +1,7 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: единый project workflow — `completed` / `validated locally` в изолированном worktree;
-изменения не committed и не интегрированы в active `main` по прямому запрету пользователя
+Статус: единый project workflow — `completed` / `merged locally` в active `main`;
+feature commit `4bcdf32` интегрирован fast-forward, push не выполнялся
 Рабочий item: source ownership, lifecycle-команды, docs/learning triggers, external/device/monitoring
 Дата: 2026-08-27
 
@@ -29,8 +29,8 @@ unified project workflow (`feature/unified-project-workflow`, validated locally)
 - Global source и выделенный worktree были clean до mutation; baseline — 198 files, 88 tests PASS.
 - Existing accepted tests не изменялись; новый contract test добавлен отдельным файлом.
 - Active `~/.codex` ↔ `~/.agents/skills` parity — PASS, 9/9 при baseline и финальном read-enabled
-  check. Skill sources этой feature не менялись, uncommitted worktree не materialize-ился в active
-  runtime.
+  check. Skill sources этой feature не менялись, поэтому отдельная runtime materialization после
+  merge не требуется.
 
 ## Самостоятельный runnable vertical slice
 
@@ -72,7 +72,8 @@ runtime integration является отдельным evidence level, а не 
 - [x] Skills/hooks/MCP/agents/config не расширены; project overlays не получили global copies.
 - [x] Wrong source root fail-visible; real project restore сверяет активные stage routes с текущими
   plan/status вместо доверия только structural PASS.
-- [x] External writes, commit, push, merge, deletion и runtime materialization не выполнялись.
+- [x] Feature commit `4bcdf32` fast-forward merged в локальную `main`; push, external writes и
+  runtime materialization не выполнялись.
 
 Проверки:
 
@@ -97,8 +98,8 @@ runtime integration является отдельным evidence level, а не 
 
 ## Deferred / не входит
 
-- commit/merge/push и materialization feature в active runtime — запрещены текущим prompt до
-  отдельного явного разрешения;
+- push и materialization в active runtime — отдельные действия, не выполненные этим локальным
+  merge;
 - repair pre-existing Browser client hash;
 - project-owned `electro-tutor` `TUTOR-02` и его текущий dirty work; эта задача их не изменяет;
 - mapping/удаление legacy `presets/*` quarantine;
@@ -119,6 +120,6 @@ runtime integration является отдельным evidence level, а не 
 
 ## Следующее действие
 
-Локальный slice реализован и проверен. Следующее действие возможно только после отдельного
-разрешения пользователя: создать commit feature-ветки; merge/push остаются отдельными действиями.
-До этого active `main`/runtime намеренно не обновляются, а worktree сохраняется.
+Slice реализован, проверен и fast-forward merged в локальную `main` commit-ом `4bcdf32`.
+Обязательного следующего implementation stage нет. Push, Browser hash repair, product-specific
+rollout и внешняя синхронизация остаются отдельными действиями с собственным разрешением.

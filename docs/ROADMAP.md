@@ -14,13 +14,10 @@
 - канонический контракт архитектурно завершённых stages, scaffold-safe lifecycle/evidence и
   task-aware `AI_PLAN → selected STAGES record` projection — fast-forward merged locally,
   88 tests PASS, runtime Skill parity 9/9.
-
-## Validated locally, integration pending
-
 - единый project workflow: actual `~/.codex` source ownership, восемь lifecycle requests,
   documentation/LEARNING triggers, external projection rules, computer↔laptop restore, monitoring
   classes и fail-visible global source-root validation — 94 tests PASS, 199-file manifest PASS;
-  feature остаётся uncommitted и не active в `main` по прямому запрету пользователя.
+  feature commit `4bcdf32` fast-forward merged в локальную `main`, push не выполнялся.
 
 ## Дальнейшие направления
 

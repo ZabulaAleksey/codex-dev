@@ -62,6 +62,11 @@ result: PASS 9/9 parity; validator BLOCKED только unmatched-browser-client
 scope: read-enabled installed layer ~/.codex → ~/.agents/skills вне feature worktree
 caveat: sandbox без чтения runtime дал ложный drift; синхронизация по такому сигналу запрещена
 
+command / check: git merge --ff-only feature/unified-project-workflow
+result: PASS — feature commit 4bcdf32 integrated в локальную main
+scope: local Git integration; Completion Documentation Synchronization Gate повторён после merge
+caveat: push, runtime materialization и external writes не выполнялись
+
 command / check: electro-tutor overlay/reconciliation/SessionStart restore
 result: PASS — structural PASS, BROWNFIELD/pnpm/no dependency drift, active route audit selects TUTOR-02
 scope: один real project без старого чата

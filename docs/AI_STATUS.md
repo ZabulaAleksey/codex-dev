@@ -4,12 +4,13 @@
 
 ## Статус
 
-- Lifecycle: unified project workflow `completed` в feature worktree.
-- Evidence level: `validated locally`; commit отсутствует по прямому запрету пользователя.
-- Integration: active `main`, runtime, remote и external services не изменялись.
+- Lifecycle: unified project workflow `completed`.
+- Evidence level: `merged locally`; feature commit `4bcdf32` fast-forward integrated в `main`.
+- Integration: active local `main` обновлена; remote, runtime projection и external services не
+  изменялись.
 - Runtime: active `~/.codex` ↔ `~/.agents/skills` parity — PASS, 9/9 при baseline и финальном
-  read-enabled check; Skill sources feature не менялись и не materialize-ились из uncommitted
-  worktree.
+  read-enabled check; Skill sources feature не менялись, поэтому runtime materialization после
+  merge не требуется.
 
 Единый global policy owner теперь формализует source responsibility, documentation/learning
 triggers, external projections, device restore и monitoring. `docs/WORKFLOW.md` даёт восемь
@@ -58,19 +59,18 @@ copy-ready lifecycle requests как operational projection, а не второ�
 
 - Active `main` global validator по-прежнему `BLOCKED` pre-existing сигналом
   `unmatched-browser-client-hash`; feature его не меняет.
-- Feature не committed/merged, поэтому новый workflow ещё не является active `main`/runtime
-  evidence. Runtime sync из uncommitted worktree намеренно не выполнялся.
+- Workflow находится в local `main` начиная с `4bcdf32`. Push не выполнялся; отсутствие remote
+  evidence не снижает подтверждённый локальный merge level.
 - Real project restoration — PASS: `electro-tutor` восстанавливает текущий plan/status и выбирает
   `TUTOR-02` без старого чата. Unrelated dirty worktree сохранён read-only и не считается дефектом
   восстановления; исторические/отрицательные упоминания `STAGED_PROMPTS.md` не являются active
   stage routes.
 - Legacy named presets остаются `BLOCKED` quarantine; mapping/удаление требует отдельного scope и
   разрешения. Semantic link/stage parser не добавлен без versioned schema.
-- Commit, push, merge, deletion, external writes, release/deploy не выполнялись.
+- Push, branch deletion, external writes и release/deploy не выполнялись; feature branch сохранена.
 
 ## Следующее действие
 
-Read-only review завершён без blocking findings. Пользователь может отдельно разрешить commit
-feature-ветки. Merge, push, runtime
-materialization, Browser hash repair, product `TUTOR-02`, legacy preset cleanup и external sync —
-самостоятельные последующие действия и не выполняются автоматически.
+Read-only review и локальный merge завершены без blocking findings. Push, Browser hash repair,
+product `TUTOR-02`, legacy preset cleanup и external sync — самостоятельные последующие действия и
+не выполняются автоматически.
