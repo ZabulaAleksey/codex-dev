@@ -12,6 +12,12 @@
 - Completion Documentation Synchronization Gate для task/stage/merge closeout;
 - отделение состояния ДЕВ от live-состояния product repositories.
 
+## Готово к интеграции
+
+- канонический контракт архитектурно завершённых stages, scaffold-safe lifecycle/evidence и
+  task-aware `AI_PLAN → selected STAGES record` projection — feature commit `8c05d0f`, 88 tests
+  PASS; merge и runtime materialization ожидают разрешения пользователя.
+
 ## Дальнейшие направления
 
 - развитие model/tool routing;

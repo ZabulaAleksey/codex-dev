@@ -3,6 +3,70 @@
 Здесь хранятся воспроизводимые объяснения существенных изменений. Журнал не
 дублирует оперативный статус и не содержит скрытых рассуждений модели.
 
+## 2026-08-27 — архитектурно завершённые этапы
+
+### Что изменено
+
+- `rules/governance.md` стал единственным полным Stage contract: только completed prerequisites,
+  dependency DAG без cycle/forward edge, runnable vertical slice, concrete E2E, PASS/evidence,
+  полностью рабочая temporary implementation и явно deferred scope.
+- `blocked`, `scaffolded`, `partial`, `implemented_unverified` отделены от terminal
+  `completed`/`verified`/`DONE`; mocks/stubs/interfaces подтверждают подготовку, но не product path.
+- SPEC/ADR закреплены как source of requirements, accepted tests — как executable contract/evidence.
+- Existing SessionStart/SubagentStart hook теперь выбирает bounded stage record по stable
+  `Stage ID` из AI_PLAN. Selector не вводит вымышленное поле hook payload и не загружает весь
+  catalog.
+
+### Поток и fallback
+
+```text
+SPEC → governance Stage contract → Skills/templates → project AI_PLAN Stage ID
+                                                    ↓
+                         exact unique STAGES heading → selected context first
+                                                    ↓
+                 invalid/missing/duplicate/oversized → visible DEGRADED → manual check
+```
+
+Retry отсутствует, потому что Markdown input детерминирован. Silent fallback запрещён. Hook
+игнорирует heading/selector examples внутри fenced blocks, отклоняет symlink наружу, ограничивает
+scan/output и не объявляет DAG либо evidence истинными.
+
+### Почему потребовался cross-architecture audit
+
+Прежние surfaces расходились в четырёх местах: blocked gate можно было прочитать как допустимый
+для DONE; tests назывались источником требований; full-overlay baseline и legacy architecture/ADR
+paths имели разные пороги; документация обещала selected STAGES context, но production hook его не
+доставлял. Исправление одного текста оставило бы скрытые конфликты в bootstrap, planning, status и
+runtime route, поэтому были синхронизированы все owners и projections.
+
+### Проверка
+
+```text
+py -3 -B tools\validate_context.py
+py -3 -B -m unittest discover -s tools -p "test*.py"
+powershell -NoProfile -ExecutionPolicy Bypass -File skill-sources\dev-karkas\scripts\validate.ps1
+python -X utf8 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skill-sources/<changed-skill>
+py -3 -B -m py_compile hooks\session_context.py
+git diff --check
+```
+
+Результат feature commit `8c05d0f`: context validation — 198 files; unit/contract suite —
+88 tests PASS; dev-karkas и пять изменённых Skills — valid; hook primary/degraded subprocess paths
+и diff checks — PASS. Active `main` validator сохраняет только pre-existing
+`unmatched-browser-client-hash`. Финальный reviewer — `No blocking findings`. Runtime Skills не
+синхронизировались до merge.
+
+### Как повторить самостоятельно
+
+1. Найди canonical requirement в SPEC и единственного полного policy owner.
+2. Для stage заполни DAG, prerequisites, runnable slice, concrete E2E, PASS/evidence, temporary и
+   deferred fields до реализации.
+3. Укажи stable `Stage ID` в AI_PLAN и проверь, что он встречается ровно в одном STAGES heading.
+4. Прогони primary selector и missing/duplicate/oversized degraded scenarios.
+5. Выполни unit/integration/component и ближайший реальный consumer E2E; mock не называй E2E.
+6. Сверь lifecycle отдельно от commit/merge/release evidence.
+7. Перед DONE проверь state-bearing docs и повтори gate после разрешённого merge.
+
 ## 2026-08-26 — синхронизация документации при завершении работы
 
 ### Что изменено

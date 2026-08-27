@@ -1,71 +1,63 @@
 # Текущее состояние ДЕВ / КАРКАС
 
-Дата: 2026-08-26
+Дата: 2026-08-27
 
 ## Статус
 
-Completion Documentation Synchronization Gate реализован, validated и fast-forward слит
-в локальную `main` feature commit `b4d8565`. Стабильный requirement принадлежит
-`specs/system.spec.md`, каноническая policy — `rules/governance.md`, исполняемый workflow —
-`dev-karkas/references/STATUS_WORKFLOW.md`. Runtime Skills materialized из active source;
-push не выполнялся.
+- Lifecycle: `completed` на `feature/architecturally-complete-stages`.
+- Evidence level: `committed`, feature commit `8c05d0f`.
+- Integration: не merged, не pushed, не released/deployed.
+- Runtime: изменённые Skill sources ещё не materialized в `~/.agents/skills`; active runtime
+  намеренно соответствует текущей `main` до разрешённого merge.
 
-## Сохраняющееся подтверждённое состояние
+Глобальный ДЕВ теперь имеет один канонический Stage contract в `rules/governance.md`. Он запрещает
+forward dependency, ложный completion по scaffold evidence и перенос обязательного gate в будущий
+stage. Planning/execution Skills и templates собирают операционные поля, но не копируют policy.
 
-- глобальный ДЕВ остаётся в единственном Git root `~/.codex`;
-- Backend Developer Experience Policy ранее validated и слита в active `main`;
-- product repositories этой задачей не изменялись;
-- runtime parity всех versioned Skill sources подтверждена после merge: 9/9.
+## Реализованный vertical slice
 
-## Подтверждённые инварианты
-
-- перед `DONE` всегда проверяются существующие `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`,
-  stage tracker и другие документы, отражающие выполненные шаги или состояние;
-- audit обязателен, но mutation выполняется только при изменении фактов;
-- timestamp-only churn и выдуманное evidence запрещены;
-- stale actions, stage pointers, blockers, test results и capability claims должны быть
-  устранены или явно классифицированы;
-- статус `merged`, `released` или `deployed` соответствует только подтверждённому уровню;
-- после merge gate повторяется по фактическому target branch;
-- итоговый handoff различает обновлённые и проверенные без изменений документы.
+- `specs/system.spec.md` содержит `FR-007`/`AC-007` и cross-surface consistency `AC-008`;
+- governance разделяет lifecycle и evidence/integration, определяет internal/product E2E и
+  terminal gate;
+- full staged overlay baseline, architecture/ADR mapping и SPEC/test authority согласованы;
+- `docs/AI_PLAN.md` stable `Stage ID` выбирает exact unique heading record в
+  `prompts/STAGES.md` через существующий SessionStart/SubagentStart hook;
+- no-selector сохраняет compact snapshot; invalid, duplicate, missing, ambiguous или oversized
+  input выдаёт visible `DEGRADED`, не случайный fallback;
+- structural и subprocess contract tests защищают global surfaces и internal hook path.
 
 ## Verification evidence
 
-- `py -3 -B tools\validate_context.py` — PASS, 197 files;
-- полный validator/sync/reconcile/Backend DX/documentation unit suite — PASS, 70 tests;
+- `py -3 -B -m unittest discover -s tools -p "test*.py"` — PASS, 88 tests;
+- canonical explicit unit/contract suite — PASS, 88 tests;
+- `py -3 -B tools\validate_context.py` — PASS, 198 files;
 - `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
-- `quick_validate.py` для `skill-sources/dev-karkas` и
-  `skill-sources/implement-stage` через штатный `python` — PASS;
-- `tools\sync_global_skills.py` source/runtime parity — PASS, 9 sources;
-- `git diff --check` и conflict-marker scan — PASS.
-- target `main` `tools\validate_global_codex.py` — `BLOCKED` только прежним
-  `unmatched-browser-client-hash`; documentation/Skill drift отсутствует.
+- `quick_validate.py` через `python -X utf8` — PASS для пяти изменённых Skills;
+- hook compile и subprocess primary/degraded paths — PASS;
+- `git diff --check`, cached diff check, conflict-marker и semantic conflict scans — PASS;
+- initial и follow-up reviewer findings устранены; финальный state-aware reviewer —
+  `No blocking findings`.
 
 ## Синхронизация документации
 
-- Обновлены: root и `skill-sources/dev-karkas/README.md`, `docs/AI_PLAN.md`,
-  `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `specs/system.spec.md`, `rules/governance.md`,
-  `docs/DECISIONS.md`,
-  `docs/CONTEXT_COMPATIBILITY.md`, `docs/PROJECT_FRAMEWORK.md`, `docs/WORKFLOW.md`,
-  `docs/TESTING.md`, `docs/LEARNING_LOG.md`, Skills, templates, validator inventory и
-  contract tests.
-- После merge повторно обновлены `docs/AI_PLAN.md`, `docs/AI_STATUS.md` и merge evidence
-  в `docs/LEARNING_LOG.md`.
-- На target `main` проверены без дополнительных изменений: root/Skill README,
-  `docs/ROADMAP.md`, system SPEC, governance, decisions, compatibility,
-  framework/workflow/testing, `docs/ARCHITECTURE.md`, `docs/DESIGN.md` и
-  `docs/SECURITY.md`.
-- Не применяются / отсутствуют: `prompts/STAGES.md`, `docs/TRACEABILITY.md`,
-  `CHANGELOG.md`, `docs/DEV_LOG.md`.
+- Обновлены: `README.md`, `QUICKSTART.md`, `AGENTS.md`, system SPEC, governance/SDLC rules,
+  `ARCHITECTURE.md`, `DECISIONS.md`, `CONTEXT_POLICY.md`, `CONTEXT_COMPATIBILITY.md`,
+  `PROJECT_FRAMEWORK.md`, `HOOK_POLICY.md`, `TESTING.md`, `VERIFY_SETUP.md`, `WORKFLOW.md`,
+  context inventory/maps, Skills/references, AI templates и state docs.
+- Проверены и остались точными: `DESIGN.md`, `SECURITY.md`, feature SPECs,
+  `docs/project-context.md`.
+- Не применяются в этом global infrastructure repository: project `prompts/STAGES.md`,
+  `TRACEABILITY.md`, `CHANGELOG.md`, `DEV_LOG.md`.
 
 ## Ограничения
 
-- Active `main` global validator остаётся `BLOCKED` прежним
-  `unmatched-browser-client-hash`; изменение документационного workflow его не затрагивает.
-- Gate проверяет смысл human/agent review и не заявляется как автоматический semantic validator.
+- Active `main` global validator по-прежнему `BLOCKED` pre-existing сигналом
+  `unmatched-browser-client-hash`; feature его не меняет.
+- Semantic parser project DAG/evidence намеренно не добавлен без versioned schema/migration;
+  истинность project completion остаётся evidence/review gate.
+- Merge, runtime materialization и worktree cleanup требуют явного разрешения пользователя.
 
 ## Следующее действие
 
-Обязательных действий по этому этапу больше нет. Подтверждённые уровни: `implemented`,
-`validated`, `committed`, `merged locally`, `materialized globally`. `pushed`, `released`
-и `deployed` не заявляются. Browser hash repair остаётся отдельной maintenance-задачей.
+Запросить разрешение на merge в `main`; затем materialize runtime Skills и повторить
+verification/documentation gate на target branch.

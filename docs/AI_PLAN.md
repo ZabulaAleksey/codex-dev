@@ -1,56 +1,111 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: Completion Documentation Synchronization Gate fast-forward слит в локальную `main`,
-runtime Skills синхронизированы; push не выполнен
-Этап: обязательная синхронизация документации при task/stage/merge closeout — завершён
-Дата: 2026-08-26
+Статус: архитектурно завершённый stage contract реализован, validated и committed в изолированной
+ветке; merge, push и runtime materialization не выполнялись
+Рабочий item: правило архитектурно завершённых этапов — `completed` на feature branch
+Дата: 2026-08-27
 
-## Текущий ограниченный срез
+## Applicability
 
-Закрепить единый обязательный audit существующих `README`, `AI_PLAN`, `AI_STATUS`,
-`ROADMAP`, stage tracker и других state-bearing документов. Проверка выполняется всегда,
-mutation — только при изменении подтверждённых фактов; после merge gate повторяется по
-target branch.
+Глобальный infrastructure repository не является full staged product overlay и намеренно не
+использует project `prompts/STAGES.md`. Поэтому этот change ведётся как bounded work item в
+`AI_PLAN`, без параллельного stage source. Требуемые поля архитектурной завершённости ниже
+зафиксированы явно.
 
-Связанная SPEC: `specs/system.spec.md`, `FR-006`, `AC-006`.
+Связанная SPEC: `specs/system.spec.md`, `NFR-001`, `NFR-003`, `FR-007`, `AC-007`, `AC-008`.
 
-## Выполнено
+## Dependency DAG и входные предпосылки
 
-1. Requirement и acceptance criterion добавлены в системную SPEC.
-2. Канонический gate добавлен в `rules/governance.md` и global `AGENTS.md`.
-3. Процедура встроена в `dev-karkas`, `implement-stage`, общий workflow и AI templates.
-4. Gate выявляет stale current/future actions, stage pointers, blockers, test evidence,
-   README capabilities и неподтверждённые merge/release/deploy claims.
-5. README, roadmap, decision, compatibility, framework и learning sources синхронизированы.
-6. Добавлен отдельный structural contract test без изменения принятых tests.
-7. Feature commit `b4d8565` fast-forward слит в локальную `main`.
-8. Runtime Skills `dev-karkas` и `implement-stage` materialized из active `main`;
-   source/runtime parity — PASS, 9 sources.
+```text
+Completion Documentation Synchronization Gate (`b4d8565`, completed/merged locally)
+        ↓
+existing SDD + governance + source/runtime Skill split (validated baseline)
+        ↓
+architecturally complete stage contract (`8c05d0f`, completed on feature branch)
+```
 
-## Проверки
+- Self-reference, cycle и forward dependency отсутствуют.
+- Git source/worktree были clean до mutation; baseline — 197 managed files и 70 tests PASS.
+- Existing accepted tests не изменялись; новый contract test добавлен отдельным файлом.
+- Runtime Skills остаются проекцией active `main` до разрешённого merge.
 
-- `py -3 -B tools\validate_context.py` — PASS, 197 files;
-- полный validator/sync/reconcile/Backend DX/documentation unit suite — PASS, 70 tests;
+## Самостоятельный runnable vertical slice
+
+```text
+user requirement
+  → specs/system.spec.md
+  → rules/governance.md Stage contract
+  → AGENTS/rules/Skills/templates/status workflow
+  → AI_PLAN Stage ID
+  → SessionStart/SubagentStart exact STAGES record projection
+  → structural + subprocess contract tests
+  → observable PASS / visible DEGRADED result
+```
+
+Slice не зависит от будущего компонента. Exact selector не объявляет stage завершённым и не
+заменяет semantic review DAG, prerequisites или evidence.
+
+## Concrete end-to-end scenario
+
+1. Temporary independent Git repository содержит `docs/AI_PLAN.md` со stable `Stage ID`.
+2. `hooks/session_context.py` безопасно разрешает `prompts/STAGES.md` внутри Git-root.
+3. Hook возвращает ровно один выбранный heading record первым в `additionalContext`.
+4. Другие stage records отсутствуют в результате; invalid, duplicate, missing или oversized
+   selector даёт видимый `Stage context — DEGRADED` без silent fallback.
+
+Результат: subprocess consumer path `AI_PLAN → hook → selected STAGES record` — PASS.
+
+## PASS criteria и evidence
+
+- [x] Future stage не разблокирует primary path, инфраструктуру или проверку предыдущего stage.
+- [x] Dependency DAG, prerequisites, runnable slice, concrete E2E, PASS/evidence, допустимая
+  temporary implementation и deferred scope обязательны до реализации.
+- [x] Mock/stub/interface-only evidence допускает только non-terminal status.
+- [x] Lifecycle и evidence/integration разделены; `completed`, `verified`, `DONE` имеют один gate.
+- [x] SPEC/ADR остаются source of requirements; accepted tests — executable contract/evidence.
+- [x] Full staged overlay baseline и legacy architecture/ADR mapping согласованы.
+- [x] Task-aware route загружает только выбранный STAGES record и fail-visible при деградации.
+- [x] Feature commit создан: `8c05d0f`.
+
+Проверки:
+
+- `py -3 -B -m unittest discover -s tools -p "test*.py"` — PASS, 88 tests;
+- canonical validator/sync/reconcile/Backend DX/documentation/stage suite — PASS, 88 tests;
+- `py -3 -B tools\validate_context.py` — PASS, 198 files;
 - `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
-- `quick_validate.py` для `dev-karkas` и `implement-stage` через штатный `python` — PASS;
-- `git diff --check` и conflict-marker scan — PASS;
-- target `main` source/runtime parity — PASS, 9 sources;
-- target `main` `validate_global_codex.py` — `BLOCKED` только прежним
-  `unmatched-browser-client-hash`; documentation/Skill drift отсутствует.
+- `quick_validate.py` через `python -X utf8` — PASS для `dev-karkas`,
+  `bootstrap-project-framework`, `plan-stage`, `implement-stage`, `resume-project`;
+- `py -3 -B -m py_compile hooks\session_context.py` — PASS;
+- `git diff --check`, staged diff check и conflict/competing-path scans — PASS;
+- active `main` global validator — `BLOCKED` только прежним
+  `unmatched-browser-client-hash`; feature runtime ещё не materialized.
+
+## Допустимая временная реализация
+
+`none`: selector, degraded path, documentation routes и tests являются рабочей реализацией
+текущего internal slice, а не scaffold.
+
+## Deferred / не входит
+
+- versioned schema и semantic parser произвольных project `prompts/STAGES.md`;
+- автоматическое доказательство истинности project DAG/E2E evidence;
+- repair pre-existing Browser client hash;
+- merge, push и runtime Skill materialization без прямого разрешения пользователя.
+
+Эти пункты не нужны для запуска или проверки текущего feature-branch slice.
 
 ## Documentation audit
 
-- Обновлены: root и `dev-karkas` README, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, system SPEC,
-  governance, decisions, compatibility, framework/workflow/testing, learning log, Skills,
-  AI templates, validator inventory и contract tests.
-- После merge повторно обновлены `AI_PLAN`, `AI_STATUS` и merge evidence в learning log.
-- На target `main` проверены без дополнительных изменений: root/Skill README, `ROADMAP`,
-  system SPEC, governance, decisions, compatibility, framework/workflow/testing,
-  `ARCHITECTURE.md`, `DESIGN.md` и `SECURITY.md`.
-- Не используются этим repository: `prompts/STAGES.md`, `TRACEABILITY.md`, `CHANGELOG.md`,
-  `DEV_LOG.md`; параллельные placeholders не создавались.
+- Обновлены: global router, SPEC, governance/SDLC rules, architecture/decisions/context/hook/testing
+  docs, framework/workflow/quickstart/readme, compatibility/inventory maps, Skills/references,
+  AI templates, validator manifest и новый contract test.
+- Этим closeout обновлены: `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `LEARNING_LOG`.
+- Проверены без содержательных изменений: `DESIGN.md`, `SECURITY.md`, feature SPECs и
+  `docs/project-context.md`; текущая задача их факты не меняет.
+- Не применяются: project `prompts/STAGES.md`, `TRACEABILITY.md`, `CHANGELOG.md`, `DEV_LOG.md`.
 
 ## Следующее действие
 
-Обязательных действий по Completion Documentation Synchronization Gate больше нет.
-Следующая возможная задача — отдельный repair `unmatched-browser-client-hash` runtime Browser.
+Финальный read-only reviewer не нашёл blocking findings. Требуется явное разрешение пользователя
+на merge ветки в `main` и удаление worktree. Только после merge следует materialize runtime Skills
+из active source и повторить global validation/documentation gate по target branch.
