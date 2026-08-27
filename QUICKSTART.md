@@ -24,4 +24,4 @@ codex mcp list
 codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов. Не изменяй файлы."
 ```
 
-В интерактивном Codex открой `/hooks`, проверь определения и доверь их только после просмотра файлов. Для `STANDARD` или `COMPLEX` функции также проверь `specs/README.md` и относящуюся к задаче SPEC.
+В интерактивном Codex открой `/hooks`, проверь определения и доверь их только после просмотра файлов. Для `STANDARD` или `COMPLEX` функции также проверь `specs/README.md` и относящуюся к задаче SPEC. Для stage-bound задачи укажи stable `Stage ID` в `docs/AI_PLAN.md`, загрузи только exact unique heading record из `prompts/STAGES.md` и до кода проверь его dependency DAG, runnable vertical slice и end-to-end PASS contract. `DEGRADED` warning hook требует ручного чтения полного record и не разрешает completion claim.

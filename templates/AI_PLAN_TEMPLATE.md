@@ -9,6 +9,33 @@
 - SPEC:
 - Идентификаторы требований:
 
+## Stage identity и dependency DAG
+
+- Stage ID:
+- Selector format: stable ASCII ID; exact unique heading token in `prompts/STAGES.md`.
+- Completed / verified prerequisites:
+- DAG:
+- Проверка отсутствия self-reference, cycle и forward dependency:
+
+## Входные предпосылки
+
+| Предпосылка | Evidence доступности до старта |
+|---|---|
+| | |
+
+## Самостоятельный runnable vertical slice
+
+- Точка входа:
+- Полный текущий путь:
+- Наблюдаемый результат:
+- Обязательная инфраструктура, входящая в этот stage:
+
+## Concrete end-to-end scenario
+
+1. Вход / действие consumer:
+2. Реальный application/API/CLI/backend path:
+3. Наблюдаемый результат:
+
 ## Область работы
 
 ### Входит
@@ -25,7 +52,7 @@
 |---|---|---|---|---|
 | 1 | | | | |
 
-## Критерии приёмки
+## Acceptance / PASS criteria
 
 - [ ]
 
@@ -34,6 +61,19 @@
 ```text
 <команды>
 ```
+
+| Gate | Command / check | Expected PASS | Evidence scope/environment |
+|---|---|---|---|
+| End-to-end | | | |
+
+## Допустимая временная реализация
+
+- Полностью рабочая реализация текущего slice или `none`:
+- Явные границы:
+
+## Deferred to future stages
+
+- Только расширения/оптимизации/замены, не нужные primary path текущего stage:
 
 ## Риски и откат
 
@@ -45,11 +85,16 @@
 
 ## Определение готовности
 
+- [ ] Все prerequisites завершены; forward dependency/cycle отсутствуют.
+- [ ] Primary vertical slice запускается без future stage.
+- [ ] Concrete end-to-end scenario имеет PASS evidence.
+- [ ] Mocks/stubs/fakes/interfaces не выданы за user/production completion.
 - [ ] Критерии приёмки подтверждены.
 - [ ] Релевантные проверки выполнены.
-- [ ] `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, stage tracker и другие state-bearing документы проверены.
+- [ ] `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `prompts/STAGES.md` и другие state-bearing документы проверены.
 - [ ] Изменившиеся факты синхронизированы; точные документы оставлены без churn.
 
 ## Условие остановки
 
 - Остановиться и запросить решение, если реализация требует изменить SPEC, контракт или согласованные non-goals.
+- Не использовать completion status, если primary path/verification зависит от future stage; выбрать `blocked`, `scaffolded`, `implemented_unverified` или `partial`.

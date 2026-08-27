@@ -10,7 +10,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -42,6 +42,19 @@ Fixture доказывает read-only deterministic contract validator-а. Он
 обязательный список state-bearing sources, routing Skills и поддержку AI templates.
 Это structural contract test: смысловую актуальность проектной документации подтверждает
 Completion Documentation Synchronization Gate, а не эвристический semantic validator.
+
+## Architecturally complete stage contract
+
+`tools.test_stage_completion_policy` проверяет стабильные `FR-007` / `AC-007`, единственного
+владельца полного Stage contract, обязательные planning/status fields, routes Skills/templates,
+разделение lifecycle/evidence, SPEC authority и отсутствие конкурирующего local backlog path.
+Subprocess-тесты дополнительно проходят внутренний путь
+`AI_PLAN Stage ID → session_context.py → exact selected STAGES record` и проверяют no-selector,
+missing и ambiguous degraded-сценарии.
+
+Policy-часть остаётся structural contract test глобальной автоматизации, а hook-часть — internal
+E2E context-projection path. Она не валидирует семантику произвольного project
+`prompts/STAGES.md`, не исполняет product path и не превращает mocks/stubs в E2E evidence.
 
 ## Evidence policy
 

@@ -1,30 +1,32 @@
 # Project files policy
 
-Используй этот документ как карту назначения, а не как обязательное дерево.
+Используй этот документ как карту назначения. Обязательный baseline active full staged product
+overlay задаёт `~/.codex/rules/governance.md`; колонка applicability не разрешает пропускать его.
+Repository вне полного overlay сначала явно классифицируется и не получает placeholders.
 
 | Artifact | Назначение | Создавать когда |
 |---|---|---|
-| `AGENTS.md` | project-specific инструкции агентам | почти всегда для agent-driven проекта |
+| `AGENTS.md` | project-specific инструкции агентам | обязательно для полного overlay |
 | `README.md` | вход для человека/разработчика | почти всегда |
 | `specs/system.spec.md` / `specs/features/*.spec.md` | требования продукта/системы | когда меняется существенное наблюдаемое поведение |
-| `docs/ARCHITECTURE.md` | каноническая архитектура | для существенного software repository |
+| `docs/ARCHITECTURE.md` | каноническая архитектура | обязательно для полного overlay |
 | `docs/DESIGN.md` | канонический UI/UX contract | есть пользовательский интерфейс |
 | `docs/SECURITY.md` | security baseline | есть сеть, пользователи, данные, upload, auth или публичный API |
 | `docs/DEPENDENCIES.md` | canonical manager, lockfile, shared cache/store и clean restore | ecosystem определим и существующий architecture document не выполняет эту роль |
-| `docs/ROADMAP.md` | направления и крупные этапы | для существенного agent-driven проекта |
-| `docs/AI_PLAN.md` | ближайший исполнимый план | для существенного agent-driven проекта |
-| `docs/AI_STATUS.md` | подтверждённое текущее состояние | для существенного agent-driven проекта |
-| `docs/project-context.md` | устойчивые project facts, включая применимую Backend DX delta | для существенного project overlay; Backend DX section только при `BDX-L1..L3` |
-| `docs/DECISIONS.md` / ADR | журнал важных решений | решения имеют долгий хвост |
-| `prompts/STAGES.md` | единый detailed stage source | разработка ведётся этапами |
-| `docs/LEARNING_LOG.md` | повторно полезные выводы | есть диагностические/инженерные знания |
+| `docs/ROADMAP.md` | направления и крупные этапы | обязательно для полного overlay |
+| `docs/AI_PLAN.md` | ближайший исполнимый план | обязательно для полного overlay |
+| `docs/AI_STATUS.md` | подтверждённое текущее состояние | обязательно для полного overlay |
+| `docs/project-context.md` | устойчивые project facts, включая применимую Backend DX delta | обязательно для полного overlay; Backend DX section только при `BDX-L1..L3` |
+| `docs/DECISIONS.md` | журнал важных решений; может ссылаться на ADR supplement | обязательно для полного overlay |
+| `prompts/STAGES.md` | единый detailed stage source | обязательно для полного overlay |
+| `docs/LEARNING_LOG.md` | повторно полезные выводы | обязательно для полного overlay; entries только при наличии evidence |
 | `docs/DEV_LOG.md` | краткий журнал существенных работ | нужен trace, отличный от Git history |
 | `docs/notes/<topic>.md` | долговечный дополнительный материал без канонической роли | заметка действительно нужна и не помещается в существующий контракт |
 
 ## Именование и канон
 
-1. Не переименовывай существующий канонический файл только ради совпадения с таблицей.
-2. Если два документа делают одно и то же, выбери один канон и постепенно устрани дублирование без потери содержимого.
+1. В brownfield не переименовывай существующий legacy-файл только ради совпадения с таблицей до reconciliation и semantic/link audit.
+2. Зафиксируй canonical mapping в `docs/CONTEXT_COMPATIBILITY.md`, сохрани уникальное содержание и мигрируй к одному канону без параллельной роли.
 3. Ссылки между документами предпочтительнее копипаста.
 4. Не создавай пустые placeholder-файлы без ближайшего полезного содержания.
 5. Не генерируй `SNAPSHOT.md`, если `AI_STATUS.md` уже выполняет эту роль.
@@ -40,4 +42,5 @@ prompts/
 └── STAGES.md
 ```
 
-`STAGES.md` является единым detailed stage source. Сырые идеи не превращаются в отдельные stage-файлы до refinement/approval.
+`STAGES.md` является единым detailed stage source. Каждый stage применяет архитектурный Stage
+contract из governance. Сырые идеи не превращаются в отдельные stage-файлы до refinement/approval.

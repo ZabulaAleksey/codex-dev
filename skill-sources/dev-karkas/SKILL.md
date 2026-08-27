@@ -47,6 +47,9 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - `references/GIT_WORKFLOW.md` — ветки, commit/PR/merge и работа с git;
 - `references/ARCHITECTURE_POLICY.md` — API-first, границы слоёв, telemetry, adapters, SDK/CLI/MCP.
 
+Для планирования, реализации, resume и закрытия stage дополнительно применяй единственный полный
+Stage contract из `~/.codex/rules/governance.md`; references ниже не переопределяют его.
+
 ## Универсальный workflow
 
 ### 1. Inspect
@@ -57,7 +60,7 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - `AGENTS.md` / `AGENTS.override.md`;
 - README, SPEC, DESIGN, SECURITY, ROADMAP;
 - AI_PLAN, AI_STATUS, PROGRESS, DEV_LOG, LEARNING, decisions;
-- `PROMPTS/`, docs, tests, CI/CD;
+- `prompts/STAGES.md`, docs, tests, CI/CD;
 - package/workspace manifests;
 - dependency manager, canonical lockfile, CI restore command and tracked generated
   dependency/build directories when an ecosystem is present;
@@ -111,7 +114,7 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 
 Перед завершением выполни Completion Documentation Synchronization Gate из
 `references/STATUS_WORKFLOW.md`: всегда проверь README, AI_PLAN, AI_STATUS, ROADMAP,
-stage tracker и другие state-bearing документы; обнови изменившиеся факты, а точные
+`prompts/STAGES.md` и другие state-bearing документы; обнови изменившиеся факты, а точные
 документы оставь без churn. После merge повтори gate по target branch.
 
 ### 7. Report
@@ -140,6 +143,10 @@ stage tracker и другие state-bearing документы; обнови и�
 
 Любой implementation prompt должен быть достаточно самодостаточным, чтобы другой агент мог выполнить его без пересказа текущего чата. Следуй `references/PROMPT_TEMPLATE.md`.
 
+До сохранения stage prompt проверь completed prerequisites/DAG, entry preconditions, runnable
+vertical slice, concrete end-to-end scenario, PASS/evidence, fully working temporary implementation
+и deferred scope. Future stage не должен разблокировать primary path текущего.
+
 ## Защита от дрейфа
 
 Считай источником истины в порядке конкретности:
@@ -148,7 +155,7 @@ stage tracker и другие state-bearing документы; обнови и�
 2. явно утверждённая спецификация / архитектурное решение;
 3. project-specific `AGENTS.md` и project policy;
 4. AI_STATUS / AI_PLAN;
-5. backlog / PROMPTS;
+5. backlog / `prompts/STAGES.md`;
 6. Notion-идеи и brainstorm.
 
 Более низкий уровень не должен молча переписывать более высокий.

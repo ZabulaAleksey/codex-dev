@@ -64,6 +64,10 @@ Feature SPEC
 
 Некоторые правила не относятся только к одному стеку или SDLC-этапу.
 
+- Если задача проектирует, реализует, возобновляет или закрывает stage, загрузи Stage contract
+  из `rules/governance.md`. Он является единственным владельцем dependency DAG, runnable vertical
+  slice, concrete end-to-end PASS evidence и completion statuses.
+
 - Если операция допускает retry, альтернативный tool/model/backend/data source,
   частичный результат или другой degraded mode, загрузи
   `rules/fallback-policy.md`.

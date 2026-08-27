@@ -38,8 +38,14 @@ $dev-karkas синхронизируй статус после завершён�
 
 Skill также разрешает implicit invocation через `agents/openai.yaml`.
 
+При построении или выполнении stage Skill применяет канонический Stage contract из
+`~/.codex/rules/governance.md`: completed prerequisites/DAG, runnable vertical slice, concrete
+end-to-end PASS evidence, fully working temporary implementation и deferred scope. Future stage
+не может впервые сделать предыдущий stage исполнимым или проверяемым; mock-only результат остаётся
+`scaffolded`.
+
 При завершении задачи или этапа Skill всегда проверяет `README`, `AI_PLAN`,
-`AI_STATUS`, `ROADMAP`, stage tracker и другие state-bearing документы по
+`AI_STATUS`, `ROADMAP`, `prompts/STAGES.md` и другие state-bearing документы по
 `references/STATUS_WORKFLOW.md`. Изменившиеся факты обновляются; точные документы
 остаются без timestamp-only churn. После merge gate повторяется по target branch.
 

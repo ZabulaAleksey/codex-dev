@@ -6,3 +6,6 @@
 - Сравни альтернативы и зафиксируй существенное решение в `docs/DECISIONS.md`.
 - Не добавляй технологию без конкретной проблемы и критериев успеха.
 - Архитектура должна обеспечивать SPEC, а не менять её молча.
+- Для поэтапной архитектуры примени Stage contract из `rules/governance.md`: текущий stage
+  обязан иметь completed prerequisites, runnable vertical slice и собственный end-to-end PASS path,
+  а не зависеть от future stage для обязательной инфраструктуры или verification.

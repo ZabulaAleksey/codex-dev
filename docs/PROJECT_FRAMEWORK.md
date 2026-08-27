@@ -26,20 +26,26 @@ Implementation → tests → state update
 
 Создавай только артефакты, которые решают подтверждённую задачу проекта.
 
-Обязательное ядро для существенного проекта:
+Обязательное ядро для active product repository, подключённого как полный staged overlay:
 
 - `specs/system.spec.md` и при необходимости `specs/features/*` — стабильные требования и критерии приёмки;
 - `AGENTS.md` — тонкий project overlay с локальными инвариантами и маршрутизацией контекста;
+- `prompts/STAGES.md` — единственный подробный источник самостоятельных stages;
 - `docs/ARCHITECTURE.md` — границы, зависимости, интерфейсы и потоки данных;
 - `docs/DECISIONS.md` — существенные решения и их последствия;
-- `docs/DESIGN.md` — фактический UI/UX либо явная отметка, что UI пока отсутствует;
 - `docs/ROADMAP.md` — долгосрочная последовательность этапов;
 - `docs/AI_PLAN.md` — один текущий ограниченный исполняемый срез;
-- `docs/AI_STATUS.md` — один актуальный снимок состояния.
+- `docs/AI_STATUS.md` — один актуальный снимок состояния;
+- `docs/LEARNING_LOG.md` — повторно полезные инженерные выводы без копирования Git history;
+- `docs/project-context.md` — устойчивые project facts и применимая Backend DX delta.
 
-По риску и потребности добавляются API/data contracts, `SECURITY.md`, test strategy, integration contracts и другие предметные документы. `DEV_LOG` и `LEARNING_LOG` создаются только когда подробная хронология или учебное объяснение действительно полезны.
+По поверхности и риску добавляются `DESIGN.md` для UI, API/data contracts, `SECURITY.md`,
+test strategy, integration contracts и другие предметные документы. `DEV_LOG` создаётся только
+когда подробная хронология действительно полезна; отсутствие UI не является причиной для
+пустого `DESIGN.md`.
 
-Stage prompts могут храниться в `prompts/`, если проекту нужна библиотека самостоятельных этапов. Они не заменяют SPEC, ROADMAP или текущий `AI_PLAN`.
+`prompts/STAGES.md` не заменяет SPEC, ROADMAP или текущий `AI_PLAN`: SPEC определяет стабильные
+требования, STAGES — подробные stage contracts, ROADMAP — порядок, AI_PLAN — активный slice.
 
 ### Backend DX profile
 
@@ -80,6 +86,19 @@ implementation/tests фактическое состояние и доказат
 
 При конфликте применяй каскад инструкций из `docs/CONTEXT_POLICY.md`. Не меняй требования или архитектурные границы молча: зафиксируй конфликт, решение и необходимые обновления источников истины.
 
+## Архитектурно завершённые stages
+
+Полный канонический контракт находится в `rules/governance.md`. Каждый stage до реализации
+фиксирует DAG только из завершённых prerequisites, входные предпосылки, runnable vertical slice,
+конкретный end-to-end сценарий, PASS-критерии/evidence, допустимую полностью рабочую временную
+реализацию и deferred scope. `PROMPT_TEMPLATE.md` и `AI_PLAN_TEMPLATE.md` являются операционными
+проекциями этого контракта, а не отдельными владельцами требований.
+
+Future stage может расширить или заменить работающий slice, но не может впервые сделать
+предыдущий stage исполнимым или проверяемым. Mock/stub/interface-only результат остаётся
+`scaffolded`; отсутствие end-to-end PASS evidence оставляет stage `blocked`, `partial` либо
+`implemented_unverified`.
+
 ## Процесс bootstrap
 
 1. Определи Git-корень, ближайшие инструкции и состояние рабочей копии.
@@ -96,10 +115,12 @@ implementation/tests фактическое состояние и доказат
     restore и exception rationale по `rules/dependency-management.md`.
 11. Классифицируй Backend DX как `BDX-L0..L3`; для `BDX-L1..L3` добавь только delta в `docs/project-context.md`.
 12. Настрой task-to-context routing в тонком `AGENTS.md` и stage prompts.
-13. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
-14. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
-15. Зафиксируй текущее состояние и следующий этап.
-16. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
+13. Для каждого stage проверь dependency DAG, completed prerequisites, runnable vertical slice,
+    конкретный end-to-end сценарий, PASS/evidence, temporary implementation и deferred scope.
+14. Проверь согласованность требований, контрактов, критериев приёмки, тестов и context budget.
+15. После refresh выполни validator и повтор baseline-тестов; новые failures являются regression.
+16. Зафиксируй текущее состояние и следующий этап.
+17. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
 
 Готовый overlay проверяется без изменений repository:
 
@@ -124,15 +145,21 @@ Context =
 nearest instructions
 + selected mode/SDLC/domain/stack rules
 + affected SPEC requirements
++ selected record from prompts/STAGES.md when stage-bound
 + relevant architecture/decisions/security
 + current AI_PLAN
 + target files/tests/diff
 + compact AI_STATUS
 ```
 
-Не загружай автоматически все prompts, roadmap, fixtures, logs и общую библиотеку. Маршрутизация должна быть предметной, например изменение публичного API подтягивает API-контракт, compatibility decision и contract tests, а изменение хранения — data model, security/retention rules и migration plan.
+Не загружай автоматически все stages, roadmap, fixtures, logs и общую библиотеку. Для stage-bound
+задачи укажи stable `Stage ID` в `docs/AI_PLAN.md` и загружай только exact unique heading record из
+`prompts/STAGES.md`. Degraded-warning selector требует ручного чтения полного record и запрещает
+completion claim до проверки. Остальная маршрутизация должна быть
+предметной: например изменение публичного API подтягивает API-контракт, compatibility decision и
+contract tests, а изменение хранения — data model, security/retention rules и migration plan.
 
-После этапа всегда проверяй `README.md`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, stage tracker и
+После этапа всегда проверяй `README.md`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `prompts/STAGES.md` и
 другие state-bearing документы по Completion Documentation Synchronization Gate из
 `rules/governance.md`. Обновляй только документы, чья фактическая информация изменилась;
 для остальных достаточно подтверждения `checked, still accurate` без timestamp-only churn.
@@ -167,7 +194,8 @@ nearest instructions
 
 - требования имеют один канонический источник и проверяемые критерии;
 - архитектурные границы и существенные решения явны;
-- этапы достаточно малы для отдельной реализации, проверки и отката;
+- этапы архитектурно завершены: каждый имеет completed prerequisites, runnable vertical slice,
+  end-to-end PASS evidence и не зависит от будущего stage для основного пути;
 - один `AI_STATUS` описывает фактическое состояние, а один `AI_PLAN` — текущую работу;
 - security и testing соответствуют рискам проекта;
 - context routing использует минимально достаточный набор источников;

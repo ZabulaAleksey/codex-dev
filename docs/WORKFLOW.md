@@ -34,7 +34,9 @@
 
 ## D. Следующий этап дорожной карты
 
-Используй `$implement-stage`.
+Сначала подтверди, что stage contract из `rules/governance.md` содержит completed prerequisites,
+dependency DAG, runnable vertical slice, concrete end-to-end scenario, PASS/evidence contract,
+temporary implementation и deferred scope. Затем используй `$implement-stage`.
 
 ## E. Исследование новой технологии
 
@@ -51,6 +53,8 @@ Feature flag, benchmark, ADR и план отката добавляй проп�
 ## G. Маршрутизация правил
 
 Перед `STANDARD` или `COMPLEX` задачей определи режим, этап SDLC, домен, стек и соответствующую SPEC. Загружай только относящиеся к задаче файлы из `rules/` согласно `rules/README.md`.
+Для stage-bound задачи stable `Stage ID` активного `docs/AI_PLAN.md` выбирает ровно один heading
+record в `prompts/STAGES.md`; degraded hook context требует ручной проверки полного record.
 
 ## H. Backend developer workflow
 
@@ -62,10 +66,14 @@ Feature flag, benchmark, ADR и план отката добавляй проп�
 
 ## I. Завершение этапа
 
-Этап считается завершённым, когда выполнены критерии приёмки, пройдены релевантные
-проверки, проведён требуемый review и пройден Completion Documentation Synchronization
-Gate из `rules/governance.md`. Всегда проверь `README.md`, `docs/AI_PLAN.md`,
-`docs/AI_STATUS.md`, `docs/ROADMAP.md`, stage tracker и другие state-bearing документы;
-обнови изменившиеся факты, а точные документы оставь без формального churn. После merge
-повтори gate по target branch и только тогда фиксируй интеграцию как завершённую. Merge и
-push выполняются только в рамках явного разрешения пользователя и Git-правил проекта.
+Этап считается завершённым, когда его primary vertical slice запускается без будущего stage,
+конкретный end-to-end сценарий имеет PASS evidence, выполнены критерии приёмки, пройдены
+релевантные проверки/review и Completion Documentation Synchronization Gate из
+`rules/governance.md`. Заблокированный primary gate нельзя закрыть как `DONE`; используй
+`blocked`, `scaffolded`, `implemented_unverified` или `partial`.
+
+Всегда проверь `README.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`,
+`prompts/STAGES.md` и другие state-bearing документы; обнови изменившиеся факты, а точные
+документы оставь без формального churn. После merge повтори gate по target branch и только
+тогда фиксируй интеграцию как завершённую. Merge и push выполняются только в рамках явного
+разрешения пользователя и Git-правил проекта.

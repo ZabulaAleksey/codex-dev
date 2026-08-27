@@ -13,11 +13,19 @@
 1. Ближайший относящийся к задаче `AGENTS.md` / `AGENTS.override.md`.
 2. Одно правило режима и только активные фрагменты SDLC, домена и стека.
 3. Затрагиваемые требования и критерии приёмки из SPEC.
-4. Релевантные разделы `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md` и `SECURITY.md`.
-5. Текущий `AI_PLAN`, целевой код, тесты и diff.
-6. Компактный снимок `AI_STATUS`.
+4. Только выбранный stage record из `prompts/STAGES.md`, если задача относится к stage.
+5. Релевантные разделы `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md` и `SECURITY.md`.
+6. Текущий `AI_PLAN`, целевой код, тесты и diff.
+7. Компактный снимок `AI_STATUS`.
 
-Не загружай по умолчанию всю библиотеку prompts, полные исторические roadmap, все fixtures/references, старые generated reports и общие правила, уже унаследованные проектом.
+Не загружай по умолчанию все stages целиком, полные исторические roadmap, все fixtures/references,
+старые generated reports и общие правила, уже унаследованные проектом.
+
+Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `docs/AI_PLAN.md`;
+тот же ID должен быть отдельным token ровно одного Markdown heading в `prompts/STAGES.md`.
+SessionStart/SubagentStart hook проецирует bounded запись первой. Без selector catalog не читается;
+invalid, missing, ambiguous или oversized selector даёт видимый `DEGRADED` context. В этом случае
+открой полный record вручную и не используй completion claim до проверки.
 
 ## Закон проектного overlay
 

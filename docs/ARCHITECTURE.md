@@ -23,10 +23,49 @@ read-only validator
 matrix, принимает explicit conflict resolutions, добавляет read-only dependency inventory/drift и сравнивает test baseline с post-refresh run.
 Он не пишет файлы, не выполняет product code и не изменяет Git status.
 
+Stage lifecycle проходит через отдельный policy/evidence contour:
+
+```text
+SPEC requirement
+      ↓
+prompts/STAGES.md: DAG + prerequisites + runnable slice + E2E + PASS/evidence
+      ↓
+docs/AI_PLAN.md: текущий ограниченный slice
+      ↓
+implementation → unit/integration/component → concrete end-to-end path
+      ↓
+lifecycle status + evidence level → documentation synchronization
+```
+
+Task-aware context projection использует обратную ссылку из активного плана:
+
+```text
+docs/AI_PLAN.md: stable Stage ID
+      ↓ exact unique heading selector
+hooks/session_context.py → bounded selected prompts/STAGES.md record first
+      ↓ invalid / missing / ambiguous / oversized
+visible DEGRADED warning → manual full-record check → no completion claim до проверки
+```
+
+Selector не является semantic parser: он не выводит dependency DAG, не проверяет prerequisites и
+не объявляет stage завершённым. Без `Stage ID` hook сохраняет обычный compact project snapshot и
+не загружает stage catalog.
+
+Полным владельцем stage contract является `rules/governance.md`. Skills и templates только
+маршрутизируют к нему и собирают операционные поля. `tools/test_stage_completion_policy.py`
+структурно проверяет согласованность глобальных policy surfaces; он не подменяет runtime evidence
+конкретного product repository.
+
 `tools/validate_context.py` отдельно проверяет manifest самого ДЕВ.
 `tools/validate_project_overlay.py` запускается для одного явно выбранного repository;
 ДЕВ не хранит live inventory product repositories. Текущие этапы, blockers
 и другие сведения о состоянии продукта принадлежат самому product repository.
+
+Project-overlay validator остаётся детерминированным structural gate: он не объявляет stage
+архитектурно завершённым по наличию headings и не интерпретирует mock/stub как production evidence.
+Dependency DAG, исполнимость slice и истинность end-to-end результата подтверждаются stage evidence
+и review. Отдельный semantic parser потребует versioned schema и migration существующих STAGES;
+точный heading selector только проецирует явно выбранный record и не вводит такую эвристику.
 
 ## Потоки и интерфейсы
 
@@ -50,6 +89,18 @@ Host-managed runtime bindings не подменяются угаданными �
 ## Policy layer
 
 Сквозные инженерные policies находятся в `rules/`.
+
+Lifecycle/evidence и архитектурная завершённость stages:
+
+```text
+specs/system.spec.md (FR-007 / AC-007)
+        ↓
+rules/governance.md (канонический Stage contract)
+        ↓
+dev-karkas + plan-stage + implement-stage + templates (операционные проекции)
+        ↓
+project evidence и review
+```
 
 Fallback/retry/degradation contract:
 

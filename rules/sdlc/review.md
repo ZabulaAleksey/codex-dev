@@ -6,3 +6,5 @@
 - Отделяй блокирующие дефекты от рекомендаций и стилевых предпочтений.
 - Для безопасности и производительности подключай профильную проверку только по затронутому риску.
 - Не изменяй код в read-only review без отдельного запроса.
+- Для stage completion проверь отсутствие forward dependency/cycle, runnable primary slice,
+  end-to-end PASS evidence и отсутствие mock/stub-as-production claims.

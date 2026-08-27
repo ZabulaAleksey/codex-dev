@@ -43,6 +43,10 @@ codex execpolicy check --pretty --rules "$HOME\.codex\rules\ai-dev-team.rules" -
 ```
 
 Для репозитория с `docs/AI_STATUS.md` ожидается JSON, содержащий `additionalContext`.
+Если `docs/AI_PLAN.md` содержит stable `Stage ID`, а `prompts/STAGES.md` — ровно один heading с
+этим ID как отдельным token, выбранная bounded запись должна идти в `additionalContext` первой.
+Invalid, missing или ambiguous selector должен вернуть `Stage context — DEGRADED`, а не другую
+stage-запись.
 
 ## Проект
 

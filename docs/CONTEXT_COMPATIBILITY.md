@@ -10,6 +10,24 @@
 - `CONFLICT` — определения дублируются или задают несовместимое поведение; выбери один канонический источник.
 - `OBSOLETE` — возможность больше не используется и должна быть удалена отдельным согласованным изменением.
 
+## Решение 2026-08-27 — архитектурно завершённые stages
+
+| Возможность | Что уже есть | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Stage lifecycle/evidence | Stage contract, completion gate и разрозненные fields в Skills/templates | запрет forward dependency, обязательный runnable slice/E2E/PASS evidence и scaffold-safe statuses | `EXTEND` | `specs/system.spec.md` → `rules/governance.md` |
+| Planning/bootstrap/execution | `dev-karkas`, `plan-stage`, `implement-stage`, bootstrap и AI templates | собрать обязательные fields без копирования policy | `EXTEND` | короткие routes к governance + operational projections |
+| Task-aware context routing | SPEC и AI_PLAN загружались, detailed stage source мог остаться вне активного context | доставлять контракт без загрузки всего catalog | `CONFLICT` → `EXTEND` | stable `Stage ID` в AI_PLAN → exact unique heading selector существующего SessionStart/SubagentStart hook |
+| Tests vs requirements | `TESTING_POLICY.md` называл tests источником требований, SDD — evidence | один source of requirements | `CONFLICT` → `INHERITED` | SPEC/ADR задают требования; accepted tests — executable contract/evidence |
+| Project-file baseline | governance требовал полный overlay, references описывали часть baseline как optional | единый applicability threshold | `CONFLICT` → `INHERITED` | governance обязателен для active full staged product overlay; прочие repositories явно классифицируются |
+| Architecture/ADR paths | references допускали альтернативные каноны без mapping rule | один source of truth в brownfield | `CONFLICT` → `EXTEND` | `docs/ARCHITECTURE.md` / `docs/DECISIONS.md`; legacy только через compatibility mapping и semantic/link audit |
+| UI design applicability | одно правило требовало пустой DESIGN для non-UI, governance делал его conditional | исключить N/A placeholders | `CONFLICT` → `INHERITED` | `DESIGN.md` только при UI surface; отсутствие UI при необходимости фиксируется в architecture/context |
+| STAGES semantic parser | structural validator без versioned stage schema | не выдавать headings за runtime evidence и не ломать legacy formats | `INHERITED` | human/agent evidence gate + новый structural policy test; parser отложен до schema/migration |
+
+Новый hook, MCP, agent, dependency или внешняя write-интеграция не добавляются: существующий
+read-only SessionStart/SubagentStart hook узко расширен bounded selector и visible degraded path.
+Полная policy не копируется в project overlays; runtime Skills materialize только после интеграции
+source branch.
+
 ## Решение 2026-08-26 — Completion Documentation Synchronization Gate
 
 | Возможность | Что уже есть | Потребность | Статус | Канонический источник |
@@ -92,7 +110,7 @@ presets остаются неактивным `BLOCKED` quarantine и не по�
 | Терминология КАРКАСА | Project overlay и context policy без общего определения команды | одинаковое значение для всех `projects/*` | `EXTEND` | канонический `docs/PROJECT_FRAMEWORK.md` |
 | Context routing | корневой и глобальный `AGENTS.md` | распознавать команды «создай КАРКАС» / «автоматизация контекста» | `EXTEND` | короткие routers; полный текст не копируется |
 | Bootstrap workflow | generic planning/implementation Skills | повторяемый inspect → gap → minimal delta процесс | `EXTEND` | общий `bootstrap-project-framework` Skill |
-| SessionStart hook | компактный активный context hook | task-aware выбор документов | `INHERITED` | hook не расширять всей библиотекой docs/prompts |
+| SessionStart hook | компактный активный context hook | task-aware выбор одного stage record | `EXTEND` | stable AI_PLAN `Stage ID`; exact unique heading; не загружать всю библиотеку docs/prompts |
 | Project overlays | локальные overlays | распространить определение | `INHERITED` | не копировать документ/Skill в каждый repository |
 | OCR-примеры исходного brief | только Text Recognition Core | общая терминология | `CONFLICT` | оставить в TRC; глобальный документ domain-neutral |
 | Язык проектного контекста | единого правила не было, часть agents и документов была на английском | единый читаемый язык новых КАРКАСОВ | `EXTEND` | русский по умолчанию в `AGENTS.md`, `PROJECT_FRAMEWORK.md` и bootstrap Skill; программные идентификаторы и внешние контракты не переводятся |
@@ -117,7 +135,11 @@ Live inventory product repositories больше не является capabilit
 каноническим источником, а `docs/FALLBACKS.md` в product repository — только
 project-specific delta.
 
-Пользовательские `~/.codex/AGENTS.md` и `~/.agents/skills/bootstrap-project-framework` являются каноническими источниками. Это статус `INHERITED` для всех проектов: Skill и router не копируются в каждый repository.
+Историческое решение о каноническом runtime Skill superseded 2026-08-24: `~/.codex/AGENTS.md`
+остаётся каноническим router, versioned Skill source находится в
+`~/.codex/skill-sources/bootstrap-project-framework`, а
+`~/.agents/skills/bootstrap-project-framework` является только hash-verified runtime projection.
+Проекты наследуют router/Skill и не копируют их локально.
 
 ## Решение 2026-08-20 — нормализация глобального runtime-слоя
 

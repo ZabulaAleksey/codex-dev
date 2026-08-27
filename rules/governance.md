@@ -26,7 +26,7 @@
 
 ## Project state и документы
 
-Для активного software repository обязательны содержательные:
+Для активного product repository, подключённого как полный staged ДЕВ overlay, обязательны содержательные:
 
 - `AGENTS.md`;
 - `prompts/STAGES.md`;
@@ -39,6 +39,15 @@
 - `docs/project-context.md`.
 
 Не создавай пустой placeholder. Для UI добавляй `DESIGN.md`, для security surface — `SECURITY.md`, для behavior traceability — `TRACEABILITY.md`, для отдельного test contract — `TESTING.md`.
+
+Одноразовая утилита, vendor/upstream tree, архив или repository, который явно не подключён как
+полный staged overlay, не получает этот набор механически. Классификация должна быть явной;
+`validate_project_overlay.py` проверяет именно полный project overlay.
+
+В brownfield временный legacy-путь архитектуры или ADR допустим только после canonical mapping
+в `docs/CONTEXT_COMPATIBILITY.md`, semantic/link audit и подтверждения одного source of truth.
+Целевой канон полного overlay — `docs/ARCHITECTURE.md` и `docs/DECISIONS.md`; параллельные
+документы той же роли запрещены.
 
 ### Markdown layout
 
@@ -56,10 +65,58 @@
 
 ## Stage contract
 
-`prompts/STAGES.md` — единственный detailed stage source. Стабильный stage включает status, goal, context, preconditions, dependencies, scope, out-of-scope, invariants, tasks, contracts, tests, documentation/security/performance/fallback/migration impact, DoD, verification и handoff.
+`prompts/STAGES.md` — единственный detailed stage source полного project overlay. Stable stage
+включает status, goal, context, scope, out-of-scope, invariants, tasks, contracts,
+documentation/security/performance/fallback/migration impact, DoD и handoff, а также
+обязательный контракт архитектурной завершённости ниже.
 
-Stage не становится `DONE`, пока не пройден Completion Documentation Synchronization Gate,
-не выполнены или явно заблокированы остальные gates с evidence и не просмотрен Git diff.
+### Архитектурно завершённый этап
+
+До начала работы для каждого stage зафиксируй:
+
+1. dependency DAG с устойчивыми stage IDs; каждая stage-зависимость указывает только на уже
+   `completed`/`verified` prerequisite, self-reference, cycle и forward dependency запрещены;
+2. обязательные входные предпосылки и evidence их доступности на старте;
+3. самостоятельный runnable vertical slice с конкретной точкой входа и ожидаемым результатом;
+4. конкретный end-to-end сценарий от входа пользователя/consumer до наблюдаемого результата;
+5. PASS-критерии и команды/checks, которые однозначно отличают PASS от FAIL;
+6. требуемое evidence: command/check, result, scope, environment/commit и существенные caveats;
+7. допустимые временные реализации с явными границами; они обязаны полностью обслуживать
+   заявленный текущий slice без будущего компонента;
+8. функциональность, явно вынесенную в будущие stages и не требуемую текущим acceptance contract.
+
+Для internal/docs/policy stage end-to-end означает ближайший реально исполнимый consumer path,
+например `input artifact → router/template/validator → observable result`. Для user-facing stage
+нужен живой путь `client → API/CLI → backend` либо эквивалентный product path. Если такой путь
+невозможен из-за отсутствующей будущей инфраструктуры, stage не закрывается; используй
+`blocked`/`BLOCKED_BY_BACKEND`, а не `N/A` или имитацию успеха.
+
+Future stages могут расширять работающий slice, оптимизировать его, добавлять providers/scenarios
+или заменять временную, но полностью рабочую реализацию. Они не могут задним числом:
+
+- разблокировать основной путь предыдущего stage;
+- предоставить отсутствующую обязательную инфраструктуру;
+- превратить stub/mock/scaffold в реальную реализацию;
+- впервые сделать возможной проверку функциональности, ранее объявленной завершённой.
+
+Разделяй две оси состояния:
+
+- lifecycle: `planned`, `in_progress`, `blocked`, `scaffolded`, `partial`,
+  `implemented_unverified`, `completed`;
+- evidence/integration: `implemented locally`, `validated locally`, `committed`, `pushed`,
+  `PR opened`, `merged`, `released/deployed`.
+
+`verified` и `DONE` являются terminal completion claims и подчиняются тем же условиям, что
+`completed`. Если slice зависит от будущего компонента, E2E/PASS evidence отсутствует или путь
+подтверждён только mocks/stubs/fakes/interfaces, допустимы только `blocked`, `scaffolded`,
+`implemented_unverified` или `partial`. Scaffold evidence не подтверждает пользовательский или
+production path.
+
+Stage не становится `completed`, `verified` или `DONE`, пока выполнены не все обязательные gates,
+не пройден Completion Documentation Synchronization Gate и не просмотрен Git diff. Заблокированный
+gate допустим только для явно deferred/out-of-scope follow-up; блокировка prerequisite, primary
+vertical slice, обязательной инфраструктуры, PASS-критерия или end-to-end проверки всегда
+оставляет stage в нетерминальном статусе.
 
 ## Completion Documentation Synchronization Gate
 
@@ -71,7 +128,7 @@ Stage не становится `DONE`, пока не пройден Completion 
 
 - `README.md`;
 - `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`;
-- `prompts/STAGES.md` или другой принятый stage tracker;
+- `prompts/STAGES.md`; во время согласованной brownfield migration также mapped legacy tracker;
 - `docs/TRACEABILITY.md`, `CHANGELOG.md` и `docs/DEV_LOG.md`, если проект их использует;
 - затронутые SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`,
   `TESTING.md`, `API.md`, `DATA_MODEL.md`, `DEPENDENCIES.md` и `FALLBACKS.md`.
@@ -101,7 +158,7 @@ requirement → behavior/domain contract → API/data/component contract
 ```
 
 - Mandatory behavior без evidence помечается `UNVERIFIED`.
-- Unit проверяет pure logic; integration — реальные границы storage/API/provider; component — rendering/actions/states/accessibility; E2E — только критические живые пути.
+- Unit проверяет pure logic; integration — реальные границы storage/API/provider; component — rendering/actions/states/accessibility; product E2E — критические живые пути. Каждый stage дополнительно подтверждает один concrete end-to-end consumer path по Stage contract; для internal/docs/policy stage это может быть исполнимый structural consumer path.
 - Accepted tests, fixtures и goldens нельзя ослаблять ради green. Contract change требует утверждённой SPEC/ADR до изменения теста.
 - Для нетривиального component определи inputs, outputs, state, side effects, loading/empty/error/disabled/permission/accessibility и recovery behavior.
 
@@ -144,4 +201,12 @@ External projection синхронизируется из Git. Недоступ�
 
 ## Context integrity validator
 
-Read-only validator должен выявлять отсутствующие canonical docs, alternate status, отдельные stage files, stale `projects/` paths, machine-specific paths, duplicate global rules, неправильные agent/Skill locations, broken relative links, invalid stage references и references на отсутствующие hooks/Skills/agents. Validator не исправляет repository автоматически.
+Текущий read-only `validate_project_overlay.py` выявляет отсутствующие canonical docs, alternate
+status, отдельные stage files, stale/machine-specific paths, exact global duplicates,
+automation compatibility gaps, dependency drift и явно объявленный Backend DX contract. Он не
+исправляет repository автоматически.
+
+Broken relative links, semantic invalid stage references/DAG, references на отсутствующие
+capabilities и истинность runtime evidence остаются обязательной human/agent проверкой, пока для
+них нет versioned schema и low-false-positive parser. Structural validator не имеет права
+объявлять stage архитектурно завершённым.

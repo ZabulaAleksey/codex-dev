@@ -15,6 +15,18 @@ Codex загружает все подходящие hooks из активных
 
 `session_context.py` разрешает каждый фиксированный документ относительно Git-root, отклоняет symlink/junction за пределы repository и читает только ограниченный префикс файла. Вывод принудительно переводится в UTF-8, чтобы Windows legacy console encoding не ломала JSON.
 
+Для stage-bound работы `docs/AI_PLAN.md` содержит ровно одну непустую строку `Stage ID` вне
+fenced code block: 1–64 ASCII-символа из букв, цифр, `.`, `_`, `-`. Hook находит ровно один
+Markdown heading вне fenced code block с этим ID как отдельным token в `prompts/STAGES.md` и
+ставит bounded record первым в дополнительном контексте; весь catalog не загружается. Это context
+projection, а не semantic validation DAG, prerequisites или evidence.
+
+Fallback-цепочка детерминирована: без `Stage ID` hook возвращает обычный project snapshot; при
+явном, но invalid/missing/ambiguous selector либо oversized plan/catalog выдаёт
+`Stage context — DEGRADED` и не подставляет другую запись. Retry отсутствует. Агент обязан открыть
+и проверить полный record вручную, если hook
+пометил запись как усечённую или degraded; такой context не разрешает completion claim.
+
 Поскольку Git-root ДЕВ совмещён с runtime-каталогом `~/.codex`, hook блокирует все формы принудительного `git clean`, включая раздельные flags `git clean -d -f -x`. Dry-run без `-f` / `--force` разрешён. Не запускай принудительный `git clean` в `~/.codex` вручную: игнорируемые runtime-файлы не восстанавливаются из Git.
 
 ## Когда добавлять локальный hook

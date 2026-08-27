@@ -17,6 +17,13 @@
 ## Current state / evidence
 Что подтверждено в репозитории перед началом.
 
+## Stage identity, dependency DAG & entry preconditions
+- устойчивый Stage ID;
+- dependency DAG;
+- только completed/verified prerequisite stages;
+- обязательные входные предпосылки и evidence их доступности;
+- явный запрет self-reference, cycle и forward dependency.
+
 ## Scope
 Что входит в работу.
 
@@ -28,6 +35,14 @@
 
 ## Architecture constraints
 Существующие границы слоёв, API/contracts, storage/runtime ограничения.
+
+## Runnable vertical slice
+Самостоятельная точка входа, полный текущий путь и наблюдаемый результат, которые работают без
+future stage. Опиши минимальную обязательную инфраструктуру текущего slice.
+
+## Concrete end-to-end scenario
+Вход/действие consumer → реальный application/API/CLI/backend path → наблюдаемый результат.
+Для internal/docs/policy stage укажи ближайший исполнимый consumer path.
 
 ## Security & abuse constraints
 Релевантные threat/validation/rate/permission требования.
@@ -45,17 +60,29 @@ cache/store, clean restore command, migration recovery point и documented excep
 Какие существующие проверки запустить и какие новые проверки допустимы/нужны.
 Не ослаблять существующие тесты для получения зелёного результата.
 
-## Acceptance criteria
-Наблюдаемые критерии завершения.
+## Acceptance / PASS criteria
+Наблюдаемые критерии завершения и точные условия `PASS` / `FAIL`.
+
+## Required evidence
+Для каждого обязательного gate: command/check, expected result, scope, environment/commit и caveat.
+Mock/stub/fake/interface-only evidence помечается как scaffold и не доказывает user/production path.
+
+## Allowed temporary implementation
+Опиши полностью рабочую в текущем slice временную реализацию и её границы либо явно укажи `none`.
+Замена в future stage не должна быть нужна для запуска или проверки текущего пути.
 
 ## Definition of Done
+- все prerequisite stages завершены; forward dependency/cycle отсутствуют;
+- runnable vertical slice и concrete end-to-end scenario имеют PASS evidence;
 - код/документация согласованы;
-- требуемые проверки пройдены или честно зафиксированы как unavailable;
+- все обязательные проверки пройдены; unavailable primary/E2E gate оставляет stage в
+  non-terminal status, а недоступность optional/deferred проверки фиксируется с evidence;
 - нет известных незадокументированных regressions;
 - статус обновлён только на основе evidence.
 
-## Out-of-scope follow-ups
-Следующие идеи, которые не должны раздувать текущий этап.
+## Deferred to future stages
+Функциональность, которая не входит в acceptance contract текущего stage и только расширяет либо
+заменяет уже работающий slice. Она не может быть обязательной для primary path текущего stage.
 ```
 
 ## Правила качества prompt
@@ -68,7 +95,9 @@ cache/store, clean restore command, migration recovery point и documented excep
 6. Не заявляй compatibility без evidence.
 7. Если требование неизвестно, пометь `Open question` или `Needs decision`, а не угадывай.
 8. Один prompt должен иметь один основной outcome.
+9. Не объявляй stage самостоятельным, если его основной путь или verification зависит от future stage.
+10. Не выдавай mocks/stubs/fakes/interfaces за evidence завершённого user/production path.
 
 ## Размер этапа
 
-Разделяй этап, если одновременно меняются несколько независимых крупных областей: например auth + billing + realtime board + deployment. Объединяй мелкие изменения, если по отдельности они не дают проверяемого результата.
+Разделяй этап, если одновременно меняются несколько независимых крупных областей: например auth + billing + realtime board + deployment. Объединяй мелкие изменения, если по отдельности они не дают проверяемого runnable vertical slice. После разбиения каждый новый stage обязан оставаться исполнимым и проверяемым самостоятельно.

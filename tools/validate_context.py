@@ -53,6 +53,7 @@ REQUIRED = {
     "tools/test_validate_project_overlay.py",
     "tools/test_backend_dx_policy.py",
     "tools/test_documentation_sync_policy.py",
+    "tools/test_stage_completion_policy.py",
     "tools/reconcile_project_framework.py",
     "tools/test_reconcile_project_framework.py",
     "tools/sync_global_skills.py",

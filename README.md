@@ -49,7 +49,7 @@
 - [`docs/CONTEXT_COMPATIBILITY.md`](docs/CONTEXT_COMPATIBILITY.md) используется перед добавлением agents, hooks, MCP, Skills или config.
 - [`docs/notes/AUTOMATION_EXTENSIONS.md`](docs/notes/AUTOMATION_EXTENSIONS.md) описывает опциональные расширения и условия, при которых они оправданы.
 - [`rules/governance.md`](rules/governance.md) задаёт lifecycle/evidence contracts и
-  обязательный Completion Documentation Synchronization Gate.
+  обязательные Stage contract и Completion Documentation Synchronization Gate.
 - [`rules/backend-dx.md`](rules/backend-dx.md) задаёт адаптивный `BDX-L0..L3`
   contract; Skill `backend-dx-audit` проектирует, проверяет и улучшает backend
   workflow без копирования policy в product repository.
@@ -63,6 +63,15 @@ Project-specific инструкции, архитектура, Skills и agents 
 документы, которые отражают выполненные шаги или текущее состояние. Изменившиеся факты
 обновляются, а точные документы остаются без timestamp-only churn. После merge эта
 проверка повторяется по target branch до фиксации merge-level status.
+
+## Архитектурно завершённые этапы
+
+Каждый stage до реализации получает dependency DAG только из завершённых prerequisites,
+самостоятельный runnable vertical slice, concrete end-to-end scenario, PASS/evidence contract,
+допустимую полностью рабочую временную реализацию и явно deferred scope. Future stage может
+расширить или заменить работающий slice, но не впервые сделать предыдущий stage исполнимым либо
+проверяемым. Mock/stub/interface-only результат остаётся `scaffolded`, а отсутствие живого PASS
+evidence — `blocked`, `partial` или `implemented_unverified`, но не `DONE`.
 
 ## Установка на Windows
 
@@ -85,7 +94,9 @@ config.ai-dev-team.recommended.toml
 
 Их нужно объединить со своим `~/.codex/config.toml`.
 
-`AGENTS.md`, agents, Skills, hooks и rules используются непосредственно из `~/.codex` без второй installed-копии.
+`AGENTS.md`, agents, hooks и rules используются непосредственно из `~/.codex`. Versioned Skills
+хранятся в `~/.codex/skill-sources`, а единственная active runtime-проекция materialize-ится в
+`~/.agents/skills` с file-set/SHA-256 verification; она не является вторым source of truth.
 
 ## Проверка
 
@@ -135,7 +146,7 @@ codex mcp list
 Для большого этапа:
 
 ```text
-Реализуй следующий этап из docs/ROADMAP.md. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Перед DONE проверь README, AI_PLAN, AI_STATUS, ROADMAP, stage tracker и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
+Реализуй следующий этап из docs/ROADMAP.md. До кода проверь Stage contract: completed prerequisites, DAG, runnable vertical slice, concrete E2E, PASS/evidence, temporary implementation и deferred scope. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Не закрывай mock-only или зависящий от будущего stage путь. Перед DONE проверь README, AI_PLAN, AI_STATUS, ROADMAP, prompts/STAGES.md и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
 ```
 
 Или явно вызови skill:

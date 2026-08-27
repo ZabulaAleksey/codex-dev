@@ -1,6 +1,6 @@
 # Реестр файлов глобального контекста
 
-Дата проверки: 2026-08-25.
+Дата проверки: 2026-08-27.
 
 Точный пофайловый состав Git-контекста задаёт `MANIFEST.txt`. Этот документ объясняет роль каждого класса файлов; любой tracked-файл обязан одновременно присутствовать в manifest и в одной из категорий ниже.
 
@@ -33,6 +33,10 @@
 | `rules/sdd/*.md` | specification-driven workflow |
 
 Каждый файл в этих каталогах выбирается router-ом по текущей задаче; каталог целиком в prompt не подмешивается.
+Для stage-bound задачи `rules/governance.md` и выбранный record из project
+`prompts/STAGES.md` добавляются явно; остальные stages не загружаются. Session hook использует
+stable `Stage ID` активного `docs/AI_PLAN.md`, exact unique heading selector и visible
+`DEGRADED` result при ошибке явного selector.
 
 ## Skills
 
@@ -97,6 +101,7 @@ Historical `SUPERSEDED` SPEC сохраняет audit trail, но не упра�
 | `tools/validate_project_overlay.py` | один явно выбранный project repository |
 | `tools/sync_global_skills.py` | versioned source → runtime projection |
 | `tools/test_*.py` | regression coverage соответствующего tool |
+| `tools/test_stage_completion_policy.py` | structural consistency Stage contract, routes, templates и status/evidence vocabulary |
 
 ## Quarantine / BLOCKED
 

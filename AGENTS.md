@@ -139,9 +139,14 @@ DB/resource actions и production access остаются deny-by-default.
 1. ближайший относящийся к задаче `AGENTS.md` / `AGENTS.override.md`;
 2. выбранные правила режима, этапа, домена и стека;
 3. затрагиваемые требования и критерии приёмки из SPEC;
-4. относящиеся к задаче разделы архитектуры, решений, дизайна и безопасности;
-5. текущий `AI_PLAN`, целевые файлы, тесты и diff;
-6. компактный снимок `AI_STATUS`.
+4. только выбранный stage record из `prompts/STAGES.md`, если задача относится к stage;
+5. относящиеся к задаче разделы архитектуры, решений, дизайна и безопасности;
+6. текущий `AI_PLAN`, целевые файлы, тесты и diff;
+7. компактный снимок `AI_STATUS`.
+
+Для stage-bound задачи stable `Stage ID` из `docs/AI_PLAN.md` должен выбирать ровно один heading
+record в `prompts/STAGES.md`; `DEGRADED` selector требует ручного чтения полного record и не
+разрешает completion claim.
 
 Не загружай по умолчанию полные архивы prompts и roadmap, все fixtures и references, устаревшие отчёты или общие правила, уже унаследованные на более высоком уровне. Подробная политика находится в `docs/CONTEXT_POLICY.md`.
 
@@ -330,7 +335,7 @@ Git worktree обязателен только если **два или боле
 
 ## Обязательная проектная документация
 
-Канонический baseline и назначение документов определены в `rules/governance.md`. Для активного software repository обязательны содержательные `AGENTS.md`, `prompts/STAGES.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/LEARNING_LOG.md` и `docs/project-context.md`.
+Канонический baseline и назначение документов определены в `rules/governance.md`. Для активного product repository, подключённого как полный staged ДЕВ overlay, обязательны содержательные `AGENTS.md`, `prompts/STAGES.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/LEARNING_LOG.md` и `docs/project-context.md`.
 
 Не создавай пустые placeholders. `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `TRACEABILITY.md` и `DEPENDENCIES.md` обязательны только при соответствующей поверхности проекта.
 
@@ -430,7 +435,7 @@ Git worktree обязателен только если **два или боле
 
 После создания `DESIGN.md` дальнейшие UI-изменения должны учитывать его как канонический источник требований, если более конкретные инструкции пользователя не говорят обратного.
 
-Для проекта без пользовательского интерфейса создай минимальный `DESIGN.md` и явно укажи, что UI/UX на текущем этапе отсутствует или не применяется.
+Для проекта без пользовательского интерфейса не создавай `DESIGN.md` только ради отметки `N/A`; при необходимости зафиксируй отсутствие UI в `docs/ARCHITECTURE.md` или `docs/project-context.md`.
 
 ### `AI_STATUS.md`
 
@@ -476,7 +481,7 @@ Git worktree обязателен только если **два или боле
 Completion Documentation Synchronization Gate из `rules/governance.md`.
 
 Обязательно проверь существующие `README.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`,
-`docs/ROADMAP.md`, stage tracker, traceability/changelog/dev log и затронутые SPEC,
+`docs/ROADMAP.md`, `prompts/STAGES.md`, traceability/changelog/dev log и затронутые SPEC,
 архитектурные, design, security, testing, API/data/dependency/fallback документы.
 
 Проверка обязательна; изменение файла зависит от фактов. Не обновляй документацию после каждой
@@ -614,7 +619,7 @@ AI Dev Team дополняет правила проекта, но не отме
 * архитектура проекта или реструктуризация;
 * `AGENTS.md`, skills, hooks, MCP, subagents и автоматизация разработки;
 * `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `DESIGN`, `SECURITY`, журнал решений;
-* этапы реализации и `PROMPTS`;
+* этапы реализации и `prompts/STAGES.md`;
 * Definition of Done, тестирование и quality gates;
 * обработка проектных идей и заметок из Notion;
 * преобразование идей в готовые implementation prompts;
@@ -642,7 +647,7 @@ AI Dev Team дополняет правила проекта, но не отме
    * `ROADMAP.md`;
    * `AI_PLAN.md`;
    * `AI_STATUS.md`;
-   * существующими `PROMPTS`;
+   * существующим `prompts/STAGES.md`;
    * журналом архитектурных решений;
    * уже реализованными возможностями.
 6. Не создавай новый prompt, если существующий prompt или реализованная функциональность уже покрывает эту идею.
@@ -743,7 +748,7 @@ AI Dev Team дополняет правила проекта, но не отме
 
 Если действие потенциально разрушительное, предпочитай безопасный обратимый вариант.
 
-## Работа с проектными PROMPTS
+## Работа с проектными stage prompts
 
 При создании implementation prompt используй канонический шаблон из `dev-karkas`.
 
@@ -758,10 +763,13 @@ Prompt должен быть достаточно самодостаточным
 * требования;
 * архитектурные ограничения;
 * ограничения безопасности;
-* зависимости;
+* dependency DAG только из completed prerequisites и входные предпосылки;
+* самостоятельный runnable vertical slice и concrete end-to-end scenario;
 * необходимые изменения;
 * тестирование;
-* acceptance criteria;
+* acceptance/PASS criteria и требуемое evidence;
+* допустимую полностью рабочую temporary implementation;
+* deferred future scope, который не нужен primary path текущего stage;
 * Definition of Done.
 
 Не превращай implementation prompt в пошаговую инструкцию по написанию каждой строки кода, если задача этого не требует. Описывай желаемый результат, ограничения и критерии проверки.
@@ -851,6 +859,17 @@ Prompt должен быть достаточно самодостаточным
 ## Завершение этапов
 
 Не помечай этап завершённым только потому, что код был написан.
+
+До начала каждого этапа примени канонический Stage contract из `rules/governance.md`: определи
+dependency DAG из уже завершённых prerequisites, входные предпосылки, самостоятельный runnable
+vertical slice, конкретный end-to-end сценарий, PASS-критерии, evidence, допустимые временные
+реализации и явно deferred функциональность.
+
+Будущий этап не может разблокировать основной путь, обязательную инфраструктуру или тестирование
+ранее закрытого этапа. Если текущий slice нельзя запустить и проверить без будущего компонента,
+используй только `blocked`, `scaffolded`, `implemented_unverified` или `partial`. Mocks, stubs,
+fakes и заранее подготовленные интерфейсы подтверждают scaffold, но не завершённый пользовательский
+или production-путь.
 
 Перед переходом в `DONE`:
 

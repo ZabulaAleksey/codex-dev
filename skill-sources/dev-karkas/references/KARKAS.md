@@ -1,6 +1,9 @@
 # Канон ДЕВ / КАРКАС
 
-КАРКАС — не фиксированное дерево файлов. Это набор инженерных обязанностей, которые должны быть закрыты подходящим способом для конкретного проекта.
+КАРКАС — набор инженерных обязанностей, а не повод механически генерировать файлы. Для active
+product repository, явно подключённого как полный staged ДЕВ overlay, обязательный baseline и
+канонические пути задаёт `~/.codex/rules/governance.md`. Одноразовые, vendor, archived и иные
+неполные overlays сначала явно классифицируются и не получают placeholders.
 
 ## 1. Project identity
 
@@ -33,10 +36,12 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 ## 3. Planning and status
 
-Предпочтительный минимум:
+Полный staged overlay использует:
 
-- `AI_PLAN.md` — что делать дальше;
-- `AI_STATUS.md` — что подтверждённо сделано сейчас.
+- `prompts/STAGES.md` — единственный detailed stage source;
+- `docs/ROADMAP.md` — порядок развития;
+- `docs/AI_PLAN.md` — что делать дальше в текущем slice;
+- `docs/AI_STATUS.md` — что подтверждённо сделано сейчас.
 
 `SPEC` не равен `AI_PLAN`.
 
@@ -46,11 +51,14 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 ## 4. Architecture
 
-Нужен канонический источник архитектурных решений. В зависимости от проекта:
+Канонические роли полного overlay:
 
-- `DESIGN.md`;
-- `docs/architecture/...`;
-- `decisions.md` или ADR directory.
+- `docs/ARCHITECTURE.md` — фактические границы, интерфейсы и потоки;
+- `docs/DECISIONS.md` — решения; ADR directory может быть supplement, связанный из канона;
+- `docs/DESIGN.md` — только UI/UX contract при наличии пользовательского интерфейса.
+
+Brownfield legacy path допустим временно только через canonical mapping в
+`docs/CONTEXT_COMPATIBILITY.md`, semantic/link audit и подтверждённый один source of truth.
 
 Архитектура должна отражать фактическую систему, а не желаемую фантазию. Будущие технологии помечай как planned/optional.
 
@@ -121,13 +129,16 @@ clean-room evidence, limitations и deviations. Используй
 
 ## 10. Prompts / staged implementation
 
-Если проект развивается этапами, используй `PROMPTS/` как очередь самодостаточных implementation prompts.
+В полном staged overlay используй только `prompts/STAGES.md` как очередь и подробный источник
+самодостаточных implementation stages. Сырые идеи остаются backlog/Notion до refinement/approval.
 
 Хороший prompt:
 
 - маленький настолько, чтобы его можно было доказуемо завершить;
 - большой настолько, чтобы давать полезную вертикальную ценность;
-- имеет scope, constraints, tests, acceptance criteria и DoD;
+- имеет completed prerequisites/DAG, runnable vertical slice, concrete E2E, PASS/evidence,
+  fully working temporary implementation, deferred scope и DoD;
+- не зависит от future stage для primary path, обязательной инфраструктуры или проверки;
 - не повторяет уже реализованное.
 
 Следуй `PROMPT_TEMPLATE.md`.
@@ -147,7 +158,8 @@ clean-room evidence, limitations и deviations. Используй
 
 ## 12. Learning / development record
 
-Используй `LEARNING.md` и/или `DEV_LOG.md`, только если проект действительно получает ценность от истории:
+Полный staged overlay содержит `docs/LEARNING_LOG.md`, но добавляет туда только повторно полезные
+выводы. `docs/DEV_LOG.md` создавай лишь когда нужен trace, отличный от Git history:
 
 - почему возникла проблема;
 - как диагностировали;
@@ -190,13 +202,16 @@ clean-room evidence, limitations и deviations. Используй
 
 Небольшая локальная утилита или эксперимент.
 
-Минимум: README + AGENTS + команды проверки + понятный статус/roadmap при длительной разработке.
+Если repository не подключён как полный overlay, достаточно README + AGENTS + команд проверки и
+явной классификации. Если подключён — baseline governance остаётся обязательным, но документы
+могут быть краткими и содержательными.
 
 ### STANDARD
 
 Обычный активный продукт.
 
-Добавь: DESIGN, SECURITY при наличии внешней поверхности, AI_PLAN/AI_STATUS, PROMPTS, testing policy, decisions.
+Используй полный staged baseline governance. Добавляй `DESIGN.md` только для UI, `SECURITY.md`
+для security surface и отдельный testing contract при реальной необходимости.
 
 ### ADVANCED
 

@@ -1,5 +1,35 @@
 # Существенные решения
 
+## 2026-08-27 — Один канонический контракт архитектурно завершённых этапов
+
+**Статус:** принято.
+
+**Контекст:** прежние stage surfaces требовали dependencies, acceptance и tests, но позволяли
+прочитать заблокированный gate как допустимый для `DONE`, не отделяли scaffold от production
+evidence и не запрещали forward dependency на будущую обязательную инфраструктуру. Дополнительно
+`TESTING_POLICY.md` называл tests источником требований, а project-file references расходились в
+порогах полного staged overlay. Detailed stage source также отсутствовал в минимальном
+task-aware context route между SPEC и `AI_PLAN`.
+
+**Решение:** стабильное требование принадлежит `specs/system.spec.md` (`FR-007`/`AC-007`), а
+единственный полный lifecycle/evidence contract — `rules/governance.md`. Planning/execution Skills,
+`dev-karkas`, templates и workflow содержат только ссылки и поля проекции. Полный project overlay
+имеет единый baseline из governance; UI `DESIGN.md` остаётся условным. Tests являются исполняемым
+контрактом принятого поведения и evidence, но не первичным source of requirements. Stage-bound
+задача задаёт stable `Stage ID` в `docs/AI_PLAN.md`; существующий SessionStart/SubagentStart hook
+проецирует только один exact unique heading record из `prompts/STAGES.md`, а не весь catalog.
+
+**Альтернативы:** копирование полной нормы во все Skills отклонено из-за drift; эвристический parser
+произвольных `prompts/STAGES.md` отклонён до появления versioned schema/migration, чтобы не создать
+false positives и несовместимость существующих project overlays. Exact heading selector принят как
+узкая context projection: он не интерпретирует DAG, prerequisites, PASS criteria или evidence.
+
+**Последствия:** future stage не может задним числом завершить primary path предыдущего stage;
+mock/stub-only результат остаётся `scaffolded`; structural global test защищает маршрутизацию,
+production hook test подтверждает путь `AI_PLAN → selected STAGES record`, а фактический
+end-to-end PASS stage по-прежнему подтверждается project evidence и review. Invalid, missing,
+ambiguous или oversized selector даёт видимый `DEGRADED` context и запрещает completion claim.
+
 ## 2026-08-26 — Обязательный documentation audit без формального churn
 
 - Решение: перед завершением task/stage и после merge всегда выполнять Completion

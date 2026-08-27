@@ -1,12 +1,13 @@
 # Карта зависимостей глобального контекста Codex
 
-Дата проверки: 2026-08-25.
+Дата проверки: 2026-08-27.
 
 ## Поток контекста
 
 ```text
 ~/.codex/AGENTS.md
   ├─ локальный project AGENTS.md (более специфичная delta)
+  │    └─ affected SPEC → selected prompts/STAGES.md record → AI_PLAN/AI_STATUS
   ├─ rules/README.md
   │    ├─ mode
   │    ├─ SDLC
@@ -32,6 +33,7 @@
 | Hook wiring | `hooks.json`, `hooks/**` | session output |
 | Current state/plan | `docs/AI_STATUS.md`, `docs/AI_PLAN.md` | handoff |
 | Framework contract | `docs/PROJECT_FRAMEWORK.md`, `specs/**` | project overlay |
+| Stage lifecycle/evidence | `rules/governance.md` | selected project `prompts/STAGES.md` record, AI plan/status |
 | Project facts | project repository | external projections |
 | Project bindings | внешний project-aware слой | schema `PROJECT_REGISTRY.md` |
 
@@ -39,7 +41,12 @@ Notion, Eraser и другие внешние представления не з
 
 ## Hook path
 
-`hooks.json` выбирает скрипт. Hook определяет project root, читает только bounded набор существующих project-файлов, не следует наружу по symlink и не подмешивает глобальную библиотеку целиком. События additive: project hook допустим лишь для доказанного локального gap.
+`hooks.json` выбирает скрипт. Hook определяет project root, читает только bounded набор существующих
+project-файлов, не следует наружу по symlink и не подмешивает глобальную библиотеку целиком.
+Stable `Stage ID` из `docs/AI_PLAN.md` выбирает exact unique heading record из
+`prompts/STAGES.md`; selected record идёт первым. Ошибка явного selector даёт visible `DEGRADED`
+warning без retry или произвольного fallback. События additive: project hook допустим лишь для
+доказанного локального gap.
 
 ## Rules path
 
@@ -50,6 +57,9 @@ Notion, Eraser и другие внешние представления не з
 3. релевантный domain;
 4. применимый stack;
 5. fallback/security правила по риску.
+
+Для stage-bound задачи router обязательно добавляет Stage contract из `rules/governance.md` и
+только выбранный project record из `prompts/STAGES.md`; весь stage catalog не загружается.
 
 Для backend/runtime developer workflow router дополнительно подключает
 `rules/backend-dx.md`; этот файл ссылается на dependency, database/API, testing,
@@ -83,7 +93,8 @@ schema/discovery policy и намеренно не содержит actual proje
 ```text
 requirements
   → specs/**
-  → architecture/plan
+  → selected prompts/STAGES.md record
+  → architecture/AI_PLAN
   → implementation
   → tests
   → validators
