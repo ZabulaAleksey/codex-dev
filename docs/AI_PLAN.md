@@ -1,8 +1,8 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: архитектурно завершённый stage contract реализован, validated и committed в изолированной
-ветке; merge, push и runtime materialization не выполнялись
-Рабочий item: правило архитектурно завершённых этапов — `completed` на feature branch
+Статус: архитектурно завершённый stage contract fast-forward слит в локальную `main`, target
+validated, runtime Skills materialized; push не выполнялся
+Рабочий item: правило архитектурно завершённых этапов — `completed` на `main`
 Дата: 2026-08-27
 
 ## Applicability
@@ -21,13 +21,13 @@ Completion Documentation Synchronization Gate (`b4d8565`, completed/merged local
         ↓
 existing SDD + governance + source/runtime Skill split (validated baseline)
         ↓
-architecturally complete stage contract (`8c05d0f`, completed on feature branch)
+architecturally complete stage contract (`8c05d0f` + `41612d0`, merged locally)
 ```
 
 - Self-reference, cycle и forward dependency отсутствуют.
 - Git source/worktree были clean до mutation; baseline — 197 managed files и 70 tests PASS.
 - Existing accepted tests не изменялись; новый contract test добавлен отдельным файлом.
-- Runtime Skills остаются проекцией active `main` до разрешённого merge.
+- Runtime Skills materialized из active `main`; source/runtime parity — PASS, 9/9.
 
 ## Самостоятельный runnable vertical slice
 
@@ -65,7 +65,7 @@ Slice не зависит от будущего компонента. Exact sele
 - [x] SPEC/ADR остаются source of requirements; accepted tests — executable contract/evidence.
 - [x] Full staged overlay baseline и legacy architecture/ADR mapping согласованы.
 - [x] Task-aware route загружает только выбранный STAGES record и fail-visible при деградации.
-- [x] Feature commit создан: `8c05d0f`.
+- [x] Feature commits `8c05d0f` / `41612d0` fast-forward слиты в локальную `main`.
 
 Проверки:
 
@@ -77,8 +77,8 @@ Slice не зависит от будущего компонента. Exact sele
   `bootstrap-project-framework`, `plan-stage`, `implement-stage`, `resume-project`;
 - `py -3 -B -m py_compile hooks\session_context.py` — PASS;
 - `git diff --check`, staged diff check и conflict/competing-path scans — PASS;
-- active `main` global validator — `BLOCKED` только прежним
-  `unmatched-browser-client-hash`; feature runtime ещё не materialized.
+- active `main` Skill parity — PASS, 9/9; global validator — `BLOCKED` только прежним
+  `unmatched-browser-client-hash`.
 
 ## Допустимая временная реализация
 
@@ -90,9 +90,9 @@ Slice не зависит от будущего компонента. Exact sele
 - versioned schema и semantic parser произвольных project `prompts/STAGES.md`;
 - автоматическое доказательство истинности project DAG/E2E evidence;
 - repair pre-existing Browser client hash;
-- merge, push и runtime Skill materialization без прямого разрешения пользователя.
+- push/release/deploy без отдельного разрешения пользователя.
 
-Эти пункты не нужны для запуска или проверки текущего feature-branch slice.
+Эти пункты не нужны для запуска или проверки слитого target-branch slice.
 
 ## Documentation audit
 
@@ -106,6 +106,7 @@ Slice не зависит от будущего компонента. Exact sele
 
 ## Следующее действие
 
-Финальный read-only reviewer не нашёл blocking findings. Требуется явное разрешение пользователя
-на merge ветки в `main` и удаление worktree. Только после merge следует materialize runtime Skills
-из active source и повторить global validation/documentation gate по target branch.
+Обязательных implementation/integration действий больше нет. Push не запрошен; отдельными
+optional maintenance-задачами остаются Browser hash repair и будущий semantic parser только после
+versioned STAGES schema. Удаление чистого временного worktree является локальным closeout и не
+меняет project state.

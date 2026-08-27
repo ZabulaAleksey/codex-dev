@@ -53,8 +53,9 @@ git diff --check
 Результат feature commit `8c05d0f`: context validation — 198 files; unit/contract suite —
 88 tests PASS; dev-karkas и пять изменённых Skills — valid; hook primary/degraded subprocess paths
 и diff checks — PASS. Active `main` validator сохраняет только pre-existing
-`unmatched-browser-client-hash`. Финальный reviewer — `No blocking findings`. Runtime Skills не
-синхронизировались до merge.
+`unmatched-browser-client-hash`. Финальный reviewer — `No blocking findings`. Commits `8c05d0f` /
+`41612d0` fast-forward слиты в локальную `main`; post-merge tests — 88 PASS, runtime Skill parity —
+9/9. Push/release/deploy не выполнялись.
 
 ### Как повторить самостоятельно
 

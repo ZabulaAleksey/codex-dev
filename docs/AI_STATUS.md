@@ -4,11 +4,11 @@
 
 ## Статус
 
-- Lifecycle: `completed` на `feature/architecturally-complete-stages`.
-- Evidence level: `committed`, feature commit `8c05d0f`.
-- Integration: не merged, не pushed, не released/deployed.
-- Runtime: изменённые Skill sources ещё не materialized в `~/.agents/skills`; active runtime
-  намеренно соответствует текущей `main` до разрешённого merge.
+- Lifecycle: `completed` на `main`.
+- Evidence level: `merged locally`, feature commits `8c05d0f` / `41612d0`.
+- Integration: fast-forward merge подтверждён; не pushed, не released/deployed.
+- Runtime: пять изменённых Skill sources materialized из active `main` в `~/.agents/skills`;
+  source/runtime parity — PASS, 9/9.
 
 Глобальный ДЕВ теперь имеет один канонический Stage contract в `rules/governance.md`. Он запрещает
 forward dependency, ложный completion по scaffold evidence и перенос обязательного gate в будущий
@@ -33,6 +33,7 @@ stage. Planning/execution Skills и templates собирают операцио�
 - `py -3 -B tools\validate_context.py` — PASS, 198 files;
 - `skill-sources\dev-karkas\scripts\validate.ps1` — PASS;
 - `quick_validate.py` через `python -X utf8` — PASS для пяти изменённых Skills;
+- post-merge runtime Skill parity — PASS, 9/9;
 - hook compile и subprocess primary/degraded paths — PASS;
 - `git diff --check`, cached diff check, conflict-marker и semantic conflict scans — PASS;
 - initial и follow-up reviewer findings устранены; финальный state-aware reviewer —
@@ -55,9 +56,10 @@ stage. Planning/execution Skills и templates собирают операцио�
   `unmatched-browser-client-hash`; feature его не меняет.
 - Semantic parser project DAG/evidence намеренно не добавлен без versioned schema/migration;
   истинность project completion остаётся evidence/review gate.
-- Merge, runtime materialization и worktree cleanup требуют явного разрешения пользователя.
+- Push/release/deploy не выполнялись и требуют отдельного разрешения.
 
 ## Следующее действие
 
-Запросить разрешение на merge в `main`; затем materialize runtime Skills и повторить
-verification/documentation gate на target branch.
+Обязательных действий по этому stage больше нет. Optional maintenance: repair pre-existing Browser
+client hash; push выполняется только по отдельному запросу. Чистый временный worktree удаляется как
+локальный closeout без изменения project state.

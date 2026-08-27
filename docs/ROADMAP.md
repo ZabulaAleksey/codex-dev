@@ -11,12 +11,9 @@
 - canonical Backend Developer Experience Policy и audit Skill;
 - Completion Documentation Synchronization Gate для task/stage/merge closeout;
 - отделение состояния ДЕВ от live-состояния product repositories.
-
-## Готово к интеграции
-
 - канонический контракт архитектурно завершённых stages, scaffold-safe lifecycle/evidence и
-  task-aware `AI_PLAN → selected STAGES record` projection — feature commit `8c05d0f`, 88 tests
-  PASS; merge и runtime materialization ожидают разрешения пользователя.
+  task-aware `AI_PLAN → selected STAGES record` projection — fast-forward merged locally,
+  88 tests PASS, runtime Skill parity 9/9.
 
 ## Дальнейшие направления
 
