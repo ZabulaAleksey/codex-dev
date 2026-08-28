@@ -5,8 +5,8 @@
 ## Статус
 
 - Lifecycle: global framework hardening `implemented_unverified`.
-- Integration: изменения находятся в изолированной ветке `feature/dev-global-hardening`; merge,
-  push, release и deploy не выполнялись.
+- Integration: feature commit `67112aa` fast-forward merged в локальную `main`; push, release и
+  deploy не выполнялись.
 - Runtime: canonical Skill sync подтверждён для 9 sources. Terminal global validation блокирует
   только pre-existing `unmatched-browser-client-hash` в активной конфигурации.
 - Protected state: active `config.toml`, `docs/LEARNING_LOG.md` и
@@ -37,7 +37,8 @@
 
 - baseline full suite — PASS, 101 tests; feature full suite — PASS, 110 tests;
 - independent test gate — PASS, 110 tests;
-- `py -3 -B tools\validate_context.py` — PASS, 207 files;
+- post-merge full suite — PASS, 110 tests;
+- post-merge `py -3 -B tools\validate_context.py` — PASS, 207 files;
 - Stage selector/hook regression suites — PASS;
 - Windows PowerShell syntax и actual PowerShell wrapper path — PASS до terminal global validator;
 - Git Bash syntax и actual Bash wrapper path (`PYTHON_BIN=py`) — PASS до terminal global validator;

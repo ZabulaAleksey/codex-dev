@@ -29,7 +29,8 @@
   selector contract, reviewed model inheritance/pins, Windows/Bash installer parity, thin project
   template и read-only CI реализованы; 110 tests и 207-file context validation PASS. Terminal
   installer/global validation блокирует только pre-existing `unmatched-browser-client-hash` в
-  active runtime config; merge и push не выполнялись.
+  active runtime config; feature commit `67112aa` fast-forward merged в локальную `main`, push не
+  выполнялся.
 
 ## Дальнейшие направления
 
