@@ -29,8 +29,14 @@
 Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `docs/AI_PLAN.md`;
 тот же ID должен быть отдельным token ровно одного Markdown heading в `prompts/STAGES.md`.
 SessionStart/SubagentStart hook проецирует bounded запись первой. Без selector catalog не читается;
-invalid, missing, ambiguous или oversized selector даёт видимый `DEGRADED` context. В этом случае
-открой полный record вручную и не используй completion claim до проверки.
+invalid/ambiguous/oversized явный selector либо отсутствующий выбранный heading даёт видимый
+`DEGRADED` context. В этом случае открой полный record вручную и не используй completion claim до
+проверки. Отсутствие selector сохраняет compact snapshot для незаполненного template, но full
+overlay validator классифицирует его как `missing-stage-id`.
+
+Для full project overlay read-only `tools/validate_project_overlay.py` является preflight gate:
+он требует ровно одну unfenced selector-строку, валидный ASCII ID и ровно один unfenced heading.
+Это structural validation ссылки, не semantic proof dependency DAG, runnable slice или evidence.
 
 ## Восстановление новой сессии
 

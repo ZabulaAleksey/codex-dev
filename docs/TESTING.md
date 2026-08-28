@@ -10,7 +10,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -55,6 +55,19 @@ missing и ambiguous degraded-сценарии.
 Policy-часть остаётся structural contract test глобальной автоматизации, а hook-часть — internal
 E2E context-projection path. Она не валидирует семантику произвольного project
 `prompts/STAGES.md`, не исполняет product path и не превращает mocks/stubs в E2E evidence.
+
+`tools.test_validate_project_overlay` дополнительно проверяет тот же shared selector contract как
+read-only preflight: valid, missing, multiple, empty/invalid, missing/ambiguous heading, token
+boundary и fenced examples. Selector PASS доказывает только однозначную ссылку, не архитектурную
+завершённость stage.
+
+## Global framework hardening contract
+
+`tools.test_global_framework_hardening` проверяет feature SPEC, размер/critical markers thin
+`AGENTS.md`, допустимые explicit agent model pins и default inheritance, одинаковый порядок
+install wrappers, отсутствие config write commands, minimal project router template и read-only CI.
+Actual Windows/Unix installer execution и runtime Skill parity остаются отдельным environment
+evidence; structural tests не повышают их до PASS.
 
 ## Unified project workflow contract
 

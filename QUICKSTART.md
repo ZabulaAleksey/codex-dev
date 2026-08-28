@@ -1,27 +1,56 @@
-# Быстрый старт в Windows
+# Быстрый старт на Windows, Linux и macOS
+
+## Windows PowerShell
 
 ```powershell
-# 1) Открыть PowerShell в каноническом Git repository ДЕВ
+# 1) Открыть канонический Git repository ДЕВ
 Set-Location ~/.codex
 Set-ExecutionPolicy -Scope Process Bypass
 
-# 2) Проверить глобальное ядро
+# 2) Проверить context, materialize Skills и проверить active layer
 .\install-global.ps1
 
-# 2a) Проверить целостность глобального контекста
-py -3 .\tools\validate_context.py
-
-# 2b) Read-only проверка одного project overlay
+# 3) Read-only проверка одного full project overlay
 py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project>
 
-# 3) Объединить предложенную конфигурацию с существующей, если она была
+# 4) При необходимости вручную объединить recommendation с active config
 notepad "$HOME\.codex\config.ai-dev-team.recommended.toml"
 notepad "$HOME\.codex\config.toml"
+```
 
-# 4) Проверить из выбранного независимого project repository
-Set-Location ~/codex-workspace/<project>
+## Linux / macOS
+
+```bash
+# 1) Открыть канонический Git repository ДЕВ
+cd ~/.codex
+
+# 2) Проверить context, materialize Skills и проверить active layer
+./install-global.sh
+# Если executable bit недоступен: bash ./install-global.sh
+
+# 3) Read-only проверка одного full project overlay
+python3 -B ./tools/validate_project_overlay.py ~/codex-workspace/<project>
+
+# 4) При необходимости вручную сравнить recommendation с active config
+${EDITOR:-vi} ~/.codex/config.ai-dev-team.recommended.toml ~/.codex/config.toml
+```
+
+Install wrappers проверяют, что их directory и Git root совпадают с canonical `~/.codex`,
+запускают read-only `validate_context.py` до Skill sync и не перезаписывают `config.toml`.
+
+## Проверка из product repository
+
+```text
+cd ~/codex-workspace/<project>
 codex mcp list
 codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов. Не изменяй файлы."
 ```
 
-В интерактивном Codex открой `/hooks`, проверь определения и доверь их только после просмотра файлов. Для `STANDARD` или `COMPLEX` функции также проверь `specs/README.md` и относящуюся к задаче SPEC. Для stage-bound задачи укажи stable `Stage ID` в `docs/AI_PLAN.md`, загрузи только exact unique heading record из `prompts/STAGES.md` и до кода проверь его dependency DAG, runnable vertical slice и end-to-end PASS contract. `DEGRADED` warning hook требует ручного чтения полного record и не разрешает completion claim.
+В интерактивном Codex открой `/agent`, `/hooks`, `/skills` и `/mcp`; доверяй automation только
+после просмотра versioned files. Для `STANDARD`/`COMPLEX` функции прочитай затронутую SPEC.
+
+Full staged overlay обязан иметь ровно один stable selector `- Stage ID: <id>` в
+`docs/AI_PLAN.md` и ровно один unfenced heading с этим ID как отдельным token в
+`prompts/STAGES.md`. Сначала запусти `validate_project_overlay.py`, затем загружай только exact
+selected record. `DEGRADED` warning hook требует ручного чтения полного record и запрещает
+completion claim до проверки.

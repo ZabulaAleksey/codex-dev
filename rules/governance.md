@@ -292,10 +292,10 @@ secrets штатными механизмами проекта, прочитай
 
 Текущий read-only `validate_project_overlay.py` выявляет отсутствующие canonical docs, alternate
 status, отдельные stage files, stale/machine-specific paths, exact global duplicates,
-automation compatibility gaps, dependency drift и явно объявленный Backend DX contract. Он не
-исправляет repository автоматически.
+automation compatibility gaps, dependency drift, exact Stage selector/heading reference и явно
+объявленный Backend DX contract. Он не исправляет repository автоматически.
 
-Broken relative links, semantic invalid stage references/DAG, references на отсутствующие
+Broken relative links, semantic invalid dependency DAG/Stage contract, references на отсутствующие
 capabilities и истинность runtime evidence остаются обязательной human/agent проверкой, пока для
-них нет versioned schema и low-false-positive parser. Structural validator не имеет права
-объявлять stage архитектурно завершённым.
+них нет versioned schema и low-false-positive parser. Exact selector PASS подтверждает только
+однозначную structural ссылку; validator не имеет права объявлять stage архитектурно завершённым.

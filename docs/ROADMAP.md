@@ -23,6 +23,14 @@
   expansion/RTL и self-contained initial slice — 101 tests PASS, 201-file manifest PASS; feature
   commit `ee3ea8a` fast-forward merged в локальную `main`, product rollout и push не выполнялись.
 
+## Текущее
+
+- Global framework hardening — `implemented_unverified`: thin global router, exact shared Stage
+  selector contract, reviewed model inheritance/pins, Windows/Bash installer parity, thin project
+  template и read-only CI реализованы; 110 tests и 207-file context validation PASS. Terminal
+  installer/global validation блокирует только pre-existing `unmatched-browser-client-hash` в
+  active runtime config; merge и push не выполнялись.
+
 ## Дальнейшие направления
 
 - развитие model/tool routing;

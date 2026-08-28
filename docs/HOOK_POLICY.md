@@ -15,6 +15,11 @@ Codex загружает все подходящие hooks из активных
 
 `session_context.py` разрешает каждый фиксированный документ относительно Git-root, отклоняет symlink/junction за пределы repository и читает только ограниченный префикс файла. Вывод принудительно переводится в UTF-8, чтобы Windows legacy console encoding не ломала JSON.
 
+Pure parsing contract находится в `hooks/stage_selector.py` и переиспользуется
+`session_context.py` и `tools/validate_project_overlay.py`. Hook отвечает за bounded context
+projection, а read-only validator — за fail-visible structural preflight; расхождение правил
+selector-а между ними считается regression.
+
 Для stage-bound работы `docs/AI_PLAN.md` содержит ровно одну непустую строку `Stage ID` вне
 fenced code block: 1–64 ASCII-символа из букв, цифр, `.`, `_`, `-`. Hook находит ровно один
 Markdown heading вне fenced code block с этим ID как отдельным token в `prompts/STAGES.md` и

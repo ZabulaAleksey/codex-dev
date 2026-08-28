@@ -10,6 +10,17 @@ py -3 .\tools\sync_global_skills.py --source .\skill-sources --destination ~\.ag
 py -3 .\tools\validate_global_codex.py --codex-home ~/.codex
 ```
 
+На Linux/macOS используй симметричный wrapper:
+
+```bash
+cd ~/.codex
+./install-global.sh
+```
+
+Оба install wrapper проверяют canonical directory/Git root, выполняют `validate_context.py` до
+materialization, sync через `sync_global_skills.py`, повторную context/global validation и не
+перезаписывают `config.toml`.
+
 Проверка подтверждает наличие обязательных документов, корректность `MANIFEST.txt`, отсутствие дубликатов путей без учёта регистра и соответствие manifest фактическим отслеживаемым/неигнорируемым файлам.
 
 Legacy option `validate_global_codex.py --workspace` принимает canonical source root, то есть
@@ -49,10 +60,14 @@ codex execpolicy check --pretty --rules "$HOME\.codex\rules\ai-dev-team.rules" -
 ```
 
 Для репозитория с `docs/AI_STATUS.md` ожидается JSON, содержащий `additionalContext`.
-Если `docs/AI_PLAN.md` содержит stable `Stage ID`, а `prompts/STAGES.md` — ровно один heading с
-этим ID как отдельным token, выбранная bounded запись должна идти в `additionalContext` первой.
-Invalid, missing или ambiguous selector должен вернуть `Stage context — DEGRADED`, а не другую
-stage-запись.
+До hook запусти `validate_project_overlay.py`: full overlay обязан иметь ровно один валидный
+unfenced selector и ровно один unfenced heading с ID как отдельным token. Если selector отсутствует,
+validator возвращает `missing-stage-id`; multiple/invalid selector и missing/ambiguous heading
+имеют отдельные issue codes.
+
+Hook без selector сохраняет compact snapshot и не загружает catalog (это совместимость с
+незаполненным template). Если явный selector invalid/ambiguous, выбранный heading отсутствует или
+неоднозначен, hook возвращает `Stage context — DEGRADED`, а не другую stage-запись.
 
 ## Проект
 

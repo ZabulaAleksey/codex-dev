@@ -1,562 +1,223 @@
-# Глобальные правила Codex и ДЕВ / КАРКАС
+# Глобальный router Codex и ДЕВ / КАРКАС
 
-Этот файл является единым глобальным router. Прямые инструкции пользователя имеют
-приоритет над локальным `AGENTS.md`, локальный файл проекта — над этим глобальным
-контрактом. Не копируй общие agents, hooks, Skills, MCP, Git workflow и testing
-policy внутрь проекта без подтверждённой project-specific delta.
+Этот файл задаёт обязательные инварианты и маршрутизацию. Полные contracts принадлежат указанным
+`rules/*`, `docs/*`, SPEC и Skills; не копируй их в project overlays. Прямой запрос пользователя
+приоритетнее project `AGENTS.md`, project instructions — этого router, если более конкретное
+правило не ослабляет безопасность или явно принятый контракт.
 
-## 1. Расположение ДЕВ и рабочих репозиториев
+## 1. Канонические границы
 
-- AI-инфраструктура, глобальные правила и её Git repository находятся в `~/.codex`.
-- Рабочие репозитории находятся непосредственно в `~/codex-workspace/<project>`.
-- Каждый product-каталог верхнего уровня в `~/codex-workspace/` должен быть самостоятельным Git-репозиторием; служебные hidden-каталоги не являются product repositories.
-- Git repository ДЕВ в `~/.codex` не отслеживает runtime state Codex и содержимое product repositories.
-- Не используй каталог шаблонов как рабочий репозиторий проекта.
-- В документации и примерах используй переносимые пути от `~`, а не абсолютные пути конкретного диска или пользователя.
+- Global Git repository и operational layer ДЕВ находятся непосредственно в `~/.codex`.
+- Product repositories — независимые Git roots `~/codex-workspace/<project>`; каждый top-level
+  product-каталог является отдельным repository.
+- Versioned Skills: `~/.codex/skill-sources`; `~/.agents/skills` — только hash-verified runtime
+  materialization, не второй source of truth.
+- Runtime state Codex, credentials, sessions, cache, plugins и active `~/.codex/config.toml` не
+  принадлежат Git repository ДЕВ. Не перезаписывай `config.toml`; меняй только
+  `config.ai-dev-team.recommended.toml` и templates, если задача прямо этого требует.
+- Наличие agent/hook/Skill/MCP файла не доказывает runtime activation; перед зависимостью от
+  capability проверь active configuration/discovery без вывода secrets.
+- В документации используй переносимые пути от `~`, не machine-specific абсолютные пути.
 
-### Переносы и реорганизация
+Фактическое состояние задают текущий repository/worktree, code и verification evidence.
+Утверждённые SPEC/ADR задают требования. Status, prompt, чат и внешняя projection не могут
+переопределять эти источники.
 
-Если пользователь просит перенести, переместить, переименовать или мигрировать файлы, каталоги, repository либо глобальный контекст:
+## 2. Классифицируй и загружай минимальный контекст
 
-- сначала проверь Git-состояние источника и назначения, существующие канонические файлы и возможные совпадения ролей;
-- сохраняй уникальное содержимое, dirty/untracked work и незавершённые merge-состояния; для рискованного переноса подготовь recoverable backup или rollback point;
-- не перезаписывай одноимённый канон автоматически: объединяй содержание или назначай отдельную роль с явной ссылкой и приоритетом;
-- обновляй все затронутые пути и зависимости в правилах, hooks, scripts, manifests, CI/CD, конфигурации, imports, документации и automation context;
-- после переноса ищи stale references и conflict markers, проверяй относительные ссылки, Git diff/status и релевантные валидаторы или тесты;
-- не удаляй migration backup, пока изменения не интегрированы в целевые ветки, исходные dirty/merge-состояния не разрешены и не прошёл согласованный период стабильной работы.
+Перед существенной задачей определи: `SIMPLE | STANDARD | COMPLEX`, prototype/production, этап
+SDLC, домен, стек и соответствующую SPEC. Сначала прочитай `~/.codex/rules/README.md`, затем
+только применимые mode/SDLC/domain/stack rules и `rules/model-routing.md`.
 
----
+- `SIMPLE`: локальное очевидное изменение; без AI Dev Team, обычно без SPEC и субагентов.
+- `STANDARD`: одна подсистема/обычная feature или bugfix; 0–1 полезный specialist, SPEC и
+  `rules/sdd/spec-driven-development.md` при существенном поведении.
+- `COMPLEX`: несколько подсистем/архитектура/security/performance/существенные неизвестные;
+  `rules/modes/strict.md`, полная SPEC, минимально достаточная команда и профильные review gates.
 
-# 2. Сначала определи сложность задачи
+Каскад файлового контекста:
 
-Перед началом работы выбери минимально достаточный режим.
+```text
+ближайший AGENTS.override.md / module instructions
+→ project AGENTS.md
+→ ~/.codex/AGENTS.md
+→ global Codex configuration
+```
 
-## SIMPLE — простая задача
+Порядок загрузки: ближайшие instructions → выбранные rules → затронутая SPEC → один выбранный
+stage record → относящиеся architecture/decisions/design/security → `docs/AI_PLAN.md`, code/tests →
+компактный `docs/AI_STATUS.md`. Не загружай целиком архивы prompts, все rules/specs/fixtures или
+старые reports.
 
-Используй для:
+Для stage-bound project task ровно одна строка `- Stage ID: <stable-id>` в `docs/AI_PLAN.md`
+выбирает ровно один heading в `prompts/STAGES.md`, где ID является отдельным token. Загружай только
+выбранный record. Invalid/missing/ambiguous selector даёт visible `DEGRADED`; прочитай полный record
+вручную и не используй completion claim, пока контракт не проверен.
 
-- небольшого локального исправления;
-- изменения одного или нескольких очевидно связанных файлов;
-- небольшой UI-правки;
-- исправления текста, стиля, имени или конфигурации;
-- задачи, не требующей архитектурного решения.
+## 3. Обязательные cross-cutting routes
 
-Правила:
-
-- не используй AI Dev Team;
-- не запускай субагентов без явной пользы;
-- не читай архитектурную документацию целиком;
-- исследуй только непосредственно связанные файлы;
-- выполни минимально необходимые проверки.
-
-Цель: решить задачу максимально быстро с минимальным расходом контекста.
-
-## STANDARD — обычная задача разработки
-
-Используй, если требуется:
-
-- разобраться в нескольких связанных файлах;
-- реализовать обычную feature или bugfix;
-- изменить одну подсистему;
-- провести небольшой рефакторинг.
-
-Разрешается использовать одного подходящего исследовательского или специализированного субагента, если это действительно ускоряет работу.
-
-Не запускай architect, reviewer и несколько специалистов автоматически.
-
-## COMPLEX — сложная задача
-
-Используй AI Dev Team, если задача:
-
-- затрагивает несколько подсистем;
-- требует архитектурного решения;
-- имеет существенные риски или неизвестные;
-- требует нескольких разных специализаций;
-- хорошо разделяется на независимые направления;
-- связана с безопасностью, производительностью, распределёнными системами или сложными вычислениями.
-
-Только в этом режиме по умолчанию рассматривай:
-
-- architect;
-- explorer;
-- специализированных агентов;
-- параллельное исследование;
-- reviewer;
-- security/performance review.
-
-Всегда используй минимальное число агентов, достаточное для задачи.
-
-## Маршрутизатор контекста и SDD
-
-Перед существенной программной задачей определи шесть измерений:
-
-1. сложность: `SIMPLE`, `STANDARD` или `COMPLEX`;
-2. режим разработки: prototype или production;
-3. текущий этап SDLC: requirements, specification, architecture, design, implementation, testing, review, release или maintenance;
-4. технический домен;
-5. используемый стек;
-6. соответствующую SPEC.
-
-Сначала прочитай `~/.codex/rules/README.md`, затем загружай только относящиеся к задаче правила из `rules/modes/`, `rules/sdlc/`, `rules/domains/` и `rules/stacks/`.
-
-Для `STANDARD` и `COMPLEX` изменений существенного поведения обязательно используй `~/.codex/rules/sdd/spec-driven-development.md`.
-
-Для изменений структуры repository, project lifecycle, stage/docs, source of truth, context inheritance, database/fallback/security/tooling/evidence или cross-device portability обязательно прочитай `~/.codex/rules/governance.md`.
-
-Не загружай все правила и все SPEC одновременно.
-
-### Сквозная Fallback Policy
-
-Если задача содержит retry, fallback, degraded mode, альтернативный backend/tool/model,
-частичный результат, recovery после сбоя или повтор операции с side effect,
-обязательно прочитай `~/.codex/rules/fallback-policy.md`.
-
-Проект может расширять эту policy через свой `docs/FALLBACKS.md`,
-но не должен копировать глобальный контракт целиком.
-
-### Backend Developer Experience Policy
+- Structure, lifecycle, source ownership, stages, documentation/evidence, tool boundaries:
+  `~/.codex/rules/governance.md`.
+- `STANDARD`/`COMPLEX` behavior: `~/.codex/rules/sdd/spec-driven-development.md` и затронутая SPEC.
+- Retry/fallback/degraded/recovery/side effects: `~/.codex/rules/fallback-policy.md`.
+- Dependency manager/lockfile/cache/clean restore: `~/.codex/rules/dependency-management.md`.
+- Node/Corepack/npm/pnpm/Yarn: `~/.codex/rules/node-package-management.md`.
+- Model/subagent selection: `~/.codex/rules/model-routing.md`; выбранная пользователем модель
+  главного агента не меняется молча.
+- User-facing product architecture/strings/locale/RTL: `~/.codex/rules/i18n-l10n.md`. Язык
+  project context не определяет product language/locale.
+- Global/project КАРКАС, audit, plans/status/roadmap/stages, Notion ideas и synchronization:
+  Skill `dev-karkas` и только нужные references.
 
 <!-- AI-DEV-TEAM-BACKEND-DX-POLICY -->
-
 Для создания, аудита или изменения backend developer workflow прочитай
-`~/.codex/rules/backend-dx.md` и используй global Skill `backend-dx-audit`.
-Переиспользуй существующие package manager, task runner, test runner, ORM,
-migration и orchestration mechanisms. Project `AGENTS.md` только маршрутизирует к
-project-specific `Backend DX Delta` в `docs/project-context.md`; global policy не
-копируется. Материальные BDX requirements требуют evidence, а destructive
-DB/resource actions и production access остаются deny-by-default.
-
-### Internationalization / Localization Policy
-
-Для architecture, specification, design, implementation или review продукта с пользовательской
-поверхностью обязательно прочитай `~/.codex/rules/i18n-l10n.md`. Глобальный контракт различает
-`i18n`, `l10n`, `language` и `locale`, требует resource-based пользовательские строки,
-locale-aware данные, fallback locale и проверяемые text expansion / RTL guarantees.
-
-Project `DESIGN.md`, SPEC и архитектура содержат только поддерживаемые locales, выбранную
-реализацию, обоснованные исключения и acceptance evidence; полный глобальный контракт не
-копируется. Язык проектного контекста не определяет язык пользовательского продукта.
-
-## Каскад и экономия контекста
-
-Для файловых инструкций используй каскад:
-
-`Модуль → Проект → ~/.codex → глобальная конфигурация Codex`
-
-Прямая инструкция пользователя для текущей задачи остаётся приоритетнее этого каскада.
-
-Загружай контекст в следующем порядке и только по необходимости:
-
-1. ближайший относящийся к задаче `AGENTS.md` / `AGENTS.override.md`;
-2. выбранные правила режима, этапа, домена и стека;
-3. затрагиваемые требования и критерии приёмки из SPEC;
-4. только выбранный stage record из `prompts/STAGES.md`, если задача относится к stage;
-5. относящиеся к задаче разделы архитектуры, решений, дизайна и безопасности;
-6. текущий `AI_PLAN`, целевые файлы, тесты и diff;
-7. компактный снимок `AI_STATUS`.
-
-Для stage-bound задачи stable `Stage ID` из `docs/AI_PLAN.md` должен выбирать ровно один heading
-record в `prompts/STAGES.md`; `DEGRADED` selector требует ручного чтения полного record и не
-разрешает completion claim.
-
-Не загружай по умолчанию полные архивы prompts и roadmap, все fixtures и references, устаревшие отчёты или общие правила, уже унаследованные на более высоком уровне. Подробная политика находится в `docs/CONTEXT_POLICY.md`.
-
-## КАРКАС и автоматизация контекста
-
-Когда пользователь просит «создай КАРКАС» или «сделай АВТОМАТИЗАЦИЮ КОНТЕКСТА», сначала прочитай:
-
-- `~/.codex/docs/PROJECT_FRAMEWORK.md`;
-- `~/.codex/docs/CONTEXT_POLICY.md`;
-- `~/.codex/docs/CONTEXT_COMPATIBILITY.md`.
-
-Интерпретируй КАРКАС как project-specific living contract и staged development overlay, а не как исходный код приложения или копию AI Dev Team. Выполни inspect → gap analysis → minimal delta. Не начинай крупную реализацию продукта, если пользователь запросил только КАРКАС или автоматизацию контекста.
-
-Перед bootstrap или refresh классифицируй repository как `GREENFIELD` или `BROWNFIELD`. Для `BROWNFIELD` фактический repository и его подтверждённые тесты являются source of truth текущего состояния: КАРКАС адаптируется к реализации, а не наоборот. До любых mutations выполни read-only `tools/reconcile_project_framework.py`, зафиксируй compatibility matrix в `docs/CONTEXT_COMPATIBILITY.md`, разреши конфликты, затем выполни refresh, `validate_project_overlay.py` и повтор baseline-тестов. Старые failures сохраняются как pre-existing, новые failures считаются regression.
-
-## Язык контекста
-
-При создании или обновлении проектного контекста по умолчанию используй русский язык: в `AGENTS.md`, SPEC, документации, stage prompts и человекочитаемых инструкциях agents/Skills. Не переводи программные идентификаторы, публичные API, команды, пути, имена технологий и машинные ключи конфигурации. Другой основной язык используй только по прямому указанию пользователя или когда этого требует внешний контракт проекта.
-
----
-
-# 3. Git Workflow
-
-Эти правила применяются только к задачам, которые изменяют код или файлы проекта.
-
-Для read-only анализа, вопросов, планирования и исследования ветку создавать не требуется.
-
-## Перед изменениями
-
-1. Определи корень текущего Git-репозитория.
-2. Проверь наличие:
-
-`~/codex-workspace/<project>/docs/git-flow.md`
-
-3. Если файл существует — прочитай его и используй его правила.
-4. Если файла нет — используй стандартные имена веток, например:
-
-`feature/<task>`
-
-`fix/<task>`
-
-Никогда не изменяй напрямую защищённые ветки:
-
-- `main`;
-- `master`;
-- `dev`.
-
-## Последовательная работа
-
-Если файлы изменяет один агент или несколько агентов работают последовательно:
-
-- создай обычную рабочую ветку;
-- отдельный worktree не нужен.
-
-## Параллельная работа
-
-Git worktree обязателен только если **два или более write-capable процесса/агента одновременно изменяют проект**.
-
-Каждый параллельный write-capable агент должен иметь:
-
-- отдельную ветку;
-- отдельный worktree;
-- непересекающуюся область ответственности.
-
-Для параллельных read-only агентов worktree не требуется.
-
-Не допускай одновременное изменение одного файла несколькими агентами.
-
----
-
-# 4. Коммиты
-
-Работай итеративно.
-
-Для небольшого изменения достаточно одного итогового коммита.
-
-Для средней или сложной задачи создавай промежуточный commit после завершения существенного логического блока, если этот блок:
-
-- работает;
-- прошёл необходимые проверки;
-- представляет полезную точку отката.
-
-Не создавай коммит после каждой мелкой правки.
-
-Используй стандарты commit messages проекта. Если они не определены, применяй Conventional Commits.
-
----
-
-# 5. AI Development Team
-
-Библиотека AI-инфраструктуры находится здесь:
-
-`~/.codex`
-
-Не загружай всю эту директорию в контекст.
-
-Используй её только в режиме STANDARD при явной необходимости или в режиме COMPLEX.
-
-## Выбор проектного preset
-
-Если задача относится к существующему проекту, сначала проверь:
-
-`~/codex-workspace/<project>`
-
-и прочитай его локальный `AGENTS.md`, если он существует.
-
-Для project-specific контекста используй только файлы самого project repository. Global framework не хранит и не устанавливает project-named presets. Открывай только те файлы агентов, Skills, правил или документации, на которые реально требуется опереться для текущей задачи.
-
-Не перечисляй и не загружай все доступные роли заранее.
-
-Проект является overlay над общей библиотекой. Храни в нём только проектные правила, SPEC и документацию, а также локальные agents, Skills, hooks или MCP, для которых подтверждён реальный пробел общей конфигурации. Не копируй в проект общий Git workflow, универсальные роли и глобальную конфигурацию Codex.
-
-## Общая архитектура команды
-
-Файлы:
-
-`~/.codex/docs/TEAM_ARCHITECTURE.md`
-
-`~/.codex/docs/notes/TEAM_COMMANDS.md`
-
-читай только если:
-
-- проектного preset недостаточно;
-- задача требует организации нескольких агентов;
-- требуется изменение самой AI-инфраструктуры.
-
-Для обычных задач их не читать.
-
-## Специализация
-
-Если preset содержит специализированного агента для текущей области, предпочитай его универсальному агенту.
-
-Не запускай специалиста только потому, что он существует.
-
----
-
-# 6. Делегирование
-
-Перед запуском субагента оцени, принесёт ли делегирование заметную пользу по сравнению с самостоятельным выполнением задачи.
-
-Для SIMPLE-задач по умолчанию не использовать субагентов.
-
-Для STANDARD-задач обычно достаточно 0–1 дополнительного агента.
-
-Для COMPLEX-задач разрешается несколько агентов.
-
-Независимые read-only исследования можно выполнять параллельно.
-
-Параллельную запись разрешай только в независимые области проекта и через отдельные worktrees.
-
-Перед началом реализации дождись результатов архитектурных или исследовательских агентов только если их вывод действительно необходим для реализации.
-
----
-
-# 7. Проверка изменений
-
-Масштаб проверки должен соответствовать масштабу изменения.
-
-Для SIMPLE:
-
-- выполнить непосредственно релевантную проверку или тест.
-
-Для STANDARD:
-
-- выполнить релевантные unit/integration/component tests;
-- проверить затронутую функциональность.
-
-Для COMPLEX:
-
-- выполнить необходимые тесты;
-- использовать reviewer;
-- использовать security review при изменениях безопасности, сети, авторизации, доступа или секретов;
-- использовать performance review для вычислительных hot paths или performance-critical изменений.
-
-Не запускай тяжёлые проверки, не связанные с изменённой областью, без причины.
-
-### Автоматизация тестирования
-
-- После генерации изменений для задач, затрагивающих функциональность, обязательно выполняй unit, integration и component прогоны как проверочный шаг.
-- Принятые тесты, fixtures и golden не меняются в том же проходе: сначала верификация и фиксация результатов, затем при необходимости отдельный шаг корректировки.
-- E2E-приоритеты фиксируй в проектной документации и считаются закрытыми только при наличии живого пути `client → API/CLI → backend`.
-
----
-
-# 8. Документация
-
-## Обязательная проектная документация
-
-Канонический baseline и назначение документов определены в `rules/governance.md`. Для активного product repository, подключённого как полный staged ДЕВ overlay, обязательны содержательные `AGENTS.md`, `prompts/STAGES.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/LEARNING_LOG.md` и `docs/project-context.md`.
-
-Не создавай пустые placeholders. `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `TRACEABILITY.md` и `DEPENDENCIES.md` обязательны только при соответствующей поверхности проекта.
-
-Предпочтительное расположение — в `~/codex-workspace/<project>/docs/`, если структура проекта или локальный `AGENTS.md` не задают другое место.
-
-### Размещение новых Markdown-файлов
-
-Перед созданием нового `.md` сначала проверь, можно ли обновить существующий канонический документ той же роли. Не создавай конкурирующий status, plan, architecture, design, testing, security, decision или learning source.
-
-На верхнем уровне `docs/` создавай только канонические документы КАРКАСА: обязательное ядро из `rules/governance.md` и условные документы, прямо вызванные поверхностью проекта, включая `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `TRACEABILITY.md`, `DEPENDENCIES.md`, `API.md`, `DATA_MODEL.md`, `PRIVACY.md` и `FALLBACKS.md`.
-
-Новый долговечный Markdown, который не выполняет каноническую роль КАРКАСА, помещай в `docs/notes/<topic>.md`. Не создавай произвольные новые `.md` в корне repository или непосредственно в `docs/`. Временные отчёты, scratch notes и одноразовые audit outputs не коммить: используй системный временный каталог.
-
-Правило применяется к новым файлам и не требует массового перемещения существующей документации без отдельного semantic/link audit.
-
-`AI_STATUS.md` выполняет роль актуального снимка проекта. Не создавай отдельный `PROJECT_SNAPSHOT.md`, если проект уже использует `AI_STATUS.md`.
-
-`SECURITY.md` создавай или обновляй, когда проект обрабатывает аутентификацию, секреты, недоверенный ввод, сетевые границы, платежи или чувствительные данные.
-
-Если обязательный файл отсутствует, сначала исследуй фактический repository и создай содержательный minimum; не выдумывай архитектуру или evidence.
-
-Это считается первоначальным bootstrap проектной документации и выполняется независимо от режима SIMPLE / STANDARD / COMPLEX.
-
-## Спецификации
-
-- SPEC хранится в `specs/system.spec.md` или `specs/features/<feature>.spec.md`.
-- `specs/README.md` является индексом и не заменяет сами спецификации.
-- Для `SIMPLE` не создавай SPEC автоматически, если не меняется существенное наблюдаемое поведение.
-- Для новой `STANDARD` функциональности создай или обнови соответствующую SPEC до реализации.
-- Для `COMPLEX` функциональности полная SPEC и критерии приёмки обязательны.
-- Prompt описывает текущую работу агента; SPEC описывает стабильные требования продукта.
-- Используй `~/.codex/templates/SPEC_TEMPLATE.md` и правила из `~/.codex/rules/sdd/`.
-
-При создании отсутствующих документов:
-
-* сначала исследуй только необходимую часть существующего проекта;
-* отражай фактическое текущее состояние проекта;
-* не придумывай несуществующую архитектуру, решения, функции или планы;
-* если информация неизвестна, явно указывай это;
-* создавай минимально достаточную первоначальную версию документа;
-* не выполняй большой рефакторинг проекта только ради заполнения документации.
-
-Назначение файлов:
-
-### `ARCHITECTURE.md`
-
-Должен описывать текущую архитектуру проекта:
-
-* основные подсистемы;
-* frontend/backend/services;
-* основные зависимости;
-* хранилища данных;
-* внешние интеграции;
-* основные потоки данных;
-* границы модулей;
-* ключевые интерфейсы между компонентами.
-
-Если проект небольшой, документ может быть кратким.
-
-### `DECISIONS.md`
-
-Журнал существенных архитектурных и технических решений.
-
-Для каждого решения по возможности фиксируй:
-
-* решение;
-* причину;
-* рассмотренные альтернативы;
-* последствия;
-* дату или этап проекта.
-
-Не добавляй туда каждую мелкую реализационную деталь.
-
-Если значимых решений пока нет, создай файл с соответствующей структурой и отметь, что журнал пока пуст.
-
-### `DESIGN.md`
-
-Каноническое описание дизайна и UI/UX проекта.
-
-Если UI уже существует, но `DESIGN.md` отсутствует:
-
-* проанализируй существующие страницы;
-* reusable-компоненты;
-* layout;
-* typography;
-* цвета;
-* theme/tokens;
-* spacing;
-* формы;
-* таблицы;
-* состояния loading/error/empty;
-* responsive behavior;
-
-и зафиксируй **фактически существующий дизайн** как исходный стандарт.
-
-Не изменяй существующий дизайн только ради соответствия новому документу.
-
-После создания `DESIGN.md` дальнейшие UI-изменения должны учитывать его как канонический источник требований, если более конкретные инструкции пользователя не говорят обратного.
-
-Для проекта без пользовательского интерфейса не создавай `DESIGN.md` только ради отметки `N/A`; при необходимости зафиксируй отсутствие UI в `docs/ARCHITECTURE.md` или `docs/project-context.md`.
-
-### `AI_STATUS.md`
-
-Должен содержать актуальное состояние разработки с точки зрения AI-агентов:
-
-* текущий этап;
-* что уже реализовано;
-* что находится в работе;
-* известные проблемы;
-* технический долг;
-* важные ограничения;
-* следующие разумные действия;
-* полезный контекст для продолжения работы в новой AI-сессии.
-
-Не превращай его в подробный лог каждого действия агента.
-
-Если проекту действительно нужна подробная фактическая хронология команд, изменений, сбоев и миграций, веди отдельный `docs/DEV_LOG.md` по `templates/DEV_LOG_TEMPLATE.md`. Не создавай его «на всякий случай».
-
-### `ROADMAP.md`
-
-Должен описывать дальнейшее развитие проекта:
-
-* основные этапы;
-* крупные функции;
-* зависимости между этапами;
-* ближайшие задачи;
-* более поздние направления развития.
-
-Разделяй:
-
-* уже выполненное;
-* текущее;
-* запланированное;
-* экспериментальное / optional.
-
-Не представляй экспериментальные идеи как уже утверждённые требования.
-
----
-
-## Обновление существующей документации
-
-Перед завершением любой задачи или этапа и после разрешённого merge всегда выполняй
-Completion Documentation Synchronization Gate из `rules/governance.md`.
-
-Обязательно проверь существующие `README.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`,
-`docs/ROADMAP.md`, `prompts/STAGES.md`, traceability/changelog/dev log и затронутые SPEC,
-архитектурные, design, security, testing, API/data/dependency/fallback документы.
-
-Проверка обязательна; изменение файла зависит от фактов. Не обновляй документацию после каждой
-мелкой правки только ради даты или формальной отметки. Если содержание осталось точным, не создавай
-churn, но укажи в итоговом отчёте, что документ проверен и не потребовал изменений.
-
-После первоначального создания `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `AI_STATUS.md`, `ROADMAP.md` обновляй их только тогда, когда текущая задача действительно изменяет соответствующую информацию.
-
-Если изменение затрагивает описанные в `README.md` назначение проекта, возможности, требования, установку, конфигурацию, команды запуска, примеры использования или ограничения, обнови `README.md` в рамках той же задачи. Не изменяй `README.md`, если его фактическое содержание не затронуто.
-
-Примеры:
-
-* изменена архитектура → обнови `ARCHITECTURE.md`;
-* принято существенное техническое решение → обнови `DECISIONS.md`;
-* изменены UI-принципы, компоненты или визуальный стандарт → обнови `DESIGN.md`;
-* существенно изменилось текущее состояние проекта → обнови `AI_STATUS.md`;
-* изменились этапы или планы развития → обнови `ROADMAP.md`.
-
-Для SIMPLE-задачи создание отсутствующих обязательных документов допускается в минимальном виде, но не требуется подробно перерабатывать уже существующую документацию, если сама задача её не затрагивает.
-
-Если архитектурное решение изменилось — обязательно зафиксируй его в соответствующей документации.
-
-
----
-
-# 9. Hooks, MCP, Skills и TOML из AI Dev Team
-
-Файлы внутри `~/.codex` являются канонической библиотекой инструкций и шаблонов.
-
-Не запускай принудительный `git clean` (`-f` / `--force`) в `~/.codex`: Git-root совмещён с runtime-каталогом Codex, поэтому такая очистка может удалить игнорируемые credentials, sessions, cache, plugins и active config.
-
-Не считай Hook, MCP, Skill или custom-agent активным только потому, что его файл существует в этой библиотеке.
-
-Если для задачи требуется реально подключить такую возможность, сначала проверь, установлена ли она в активной конфигурации Codex.
-
-Не изменяй глобальную конфигурацию Codex без необходимости.
-
-Перед добавлением или существенным изменением automation-возможности проведи аудит по `docs/CONTEXT_COMPATIBILITY.md` и классифицируй решение как `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`. Для нетривиального проектного изменения зафиксируй результат в `docs/CONTEXT_COMPATIBILITY.md` проекта.
-
-Экспериментальная технология должна иметь сформулированные проблему и цель, рассмотренные альтернативы, критерии успеха, безопасный fallback и способ проверки. Feature flag, benchmark, ADR и план отката обязательны тогда, когда соответствующий риск действительно присутствует.
-
----
-
-# 10. Завершение задачи
-
-После изменения файлов:
-
-1. выполни проверки, соответствующие сложности задачи;
-2. выполни Completion Documentation Synchronization Gate и устрани stale claims;
-3. проверь итоговый diff и сделай commit;
-4. кратко сообщи:
-   - что изменено;
-   - какие проверки выполнены;
-   - какие state-bearing документы обновлены, а какие проверены без изменений;
-   - есть ли известные ограничения.
-
-Не выполняй:
-
-- `git merge`;
-- удаление worktree;
-- Pull Request;
-- force push
-
-без прямого разрешения пользователя.
+`~/.codex/rules/backend-dx.md` и используй global Skill `backend-dx-audit`. Переиспользуй
+существующие package manager, task runner, test runner, ORM, migrations и orchestration.
+Project хранит только `Backend DX Delta` в `docs/project-context.md`; destructive DB/resource и
+production actions deny-by-default.
+
+## 4. Git, сохранность данных и scope
+
+Для read-only анализа branch не нужен. Перед файловыми изменениями:
+
+1. определи Git root, branch/status/diff и сохрани unrelated dirty/untracked/merge work;
+2. прочитай project `docs/git-flow.md`, если он существует;
+3. не изменяй напрямую `main`, `master` или `dev`; используй `feature/<task>` / `fix/<task>` либо
+   project convention;
+4. один write-capable процесс работает в обычной ветке; два и более параллельных writers — только
+   в отдельных branches/worktrees с непересекающимися файлами;
+5. не выполняй merge, worktree deletion, PR, push, force push, history rewrite или production
+   deployment без явного разрешения.
+
+Для move/rename/migration сначала проверь source/target Git state, canonical role collisions,
+dirty/merge state и stale references. Сохрани unique content и recoverable rollback point; не
+перезаписывай одноимённый канон автоматически и не удаляй backup до интеграции и стабильной
+проверки. После move проверь paths/imports/hooks/config/CI/docs, conflict markers, diff/status и
+релевантные tests.
+
+Не выполняй destructive reset, массовое удаление untracked/runtime data, credential/config rewrite
+или необратимую data migration без точного target, backup/recovery contract и явного разрешения.
+Никогда не запускай force-clean в `~/.codex`: рядом находятся ignored runtime credentials,
+sessions, cache, plugins и active config.
+
+## 5. ДЕВ / КАРКАС и project overlay
+
+Используй `dev-karkas`, когда задача относится к bootstrap/audit/restructure, `AGENTS.md`,
+automation, architecture/security/testing/fallback policy, SPEC, state/stages, Notion intake или
+completion synchronization. Режим Skill выбирай по задаче: bootstrap, audit, maintain,
+idea-intake, prompt-build или execute.
+
+Для active full staged product overlay содержательными canonical files являются:
+
+- `AGENTS.md`;
+- `prompts/STAGES.md`;
+- `docs/AI_PLAN.md`;
+- `docs/AI_STATUS.md`;
+- `docs/ROADMAP.md`;
+- `docs/ARCHITECTURE.md`;
+- `docs/DECISIONS.md`;
+- `docs/LEARNING_LOG.md`;
+- `docs/project-context.md`.
+
+Не создавай placeholders механически. `DESIGN.md`, `SECURITY.md`, `TESTING.md`,
+`TRACEABILITY.md`, `DEPENDENCIES.md`, `API.md`, `DATA_MODEL.md`, `PRIVACY.md` и `FALLBACKS.md`
+создавай только при соответствующей поверхности. Дополняй существующий canonical owner; новый
+долговечный non-canonical Markdown помещай в `docs/notes/<topic>.md`. Не создавай второй status,
+plan, architecture, design, decision, learning или workflow source.
+
+Brownfield repository: до framework bootstrap/refresh запусти read-only
+`tools/reconcile_project_framework.py`, зафиксируй compatibility matrix в
+`docs/CONTEXT_COMPATIBILITY.md`, разреши `CONFLICT`, затем refresh,
+`validate_project_overlay.py` и повтор baseline tests. Code/tests repository — source of truth;
+`FORBIDDEN_TO_OVERWRITE` запрещает mutation. Pre-existing failures отделяй от regressions.
+
+Когда пользователь просит «создай КАРКАС» или «автоматизацию контекста», дополнительно прочитай
+`docs/PROJECT_FRAMEWORK.md`, `docs/CONTEXT_POLICY.md`, `docs/CONTEXT_COMPATIBILITY.md`; выполни
+inspect → gap analysis → minimal delta, не реализацию продукта.
+
+## 6. Stage contract и статусы
+
+До реализации stage примени единственный полный Stage contract из `rules/governance.md`:
+completed prerequisites/dependency DAG, входные evidence, runnable vertical slice, concrete
+end-to-end scenario, PASS checks/evidence, допустимая полностью рабочая temporary implementation и
+deferred future scope.
+
+Future stage не может разблокировать primary path, обязательную инфраструктуру или verification
+ранее закрытого stage. Mock/stub/fake/interface-only путь подтверждает `scaffolded`, но не
+completion. Без обязательного evidence используй `blocked`, `scaffolded`, `partial` или
+`implemented_unverified`; `completed`, `verified` и `DONE` требуют всех terminal gates.
+
+## 7. Команда и inference budget
+
+Используй минимальное число агентов с реальной пользой:
+
+- `SIMPLE`: 0;
+- `STANDARD`: обычно 0–1;
+- `COMPLEX`: несколько только по независимым специализациям; architect/reviewer/security/performance
+  не запускаются автоматически без соответствующего риска.
+
+Read-only исследования можно параллелить. Writers получают явные owners и непересекающиеся файлы.
+Агенты без явного `model` наследуют выбранную/default Codex model; явный pin используется только
+для проверенной role-specific причины. Сначала повышай reasoning, затем model; premium режимы
+`Sol XHigh`, `Sol Max`, `Ultra` требуют прямого разрешения. Экономия не отменяет SPEC, tests,
+review и security gates.
+
+## 8. Реализация и test contracts
+
+Перед code change сопоставь requirement → SPEC/ADR → architecture → implementation → tests.
+Не меняй architecture/public contract молча. Минимальный diff предпочтительнее косметического
+refactor. Не добавляй agent/hook/MCP/Skill/dependency/technology без подтверждённого gap,
+compatibility classification и bounded failure behavior.
+
+Accepted unit/integration/component tests, fixtures, goldens и E2E scenarios — исполняемый
+контракт/evidence. Не удаляй, не skip'ай, не ослабляй и не переписывай их в обычной реализации.
+Contract change требует прямого запроса/утверждённой SPEC и отдельного согласованного изменения.
+
+После functional changes выполняй релевантные unit, integration и component checks. E2E считается
+закрытым только для живого `client → API/CLI → backend` либо эквивалентного consumer path; если
+обязательный backend отсутствует, используй `BLOCKED_BY_BACKEND`. Не называй smoke/static/mock
+evidence полноценным E2E. Команды бери из project manifests/README/CI/scripts, не выдумывай.
+
+## 9. Документация и evidence
+
+SPEC хранится в `specs/system.spec.md` или `specs/features/<feature>.spec.md`; prompt/plan не
+заменяет requirements. Для `STANDARD`/`COMPLEX` существенного behavior SPEC обновляется до кода.
+Architecture/decisions/design/security/testing/status меняй только при изменившихся фактах; не
+создавай timestamp-only churn и не выдумывай evidence.
+
+Перед завершением task/stage и после разрешённого merge выполни Completion Documentation
+Synchronization Gate из `rules/governance.md`. Всегда проверь существующие README,
+`docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `prompts/STAGES.md`, затронутые SPEC,
+architecture/decisions/design/security/testing/API/data/dependencies/fallback и используемые
+traceability/changelog/dev-log sources. Устрани stale status, blockers, next-step, test counts и
+ложные `merged/released/deployed` claims.
+
+В handoff явно укажи, какие state-bearing документы обновлены и какие проверены без изменений.
+`docs/AI_STATUS.md` — compact current truth, не action log. `docs/LEARNING_LOG.md` обновляй только
+для evidence-backed повторно полезной диагностики; не записывай скрытые рассуждения и не дублируй
+Git history.
+
+Для `STANDARD`/`COMPLEX` кратко объясняй существенные этапы, команды, изменения и проверки. Когда
+задача подходит для самостоятельного повторения, дай 3–7 воспроизводимых действий. Подробный
+`docs/notes/MENTORING_GUIDE.md` загружай только при существенной диагностике, учебной задаче или
+явном запросе.
+
+Project context по умолчанию веди на русском; identifiers, APIs, commands, paths, technologies и
+machine keys не переводи. Другой основной язык — только по прямому запросу или внешнему contract.
+
+## 10. Завершение
+
+После файловых изменений:
+
+1. выполни проверки по риску и acceptance/Definition of Done;
+2. выполни Completion Documentation Synchronization Gate;
+3. проверь final diff/status и отсутствие accidental secrets/runtime files/`LEARNING_LOG*` churn;
+4. создай атомарный commit по project convention или Conventional Commits;
+5. сообщи изменения, commands/evidence, pre-existing failures, ограничения, state-bearing документы
+   обновлены или проверены без изменений.
+
+Не повышай evidence выше факта: `implemented locally → validated locally → committed → pushed →
+PR opened → merged → released/deployed`.
 
 Если использовалась обычная ветка, заверши вопросом:
 
@@ -566,330 +227,15 @@ churn, но укажи в итоговом отчёте, что документ
 
 «Изолированная работа завершена. Могу ли я слить ветку в main и удалить временный worktree?»
 
-Слияние разрешено только после явного ответа пользователя:
+Merge разрешён только после явного ответа: `Да, сливай`.
 
-`Да, сливай`.
+## 11. Notion и идеи
 
----
+Для идей/backlog/requirements из Notion используй connected Notion и `dev-karkas` workflow.
+Сначала найди project mapping и проверь code, AGENTS, SPEC, DESIGN, ROADMAP, AI_PLAN, AI_STATUS,
+STAGES и decisions на duplicate/already implemented. Жизненный цикл:
+`IDEA → REFINED → PROMPT_READY → APPROVED → IMPLEMENTING → DONE`, с дополнительными
+`NEEDS_RESEARCH`, `NEEDS_DECISION`, `DUPLICATE`, `ALREADY_IMPLEMENTED`, `BLOCKED`.
 
-# 11. Приоритет инструкций
-
-Более конкретные правила имеют приоритет над общими.
-
-Порядок:
-
-1. прямые инструкции пользователя для текущей задачи;
-2. более локальный `AGENTS.md` / `AGENTS.override.md` проекта;
-3. правила текущей рабочей области;
-4. общая AI Dev Team библиотека.
-
-AI Dev Team дополняет правила проекта, но не отменяет их.
-
-
-# 12. Учебное сопровождение
-
-- Для `STANDARD` и `COMPLEX`-задач кратко объясняй существенные этапы, команды, изменения и проверки.
-- Для подходящих задач добавляй воспроизводимую запись в `docs/LEARNING_LOG.md` по `templates/LEARNING_LOG_TEMPLATE.md`; не записывай скрытые рассуждения модели.
-- Подробные правила загружай из `docs/notes/MENTORING_GUIDE.md` только при существенной диагностике, учебной задаче или явном запросе пользователя.
-- После завершения укажи 3–7 действий, которые пользователь может повторить самостоятельно.
-
-# 13. Выбор модели
-
-1. Перед началом задачи применяй правила из `rules/model-routing.md`.
-2. Выбранная пользователем в чате модель остаётся моделью главного агента; маршрутизация Luna / Terra / Sol и `reasoning_effort` применяется к доступным субагентам и явно управляемым запускам.
-3. Используй минимально достаточную модель и reasoning, но не ослабляй SPEC, DoD, тестирование, review, безопасность и Git workflow.
-
-
-<!-- AI-DEV-TEAM-TEST-CONTRACT-POLICY -->
-# 14. Политика тест-контрактов
-
-1. Принятый тест, fixture, golden-снапшот или E2E-сценарий является контрактом поведения. В обычной реализации этот артефакт запускается только для верификации.
-2. Принятые тесты, fixtures и e2e-сценарии не модифицируются, не удаляются и не пропускаются без явного согласования.
-3. Невыполненный принятый тест означает дефект в рабочем коде и исправляется изменением production-кода.
-4. Изменение уже принятого теста разрешено только по прямому запросу владельца или в отдельной задаче изменения требований.
-5. Новые тесты могут добавляться вместе с новой функциональностью перед первой приёмкой, но это не даёт права переписывать уже принятые тесты.
-
-# 15. Правила тестирования (для всех репозиториев)
-1. Автоматизация тестирования после генерации:
-   1. После генерации изменений для задач, затрагивающих функциональность, обязательно запускай unit, integration и component-тесты как обязательный проверочный шаг.
-   2. E2E-сценарии фиксируются в проектной документации и считаются закрытыми только при наличии живого пути `client → API/CLI → backend`.
-   3. Если живой путь отсутствует, E2E-сценарий помечай как `BLOCKED_BY_BACKEND` и не считаешь закрытым.
-2. Принятые unit/integration/component-тесты, fixtures, golden-снапшоты и E2E-сценарии рассматриваются как контракт поведения: при обычной реализации они запускаются только для верификации.
-3. Для изменений функциональности выполняй обязательные проверки unit, integration и component; E2E — только при живом пути `client → API/CLI → backend`, иначе помечай сценарий как blocked.
-4. Любые изменения принятых тестов/fixtures/golden-scenarios делай только в отдельном согласованном этапе изменения контрактов.
-
-# 16. ДЕВ / КАРКАС
-
-Для оркестрации программных проектов используй глобальный skill `dev-karkas` как канонический рабочий процесс.
-
-Подключай или используй `$dev-karkas`, когда задача относится хотя бы к одному из следующих направлений:
-
-* создание и первоначальная настройка нового проекта;
-* аудит существующего проекта;
-* развёртывание, обновление или проверка структуры ДЕВ / КАРКАСА;
-* архитектура проекта или реструктуризация;
-* `AGENTS.md`, skills, hooks, MCP, subagents и автоматизация разработки;
-* `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `DESIGN`, `SECURITY`, журнал решений;
-* этапы реализации и `prompts/STAGES.md`;
-* Definition of Done, тестирование и quality gates;
-* обработка проектных идей и заметок из Notion;
-* преобразование идей в готовые implementation prompts;
-* синхронизация состояния проекта после реализации этапа, commit, PR или merge.
-
-Не дублируй полную спецификацию КАРКАСА внутри `AGENTS.md`.
-
-Канонические глобальные правила ДЕВ / КАРКАСА находятся в skill `dev-karkas` и его файлах `references/`.
-
-Для конкретной задачи загружай только те reference-файлы, которые действительно нужны.
-
-## Работа с идеями и Notion
-
-Когда пользователь просит обработать идеи, backlog, заметки, концепции или требования из Notion:
-
-1. Используй подключённый Notion.
-2. Найди каноническую страницу соответствующего проекта.
-3. Используй `$dev-karkas` и его workflow обработки Notion.
-4. Перед созданием новых задач обязательно изучи текущее состояние репозитория.
-5. Проверь идею на дублирование с:
-
-   * существующим кодом;
-   * `AGENTS.md`;
-   * `DESIGN.md`;
-   * `ROADMAP.md`;
-   * `AI_PLAN.md`;
-   * `AI_STATUS.md`;
-   * существующим `prompts/STAGES.md`;
-   * журналом архитектурных решений;
-   * уже реализованными возможностями.
-6. Не создавай новый prompt, если существующий prompt или реализованная функциональность уже покрывает эту идею.
-7. Связанные идеи можно объединять в один coherent implementation prompt, если это уменьшает дублирование и не раздувает scope.
-8. Сырые идеи из Notion разрешено автоматически доводить до состояния `PROMPT_READY`.
-9. Сам факт существования идеи в Notion не является разрешением на её реализацию.
-10. Реализацию начинать только:
-
-    * по явной команде пользователя;
-    * либо если задача имеет подтверждённое состояние `APPROVED`;
-    * либо если проектная политика прямо разрешает автоматическое выполнение такого класса задач.
-11. Не удаляй исходные идеи из Notion после преобразования в prompt.
-12. При необходимости добавляй ссылки между исходной идеей, созданным prompt и соответствующей частью проекта.
-
-## Состояния идеи
-
-Используй следующую базовую модель жизненного цикла:
-
-`IDEA → REFINED → PROMPT_READY → APPROVED → IMPLEMENTING → DONE`
-
-Дополнительно разрешены состояния:
-
-* `NEEDS_RESEARCH` — нужна дополнительная техническая или продуктовая проработка;
-* `NEEDS_DECISION` — требуется решение пользователя;
-* `DUPLICATE` — идея уже покрыта другой задачей;
-* `ALREADY_IMPLEMENTED` — функциональность уже присутствует;
-* `BLOCKED` — реализация временно невозможна из-за зависимости или внешнего ограничения.
-
-Не повышай идею до `DONE` без фактической реализации и проверки.
-
-## Источники истины
-
-Используй следующую иерархию.
-
-### Глобальная методология разработки
-
-Канонический источник:
-
-`dev-karkas`
-
-### Правила конкретного проекта
-
-Канонические источники:
-
-* проектный `AGENTS.md`;
-* проектная документация;
-* архитектурные решения проекта.
-
-### Фактическое состояние реализации
-
-Канонические источники:
-
-* текущий код репозитория;
-* результаты тестов;
-* результаты сборки;
-* результаты линтеров и статического анализа;
-* другие подтверждённые verification evidence.
-
-Документация или статус не должны считаться доказательством реализации, если код и проверки это не подтверждают.
-
-## Конфликты источников
-
-Если Notion, документация, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `AGENTS.md` или фактический код противоречат друг другу:
-
-1. Не исправляй конфликт молча.
-2. Определи, какой источник должен быть каноническим для конкретного типа информации.
-3. Проверь фактическое состояние репозитория.
-4. Синхронизируй производные документы только после установления реального состояния.
-5. Если конфликт требует продуктового или архитектурного решения, пометь его как `NEEDS_DECISION`.
-
-## Принцип минимальных изменений
-
-Не создавай структуру КАРКАСА механически.
-
-Перед добавлением любого файла, каталога, правила, инструмента или технологии:
-
-1. Проверь, существует ли уже эквивалент.
-2. Проверь, нужен ли этот элемент конкретному проекту.
-3. Не создавай пустые или формальные файлы только ради соответствия шаблону.
-4. Не заменяй рабочую архитектуру новой без причины.
-5. Предпочитай расширение существующего решения созданию параллельного дубликата.
-
-КАРКАС — это адаптивная система управления проектом, а не фиксированный набор обязательных файлов.
-
-## Безопасность изменений
-
-Без отдельного разрешения пользователя не выполняй потенциально разрушительные действия, включая:
-
-* удаление страниц или баз Notion;
-* массовое удаление проектных файлов;
-* потерю или перезапись пользовательских данных;
-* `force push`;
-* переписывание истории Git;
-* изменение production-секретов;
-* отключение security controls;
-* production deployment;
-* необратимые миграции данных.
-
-Если действие потенциально разрушительное, предпочитай безопасный обратимый вариант.
-
-## Работа с проектными stage prompts
-
-При создании implementation prompt используй канонический шаблон из `dev-karkas`.
-
-Prompt должен быть достаточно самодостаточным, чтобы другой Codex-сеанс мог выполнить задачу без необходимости восстанавливать контекст из предыдущего разговора.
-
-Как минимум prompt должен определять:
-
-* цель;
-* контекст;
-* scope;
-* non-goals;
-* требования;
-* архитектурные ограничения;
-* ограничения безопасности;
-* dependency DAG только из completed prerequisites и входные предпосылки;
-* самостоятельный runnable vertical slice и concrete end-to-end scenario;
-* необходимые изменения;
-* тестирование;
-* acceptance/PASS criteria и требуемое evidence;
-* допустимую полностью рабочую temporary implementation;
-* deferred future scope, который не нужен primary path текущего stage;
-* Definition of Done.
-
-Не превращай implementation prompt в пошаговую инструкцию по написанию каждой строки кода, если задача этого не требует. Описывай желаемый результат, ограничения и критерии проверки.
-
-## 17. Model & Reasoning Budget Policy
-
-Основной принцип: использовать минимально достаточную модель и минимально достаточный reasoning effort. Скорость и экономия лимитов являются частью качества работы ДЕВ.
-
-### 1. Ручной выбор пользователя
-
-Явно выбранные пользователем модель, reasoning effort или режим выполнения имеют приоритет над автоматической маршрутизацией ДЕВ.
-
-ДЕВ не должен самостоятельно повышать выбранный пользователем уровень выше установленного пользователем значения.
-
-Если пользователь явно зафиксировал модель или reasoning effort, считать его верхним пределом текущей задачи, если пользователь не указал обратное.
-
-### 2. Режим по умолчанию
-
-Для обычной разработки использовать:
-
-* `GPT-5.6 Terra`;
-* reasoning `Medium`.
-
-Для простых, повторяемых и хорошо определённых задач предпочитать:
-
-* `GPT-5.6 Luna`;
-* reasoning `Low` или `Medium`.
-
-### 3. Эскалация
-
-Повышать сначала reasoning effort текущей модели и только затем переходить на более мощную модель.
-
-Предпочтительный порядок:
-
-`Luna Low → Luna Medium → Terra Low → Terra Medium → Terra High → Sol Medium → Sol High`.
-
-Не использовать более дорогой режим только потому, что задача содержит много файлов или занимает много времени.
-
-Основаниями для эскалации могут быть:
-
-* архитектурные противоречия;
-* изменение фундаментальных инвариантов;
-* breaking changes;
-* неизвестная совместимость;
-* сложные concurrency/distributed-state задачи;
-* security-critical изменения;
-* системные ошибки в нескольких подсистемах;
-* повторная неудача более дешёвого режима.
-
-### 4. Premium ceiling
-
-Следующие режимы запрещено автоматически включать без явного разрешения пользователя:
-
-* `Sol XHigh`;
-* `Sol Max`;
-* `Ultra`.
-
-При необходимости такого режима сообщить пользователю краткую причину.
-
-### 5. Субагенты
-
-Для субагентов по умолчанию использовать Luna Low.
-
-Повышать модель или reasoning конкретного субагента только тогда, когда его собственная подзадача этого требует.
-
-Не наследовать автоматически дорогой режим основного агента для механических подзадач.
-
-Количество одновременно работающих субагентов также считать частью inference budget.
-
-### 6. Retry policy
-
-Не повторять одну и ту же неудачную попытку несколько раз на дорогой модели.
-
-После неудачи:
-
-1. определить причину;
-2. использовать тесты, логи и локальную проверку;
-3. изменить стратегию;
-4. только затем рассматривать эскалацию.
-
-### 7. Quality floor
-
-Экономия inference budget не должна приводить к пропуску обязательных тестов, quality gates, security checks или проверок совместимости.
-
-Экономить следует на reasoning там, где дополнительное reasoning не изменяет качество результата, а не на верификации.
-
-## Завершение этапов
-
-Не помечай этап завершённым только потому, что код был написан.
-
-До начала каждого этапа примени канонический Stage contract из `rules/governance.md`: определи
-dependency DAG из уже завершённых prerequisites, входные предпосылки, самостоятельный runnable
-vertical slice, конкретный end-to-end сценарий, PASS-критерии, evidence, допустимые временные
-реализации и явно deferred функциональность.
-
-Будущий этап не может разблокировать основной путь, обязательную инфраструктуру или тестирование
-ранее закрытого этапа. Если текущий slice нельзя запустить и проверить без будущего компонента,
-используй только `blocked`, `scaffolded`, `implemented_unverified` или `partial`. Mocks, stubs,
-fakes и заранее подготовленные интерфейсы подтверждают scaffold, но не завершённый пользовательский
-или production-путь.
-
-Перед переходом в `DONE`:
-
-1. Выполни необходимые проверки.
-2. Зафиксируй результаты проверок.
-3. Проверь acceptance criteria.
-4. Проверь Definition of Done.
-5. Обнови статус проекта.
-6. Обнови план следующего этапа, если это предусмотрено проектом.
-7. Зафиксируй новые архитектурные решения и важные выводы, если они появились.
-
-Если проверку невозможно выполнить, укажи это явно и не выдавай непроверенный результат за полностью подтверждённый.
+Сырую идею можно довести до `PROMPT_READY`, но не реализовывать без явной команды, `APPROVED` или
+разрешающей project policy. Не удаляй исходные идеи и не повышай их до `DONE` без code/evidence.

@@ -1,3 +1,4 @@
+.github/workflows/validate.yml
 .gitignore
 AGENTS.md
 agents/architect.toml
@@ -42,7 +43,9 @@ docs/WORKFLOW.md
 hooks.json
 hooks/guard_destructive.py
 hooks/session_context.py
+hooks/stage_selector.py
 install-global.ps1
+install-global.sh
 MANIFEST.txt
 presets/field-lab/.agents/skills/field-lab-stage/SKILL.md
 presets/field-lab/.codex/agents/electromagnetics_engineer.toml
@@ -173,9 +176,11 @@ specs/features/codex-home-consolidation.spec.md
 specs/features/dependency-manager-policy.spec.md
 specs/features/full-workspace-governance.spec.md
 specs/features/global-codex-normalization.spec.md
+specs/features/global-framework-hardening.spec.md
 specs/features/project-overlay-rollout.spec.md
 specs/README.md
 specs/system.spec.md
+templates/AGENTS_PROJECT_TEMPLATE.md
 templates/AI_PLAN_TEMPLATE.md
 templates/AI_STATUS_TEMPLATE.md
 templates/BACKEND_DX_DELTA_TEMPLATE.md
@@ -189,6 +194,7 @@ tools/reconcile_project_framework.py
 tools/sync_global_skills.py
 tools/test_backend_dx_policy.py
 tools/test_documentation_sync_policy.py
+tools/test_global_framework_hardening.py
 tools/test_i18n_l10n_policy.py
 tools/test_reconcile_project_framework.py
 tools/test_stage_completion_policy.py

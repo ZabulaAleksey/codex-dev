@@ -10,13 +10,13 @@ from tools.validate_project_overlay import validate_project
 
 REQUIRED_CONTENT = {
     "AGENTS.md": "# Project router\n",
-    "prompts/STAGES.md": "# Stage 001\n\n## Status\nPLANNED\n",
+    "prompts/STAGES.md": "# Stages\n\n## STAGE-001 — first slice\n\nPLANNED\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",
     "docs/LEARNING_LOG.md": "# Learning log\n",
     "docs/project-context.md": "# Project context\n",
     "docs/ROADMAP.md": "# Roadmap\n",
-    "docs/AI_PLAN.md": "# Current plan\n",
+    "docs/AI_PLAN.md": "# Current plan\n\n- Stage ID: `STAGE-001`\n",
     "docs/AI_STATUS.md": "# Current status\n",
 }
 
@@ -132,6 +132,47 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         ).stdout
         self.assertEqual(first, second)
         self.assertEqual(before, after)
+
+    def test_stage_selector_requires_exactly_one_valid_id(self) -> None:
+        cases = (
+            ("missing-stage-id", "# Current plan\n"),
+            ("ambiguous-stage-id", (
+                "# Current plan\n\n- Stage ID: `STAGE-001`\n- Stage ID: STAGE-002\n"
+            )),
+            ("invalid-stage-id", "# Current plan\n\n- Stage ID: ``\n"),
+            ("invalid-stage-id", "# Current plan\n\n- Stage ID: `STAGE/001`\n"),
+        )
+        for index, (expected_code, content) in enumerate(cases):
+            with self.subTest(expected_code=expected_code, index=index):
+                project = self.make_project(f"{expected_code}-{index}")
+                (project / "docs/AI_PLAN.md").write_text(content, encoding="utf-8")
+                self.assertIn(expected_code, self.issue_codes(project))
+
+    def test_stage_selector_rejects_missing_or_ambiguous_heading(self) -> None:
+        project = self.make_project("missing-heading")
+        (project / "prompts/STAGES.md").write_text(
+            "# Stages\n\n## STAGE-002 — other\n", encoding="utf-8"
+        )
+        self.assertIn("missing-stage-heading", self.issue_codes(project))
+
+        project = self.make_project("ambiguous-heading")
+        (project / "prompts/STAGES.md").write_text(
+            "## STAGE-001 — first\n\nA\n\n## STAGE-001 — duplicate\n\nB\n",
+            encoding="utf-8",
+        )
+        self.assertIn("ambiguous-stage-heading", self.issue_codes(project))
+
+    def test_stage_selector_uses_token_boundaries_and_ignores_fenced_examples(self) -> None:
+        project = self.make_project()
+        (project / "prompts/STAGES.md").write_text(
+            "# Stages\n\n"
+            "```markdown\n## STAGE-001 — example only\n```\n\n"
+            "## PRE-STAGE-001-POST — not a token match\n\n"
+            "## STAGE-001 — selected\n\nRunnable slice\n",
+            encoding="utf-8",
+        )
+        result = validate_project(project, self.workspace)
+        self.assertTrue(result.ok, result.issues)
 
     def test_local_automation_rejects_heading_only_compatibility_audit(self) -> None:
         project = self.make_project()

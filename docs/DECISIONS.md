@@ -1,5 +1,33 @@
 # Существенные решения
 
+## 2026-08-28 — Thin global router, shared Stage selector и platform wrappers
+
+**Статус:** принято в feature branch; merge не выполнялся.
+
+**Контекст:** global `AGENTS.md` вырос до 61 380 bytes и повторял governance, SDD, test, Notion и
+model policies. Session hook уже имел безопасный exact Stage selector, но full overlay validator не
+мог выявить broken selector до старта сессии. Install/Skill materialization был документирован
+только для PowerShell. Agent audit дополнительно требовал отличить неизвестные pins от реально
+доступных `gpt-5.6-sol` / `luna` и default inheritance.
+
+**Решение:** оставить `AGENTS.md` router меньше 32 KiB; полные norms остаются у существующих
+owners. Pure parser `hooks/stage_selector.py` используется hook и validator, а semantic Stage
+contract остаётся human/agent gate. `install-global.ps1` и `install-global.sh` являются thin
+wrappers одинаковой последовательности Python tools и не меняют `config.toml`. Большинство agents
+наследует active/default model; explicit pins остаются только у reviewed architecture/security/test
+roles. CI выполняет read-only context/tests/syntax checks и не materialize-ит runtime.
+
+**Альтернативы:** второй parser в `tools/` отклонён из-за drift; новый global `prompts/STAGES.md` —
+потому что infrastructure repository не является full project overlay; удаление `gpt-5.6-sol`
+только по примеру prompt — потому что model доступна в текущей среде; общий Python installer с
+перезаписью config — из-за platform UX и protected runtime state.
+
+**Последствия:** full overlays без selector теперь fail visibly и требуют remediation. Existing
+hook limits/no-selector template behavior сохраняются regression tests. Unix installer требует
+actual Unix-like evidence до terminal completion; CI syntax PASS не заменяет этот gate. Runtime
+Skill drift шести sources, обнаруженный baseline audit, должен быть устранён approved sync либо
+оставаться явным blocker в state docs.
+
 ## 2026-08-27 — Один глобальный i18n/l10n contract и thin project delta
 
 **Статус:** принято.

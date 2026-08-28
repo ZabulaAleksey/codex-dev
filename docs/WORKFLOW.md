@@ -54,7 +54,9 @@ Feature flag, benchmark, ADR и план отката добавляй проп�
 
 Перед `STANDARD` или `COMPLEX` задачей определи режим, этап SDLC, домен, стек и соответствующую SPEC. Загружай только относящиеся к задаче файлы из `rules/` согласно `rules/README.md`.
 Для stage-bound задачи stable `Stage ID` активного `docs/AI_PLAN.md` выбирает ровно один heading
-record в `prompts/STAGES.md`; degraded hook context требует ручной проверки полного record.
+record в `prompts/STAGES.md`. Full overlay сначала проходит read-only
+`tools/validate_project_overlay.py`: missing/multiple/invalid selector и missing/ambiguous heading
+являются fail-visible issues. Degraded hook context требует ручной проверки полного record.
 
 ## H. Backend developer workflow
 
@@ -191,7 +193,8 @@ NEEDS_RESEARCH, NEEDS_DECISION, DUPLICATE, ALREADY_IMPLEMENTED или BLOCKED; �
 На другом устройстве:
 
 1. clone/pull глобальный ДЕВ непосредственно в `~/.codex`;
-2. запусти `install-global.ps1`, `tools/validate_context.py`, Skill parity и global validator;
+2. запусти `install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS; wrappers
+   выполняют context validation, Skill materialization/parity и global validator;
 3. clone/pull `~/codex-workspace/<project>`, проверь branch/status и восстанови dependencies;
 4. восстанови локальные secrets через разрешённый machine-local механизм, не из Git/чата;
 5. используй запрос «Возобновить проект» выше и продолжай только после совпадения local state с

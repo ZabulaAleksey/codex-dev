@@ -23,12 +23,12 @@ REQUIRED_CONTENT = {
         "Backend workflow: read ~/.codex/rules/backend-dx.md and "
         "docs/project-context.md.\n"
     ),
-    "prompts/STAGES.md": "# Stage 001\n\n## Status\nPLANNED\n",
+    "prompts/STAGES.md": "# Stages\n\n## STAGE-001 — backend slice\n\nPLANNED\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",
     "docs/LEARNING_LOG.md": "# Learning log\n",
     "docs/ROADMAP.md": "# Roadmap\n",
-    "docs/AI_PLAN.md": "# Current plan\n",
+    "docs/AI_PLAN.md": "# Current plan\n\n- Stage ID: `STAGE-001`\n",
     "docs/AI_STATUS.md": "# Current status\n",
 }
 

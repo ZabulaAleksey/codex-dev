@@ -3,17 +3,26 @@ param()
 $ErrorActionPreference = "Stop"
 $DevRoot = (Resolve-Path (Split-Path -Parent $MyInvocation.MyCommand.Path)).Path
 $CodexHome = (Join-Path $HOME ".codex")
+$SkillRuntime = (Join-Path $HOME ".agents\skills")
 
 if ([IO.Path]::GetFullPath($DevRoot) -ne [IO.Path]::GetFullPath($CodexHome)) {
-    throw "ДЕВ должен быть клонирован или перемещён непосредственно в $CodexHome. Параллельная installed-копия не поддерживается."
+    throw "DEV must be cloned or moved directly to $CodexHome. A parallel installed copy is unsupported."
 }
 
-Write-Host "ДЕВ уже расположен в каноническом ~/.codex." -ForegroundColor Green
-py -3 (Join-Path $DevRoot "tools\sync_global_skills.py") --apply
+$GitRoot = (& git -c "safe.directory=$DevRoot" -C $DevRoot rev-parse --show-toplevel).Trim()
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-py -3 (Join-Path $DevRoot "tools\validate_context.py")
+if ([IO.Path]::GetFullPath($GitRoot) -ne [IO.Path]::GetFullPath($DevRoot)) {
+    throw "Git root must match canonical ~/.codex: $DevRoot"
+}
+
+Write-Host "DEV is located in canonical ~/.codex." -ForegroundColor Green
+py -3 -B (Join-Path $DevRoot "tools\validate_context.py")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-py -3 (Join-Path $DevRoot "tools\validate_global_codex.py")
+py -3 -B (Join-Path $DevRoot "tools\sync_global_skills.py") --source (Join-Path $DevRoot "skill-sources") --destination $SkillRuntime --apply
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+py -3 -B (Join-Path $DevRoot "tools\validate_context.py")
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+py -3 -B (Join-Path $DevRoot "tools\validate_global_codex.py") --workspace $DevRoot --codex-home $CodexHome
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Write-Host "Проверки завершены. Runtime config.toml и secrets не изменялись." -ForegroundColor Green
+Write-Host "Validation completed. Runtime config.toml and secrets were not changed." -ForegroundColor Green

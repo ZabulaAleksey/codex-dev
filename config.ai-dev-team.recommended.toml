@@ -10,6 +10,9 @@ hooks = true
 [agents]
 enabled = true
 max_concurrent_threads_per_session = 4
+# Global default model намеренно не задаётся: unpinned agents наследуют выбранную
+# пользователем/default Codex model. Reviewed role pins находятся в agents/*.toml;
+# model_reasoning_effort маршрутизируется по rules/model-routing.md.
 default_subagent_reasoning_effort = "medium"
 interrupt_message = true
 

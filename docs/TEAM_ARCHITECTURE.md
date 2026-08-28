@@ -69,3 +69,26 @@ reviewer              -> проверка diff и SPEC без записи
 ## 6. Лимиты
 
 Не используй многоагентность ради самой многоагентности. Если задача помещается в один модуль и проверяется одним набором тестов, основной агент выполняет её сам или вызывает одного профильного `worker`.
+
+Конфигурационный ceiling — `max_concurrent_threads_per_session = 4`. Операционный бюджет из
+README остаётся 0–1 / 2–3 / 3–5 по сложности; ceiling не является целевым количеством агентов.
+
+## 7. Models и reasoning
+
+Основной агент сохраняет модель, выбранную пользователем. Большинство `agents/*.toml` намеренно
+не содержит `model`: такие роли наследуют active/default Codex model и задают только
+role-specific `model_reasoning_effort`.
+
+Reviewed explicit pins текущего набора:
+
+| Роли | Model | Reasoning | Причина |
+|---|---|---|---|
+| `architect`, `security_reviewer` | `gpt-5.6-sol` | `high` | архитектурные и security-critical решения |
+| `test_engineer` | `gpt-5.6-luna` | `medium` | bounded regression work и быстрые прогоны |
+
+Идентификаторы `gpt-5.6-sol`, `gpt-5.6-terra` и `gpt-5.6-luna` сверены 2026-08-28 с
+[официальным OpenAI models catalog](https://developers.openai.com/api/docs/models) и model list,
+доступным текущему Codex-сеансу. Structural test закрепляет только reviewed allow-list и не является
+runtime/account availability probe. Перед будущей заменой pin или cost-driven fallback снова
+проверь availability/capability; неизвестная model не подменяется молча. Полный порядок
+маршрутизации и premium ceiling задаёт `rules/model-routing.md`.

@@ -12,6 +12,10 @@ from typing import Iterable, Sequence
 
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
+if str(WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT))
+
+from hooks.stage_selector import find_stage_record, parse_stage_id
 
 REQUIRED_FILES = (
     "AGENTS.md",
@@ -587,6 +591,36 @@ def _backend_dx_issues(project: Path, workspace: Path) -> list[Issue]:
     return issues
 
 
+def _stage_selector_issues(project: Path) -> list[Issue]:
+    plan_path = project / "docs/AI_PLAN.md"
+    stages_path = project / "prompts/STAGES.md"
+    if not plan_path.is_file() or not stages_path.is_file():
+        return []
+
+    plan = plan_path.read_text(encoding="utf-8-sig", errors="replace")
+    selector = parse_stage_id(plan)
+    if selector.issue_code:
+        return [
+            Issue(
+                selector.issue_code,
+                "docs/AI_PLAN.md",
+                selector.message or "invalid Stage ID selector",
+            )
+        ]
+
+    catalog = stages_path.read_text(encoding="utf-8-sig", errors="replace")
+    record = find_stage_record(catalog, selector.stage_id or "")
+    if record.issue_code:
+        return [
+            Issue(
+                record.issue_code,
+                "prompts/STAGES.md",
+                record.message or "invalid Stage heading selector",
+            )
+        ]
+    return []
+
+
 def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) -> ValidationResult:
     project = project_path.expanduser().resolve()
     workspace = workspace_root.expanduser().resolve()
@@ -712,6 +746,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
 
     issues.extend(_dependency_issues(project))
     issues.extend(_backend_dx_issues(project, workspace))
+    issues.extend(_stage_selector_issues(project))
     ordered = tuple(sorted(issues, key=lambda item: (item.code, item.path.casefold(), item.message)))
     return ValidationResult(str(project), not ordered, ordered)
 

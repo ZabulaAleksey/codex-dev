@@ -10,6 +10,24 @@
 - `CONFLICT` — определения дублируются или задают несовместимое поведение; выбери один канонический источник.
 - `OBSOLETE` — возможность больше не используется и должна быть удалена отдельным согласованным изменением.
 
+## Решение 2026-08-28 — hardening global router, selector и install path
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Global `AGENTS.md` | 61 380 bytes, несколько полных policy copies | сохранить critical invariants при меньшем обязательном context | `CONFLICT` → `INHERITED` | thin `AGENTS.md` router → existing `rules/*`, `docs/*`, `dev-karkas` |
+| Stage selector | exact hook parser уже работает; overlay validator ссылку не проверяет | fail-visible preflight без semantic Stage parser | `EXTEND` | shared `hooks/stage_selector.py` → hook + `validate_project_overlay.py` |
+| Agent models | Sol/high и Luna/medium pins доступны; остальные agents unpinned | задокументировать default inheritance без массового pin churn | `INHERITED` | `agents/*.toml`, `rules/model-routing.md`, `docs/TEAM_ARCHITECTURE.md` |
+| Install | PowerShell wrapper; Unix path отсутствует; config protected | одинаковая safe sequence на Windows и Unix-like | `EXTEND` | thin `install-global.ps1` / `install-global.sh` → existing Python tools |
+| Greenfield starter | AI plan/status templates и bootstrap Skill есть; thin project AGENTS template отсутствует | минимальная project delta без local agents/Skills | `EXTEND` | `templates/AGENTS_PROJECT_TEMPLATE.md` + existing templates/Skill |
+| DEGRADED/handoff/cost | уже описаны в WORKFLOW/VERIFY_SETUP/README/config | дополнить факты, не создавать вторую policy | `INHERITED` | существующие owners |
+| CI | отсутствует | Linux syntax/unit consumer gate без runtime mutation | `EXTEND` | `.github/workflows/validate.yml` |
+| Hooks/Skills/MCP/config | новые capabilities не нужны; runtime config запрещён к overwrite | сохранить активные границы | `INHERITED` | без новых hook events/Skills/MCP и без `config.toml` mutation |
+
+Shared selector module не добавляет новый hook: он является pure implementation detail
+существующего SessionStart/SubagentStart и read-only validator. Project repositories автоматически
+не изменяются; новый mandatory selector issue обнаруживается только при явном запуске validator.
+Legacy named presets сохраняются в прежнем quarantine и этой задачей не materialize-ятся.
+
 ## Решение 2026-08-27 — глобальный i18n/l10n standard
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический источник |

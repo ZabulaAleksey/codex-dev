@@ -1,121 +1,144 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: global i18n/l10n policy — `completed` / `merged locally`; feature commit `ee3ea8a`
-fast-forward integrated в active `main`, push не выполнялся
-Рабочий item: межпроектный стандарт internationalization/localization для user-facing products
-Дата: 2026-08-27
+Статус: `implemented_unverified` / internal infrastructure item
+Stage ID (internal, не selector): `DEV-GLOBAL-HARDENING-001`
+Рабочий item: hardening global router, Stage selector validation, models и cross-platform install
+Дата: 2026-08-28
 
 ## Applicability
 
-Глобальный infrastructure repository не является full staged product overlay и намеренно не
-использует project `prompts/STAGES.md`. Change ведётся как bounded internal policy item в
-`AI_PLAN`; architecture-complete fields и evidence определены ниже.
+Global infrastructure repository не является full staged project overlay и намеренно не имеет
+`prompts/STAGES.md`. Поэтому этот internal Stage ID не записан selector-строкой `- Stage ID:`:
+такая строка потребовала бы project stage catalog и создала ложный `DEGRADED` hook context.
 
-Связанная SPEC: `specs/system.spec.md`, `FR-010`, `AC-013`.
+Связанные требования: `specs/features/global-framework-hardening.spec.md`
+(`FR-GFH-001..006`, `AC-GFH-001..008`).
 
-## Dependency DAG и обязательные входные предпосылки
+## Dependency DAG и входные предпосылки
 
 ```text
-unified project workflow (`96e948b`, completed / merged locally)
+canonical ~/.codex consolidation (completed)
         ↓
-clean global baseline (94 tests, 199-file manifest, Skill parity 9/9)
+architecturally complete Stage hook contract (completed)
         ↓
-global i18n/l10n contract + routers + project-delta boundary
+unified workflow + cross-device handoff (completed)
         ↓
-structural consumer test and documentation synchronization
+SPEC / acceptance delta
+        ↓
+shared selector contract + validator tests
+        ↓
+validator implementation
+        ↓
+AGENTS router reduction + model/config audit + installers
+        ↓
+docs/manifest synchronization + full tests/review
 ```
 
-- Self-reference, cycle и forward dependency отсутствуют.
-- Existing governance остаётся владельцем lifecycle/evidence; Fallback Policy — retry/degraded
-  semantics; язык context — authoring language. Новая policy добавляет только product-locale delta.
-- Existing accepted tests не изменялись; новый contract test добавлен отдельным файлом.
-- Product repositories, Skills, hooks, MCP, dependencies, config и external services не являются
-  prerequisites и этой feature не изменяются.
+Evidence на старте:
+
+- Git `main...origin/main`, clean, HEAD `e675b16` до создания feature worktree;
+- baseline full suite: PASS, 101 tests;
+- `py -3 -B tools\validate_context.py`: PASS, 201 files;
+- active global validation: pre-existing FAIL из-за runtime drift шести Skills;
+- `config.toml` и оба `LEARNING_LOG*` запрещены к изменению.
+
+Self-reference, cycle и forward dependency отсутствуют. Runtime Skill drift должен быть либо
+устранён approved sync path, либо остаться явным blocker без completion claim.
 
 ## Самостоятельный runnable vertical slice
 
 ```text
-user requirement
-  → specs/system.spec.md FR-010 / AC-013
-  → rules/i18n-l10n.md (single normative owner)
-  → AGENTS + rules/README + PROJECT_FRAMEWORK routers
-  → thin project SPEC/DESIGN/architecture/testing delta contract
-  → tools/test_i18n_l10n_policy.py
-  → observable PASS or fail-visible test failure
+temporary independent Git project
+  → docs/AI_PLAN.md exact selector
+  → prompts/STAGES.md exact unfenced heading
+  → tools/validate_project_overlay.py
+  → deterministic PASS или issue code/message
+  → unchanged target bytes и Git status
 ```
 
-Slice полностью работает как global architecture-policy consumer path без будущего hook, Skill,
-runtime service или product rollout. Он не выдаёт structural PASS за перевод конкретного продукта.
+Installer consumer path:
+
+```text
+canonical ~/.codex
+  → placement/Git-root check
+  → read-only validate_context
+  → sync_global_skills materialization
+  → context/global validation
+  → config.toml hash unchanged
+```
+
+Оба пути исполнимы без future stage, нового service, dependency, Skill, hook или MCP.
 
 ## Concrete end-to-end scenario
 
-1. Codex начинает architecture/specification user-facing product и читает global `AGENTS.md`.
-2. Router подключает `rules/i18n-l10n.md` независимо от frontend/mobile/desktop/public CLI stack.
-3. КАРКАС создаёт только project delta: supported locales, fallback, UX/RTL, implementation и
-   evidence; полный global contract не копируется.
-4. Structural contract test проходит цепочку SPEC → policy → routers → project-delta boundary и
-   fail visibly при отсутствии любого обязательного звена.
+1. Создать temporary independent full-overlay fixture.
+2. Valid selector с одним отдельным heading token даёт exit `0` без mutation.
+3. Missing/multiple/invalid selector и missing/ambiguous headings дают отдельные fail-visible issues.
+4. Fenced examples игнорируются так же, как existing SessionStart/SubagentStart hook.
+5. Windows и реальный Unix-like runner выполняют canonical installer sequence; `config.toml` hash
+   до и после совпадает.
 
-Это concrete internal policy E2E. Живой product path `client → API/CLI → backend` принадлежит
-конкретному repository и может быть закрыт только его locale-switch/formatting evidence.
+## Область работы
 
-## PASS criteria и evidence
+Входит: SPEC, selector parser/validator/tests, `AGENTS.md`, model recommendation docs,
+PowerShell/Bash installers, затронутые README/QUICKSTART/architecture/state/testing docs, thin
+project AGENTS template, небольшой CI gate и `MANIFEST.txt`.
 
-- [x] Есть один canonical owner `rules/i18n-l10n.md`; competing global/project copies не созданы.
-- [x] `i18n`, `l10n`, `language` и `locale` разделены, включая `en-US` / `en-GB`.
-- [x] User-facing strings вынесены в resources; locale-dependent contract охватывает dates/time,
-  numbers, currencies, units, plural rules, collation, addresses/phones и time zones.
-- [x] Fallback locale, missing/partial translation, text expansion, RTL и accessibility заданы
-  без дублирования общей Fallback Policy.
-- [x] Initial slice допускает одну production locale только с real resources/fallback/formatting и
-  pseudo-locale либо alternate test locale; future stage не разблокирует прошлый.
-- [x] Project SPEC/DESIGN/architecture/testing содержат только concrete delta и evidence.
-- [x] Compatibility audit не выявил конфликта с Skills/hooks/MCP/config/product repositories.
-- [x] Structural и полный global test suites проходят; manifest/context validator согласованы.
+Не входит: active `config.toml`, learning logs, product repositories, legacy preset cleanup,
+full semantic Stage parser, новые agents/hooks/Skills/MCP, push/merge/release/deploy.
 
-Проверки:
+## Рабочие задачи
 
-- baseline `py -3 -B -m unittest discover -s tools -p "test_*.py"` — PASS, 94 tests;
-- final full suite — PASS, 101 tests;
-- `py -3 -B -m unittest tools.test_i18n_l10n_policy` — PASS, 7 tests;
-- `py -3 -B tools\validate_context.py` — PASS, 201 files;
-- active `~/.codex` ↔ `~/.agents/skills` parity — PASS, 9/9; Skill sources не менялись;
-- active global validator после merge — `BLOCKED` только pre-existing
-  `unmatched-browser-client-hash`;
-- fast-forward merge `96e948b → ee3ea8a` — PASS; active `main` содержит policy и новый router;
-- `git diff --check` — PASS, только line-ending informational warnings.
-- independent read-only re-review — PASS без blockers; первичный P2 про uniqueness gate устранён
-  отдельной negative owner/router-copy проверкой.
+1. Зафиксировать SPEC и этот Stage contract до production-code mutation.
+2. Вынести pure Stage selector contract и переиспользовать его в hook/validator без semantic drift.
+3. Добавить positive/negative overlay validator tests, сохранив hook regressions.
+4. Сжать global router ниже 32 KiB, сохранив critical markers и policy routes.
+5. Подтвердить agent model pins/default inheritance; обновить recommendation/docs без silent model override.
+6. Реализовать симметричные install wrappers и cross-platform onboarding.
+7. Добавить только недостающую thin project AGENTS template и bounded CI validation.
+8. Выполнить tests/review, восстановить или честно отметить Skill parity, синхронизировать docs/manifest.
+
+## Acceptance / PASS criteria
+
+- [x] `AGENTS.md` меньше 32 KiB; обязательные policy markers и ссылки сохранены.
+- [x] Stage selector tests ловят valid/missing/multiple/empty/invalid/missing-heading/ambiguous/fenced.
+- [x] Existing hook behavior и size limits не сломаны.
+- [x] Explicit agent model IDs сверены с reviewed catalog; unpinned agents наследуют default.
+- [x] Оба installer path дошли до pre-existing active-config blocker; status честно оставлен
+  `implemented_unverified`.
+- [x] `config.toml` hash и `LEARNING_LOG*` неизменны.
+- [x] Full unit suite и `validate_context.py` PASS; runtime Skill parity подтверждена actual runs.
+- [x] Reviewer findings исправлены; documentation synchronization gate и manifest завершены.
+
+Terminal global validation остаётся красной только из-за pre-existing
+`unmatched-browser-client-hash`. Этот внешний blocker не отменяет выполненный implementation slice,
+но не разрешает completion claim.
 
 ## Допустимая временная реализация
 
-Одна полностью рабочая production locale допустима в product initial slice только при реальном
-resource/fallback/formatting path и pseudo-locale либо alternate test locale. Для этого global
-policy slice временных заглушек нет: policy, routes и executable contract tests являются рабочей
-реализацией.
+- Thin Bash/PowerShell wrappers вокруг существующих Python tools допустимы.
+- CI является дополнительным Unix syntax/unit evidence, но не заменяет actual installer run.
+- Mocks/fakes не подтверждают Unix install или model availability.
 
-## Deferred / не входит
+## Deferred
 
-- push и release;
-- rollout либо mass migration конкретных brownfield product repositories;
-- реальные переводы, locale switch и product E2E каждого отдельного продукта;
-- repair pre-existing Browser client hash;
-- внешняя Notion/Ideas status mutation и другие external writes без exact mapping/approval.
+- semantic validation полного Stage contract;
+- mass rollout project overlays и removal quarantined presets;
+- изменение hook `MAX_CHARS` / scan limits;
+- repair unrelated runtime config/browser state;
+- push, merge, release, deployment и external writes.
 
-Ни один deferred item не нужен для запуска или проверки текущего global policy slice.
+## Риски и rollback
 
-## Documentation audit
+- Mandatory selector validation может выявить существующие incomplete overlays; сообщения должны
+  давать точную remediation и validator не должен автоматически исправлять project.
+- Shared parser extraction повышает hook regression risk; существующие subprocess tests обязательны.
+- Router reduction может потерять critical invariant; marker/policy suites и manual diff audit
+  являются blocking gate.
+- Rollback: отдельный `git revert`; runtime Skill sync использует существующий recoverable backup.
 
-- Обновлены: `AGENTS.md`, rules router и новая policy, system SPEC, README,
-  `PROJECT_FRAMEWORK.md`, architecture/decisions/compatibility/testing, context inventory/map,
-  learning log, manifest/validator/test и state docs.
-- Проверены без содержательных изменений: `QUICKSTART.md`, `CONTEXT_POLICY.md`, `WORKFLOW.md`,
-  `DESIGN.md`, `SECURITY.md`, `HOOK_POLICY.md`, `MCP_CATALOG.md`, feature SPECs,
-  `docs/project-context.md`, Skills/hooks/installer.
-- Не применяются: project `prompts/STAGES.md`, `TRACEABILITY.md`, `CHANGELOG.md`, `DEV_LOG.md`.
+## Documentation synchronization gate
 
-## Следующее действие
-
-Feature slice реализован, проверен и fast-forward merged в локальную `main` commit-ом `ee3ea8a`.
-Обязательного следующего implementation stage нет. Push, product rollout, Browser hash repair и
-external writes остаются отдельными действиями с собственным разрешением.
+Перед terminal status проверить README, QUICKSTART, AI_PLAN, AI_STATUS, ROADMAP, architecture,
+decisions, compatibility, testing, VERIFY_SETUP, affected SPEC и manifest. Менять только
+изменившиеся факты; `LEARNING_LOG*` не трогать.

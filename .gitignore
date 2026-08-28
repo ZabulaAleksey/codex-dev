@@ -9,6 +9,7 @@
 !/QUICKSTART.md
 !/README.md
 !/install-global.ps1
+!/install-global.sh
 !/config.ai-dev-team.recommended.toml
 !/hooks.json
 !/agents/
@@ -20,6 +21,7 @@
 !/specs/
 !/templates/
 !/tools/
+!/.github/
 
 # Runtime rules Codex не являются частью ДЕВ.
 /rules/default.rules

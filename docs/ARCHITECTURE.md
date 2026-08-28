@@ -25,7 +25,7 @@ read-only validator
 детерминированный human/JSON результат
 ```
 
-`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Для явно объявленного `Backend DX Delta` он дополнительно проверяет applicability, project command/config/service contract, policy route, safe `.env.example`, guarded reset и generated-contract drift; проекты без delta не классифицируются эвристически. Dependency discovery охватывает Git-visible manifests в корне и вложенных `apps/*`/`web/*`, включая multi-ecosystem repositories, но исключает ignored/generated и вложенные upstream assets. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
+`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, exact Stage selector/heading reference, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Для явно объявленного `Backend DX Delta` он дополнительно проверяет applicability, project command/config/service contract, policy route, safe `.env.example`, guarded reset и generated-contract drift; проекты без delta не классифицируются эвристически. Dependency discovery охватывает Git-visible manifests в корне и вложенных `apps/*`/`web/*`, включая multi-ecosystem repositories, но исключает ignored/generated и вложенные upstream assets. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
 
 `tools/reconcile_project_framework.py` является отдельным read-only gate перед bootstrap/refresh.
 Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility
@@ -70,9 +70,10 @@ Task-aware context projection использует обратную ссылку
 
 ```text
 docs/AI_PLAN.md: stable Stage ID
-      ↓ exact unique heading selector
+      ↓ hooks/stage_selector.py: exact unique heading selector
 hooks/session_context.py → bounded selected prompts/STAGES.md record first
-      ↓ invalid / missing / ambiguous / oversized
+tools/validate_project_overlay.py → preflight PASS или stable issue code
+      ↓ hook: invalid / missing selected heading / ambiguous / oversized
 visible DEGRADED warning → manual full-record check → no completion claim до проверки
 ```
 
@@ -90,8 +91,9 @@ Selector не является semantic parser: он не выводит depende
 ДЕВ не хранит live inventory product repositories. Текущие этапы, blockers
 и другие сведения о состоянии продукта принадлежат самому product repository.
 
-Project-overlay validator остаётся детерминированным structural gate: он не объявляет stage
-архитектурно завершённым по наличию headings и не интерпретирует mock/stub как production evidence.
+Project-overlay validator остаётся детерминированным structural gate: shared pure selector parser
+исключает drift с hook, но не объявляет stage архитектурно завершённым по наличию headings и не
+интерпретирует mock/stub как production evidence.
 Dependency DAG, исполнимость slice и истинность end-to-end результата подтверждаются stage evidence
 и review. Отдельный semantic parser потребует versioned schema и migration существующих STAGES;
 точный heading selector только проецирует явно выбранный record и не вводит такую эвристику.
@@ -111,7 +113,18 @@ Dependency DAG, исполнимость slice и истинность end-to-en
 managed-файлы + безопасные инварианты config.toml
 ```
 
-`install-global.ps1` проверяет каноническое расположение repository и не перезаписывает активный `config.toml`. `tools/normalize_user_codex.py` выполняет ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без вывода секретов. `tools/validate_global_codex.py` проверяет managed-файлы активного слоя и статические границы безопасности. Legacy option `--workspace` означает canonical source root (обычно `~/.codex`), а не parent product workspace; отсутствующий source возвращает структурированную issue вместо exception.
+`install-global.ps1` и `install-global.sh` — thin platform wrappers одного Python path. Они
+проверяют canonical directory/Git root, выполняют read-only context validation до materialization,
+sync Skills через `tools/sync_global_skills.py`, повторяют context/global validation и не
+перезаписывают active `config.toml`. `tools/normalize_user_codex.py` выполняет отдельную
+ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без
+вывода секретов. `tools/validate_global_codex.py` проверяет managed-файлы active layer и статические
+границы безопасности. Legacy option `--workspace` означает canonical source root (обычно
+`~/.codex`), а не parent product workspace; отсутствующий source возвращает структурированную
+issue вместо exception.
+
+`.github/workflows/validate.yml` запускает read-only context validation, полный Python unit/contract
+suite и syntax checks обоих wrappers. CI не materialize-ит runtime Skills и не изменяет config.
 
 Host-managed runtime bindings не подменяются угаданными путями: отсутствующая browser service удаляется, `sky` binding сохраняется, а browser client hash допускается только при совпадении с фактически установленным client-файлом.
 

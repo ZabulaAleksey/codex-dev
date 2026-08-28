@@ -1,75 +1,72 @@
 # Текущее состояние ДЕВ / КАРКАС
 
-Дата: 2026-08-27
+Дата: 2026-08-28
 
 ## Статус
 
-- Lifecycle: global i18n/l10n policy `completed`.
-- Evidence level: `merged locally`; policy commit `ee3ea8a` fast-forward integrated в active
-  `main`, полный global test suite после merge — PASS.
-- Integration: active local `main` обновлена; push и external writes не выполнялись.
-- Runtime: Skill sources, hooks, MCP, dependencies и config не менялись; active Skill parity —
-  PASS, 9/9.
+- Lifecycle: global framework hardening `implemented_unverified`.
+- Integration: изменения находятся в изолированной ветке `feature/dev-global-hardening`; merge,
+  push, release и deploy не выполнялись.
+- Runtime: canonical Skill sync подтверждён для 9 sources. Terminal global validation блокирует
+  только pre-existing `unmatched-browser-client-hash` в активной конфигурации.
+- Protected state: active `config.toml`, `docs/LEARNING_LOG.md` и
+  `docs/notes/LEARNING_LOG.md` не изменялись; их контрольные хеши до и после actual installer runs
+  совпали.
 
-Один cross-cutting owner теперь задаёт internationalization/localization для всех user-facing
-products. Product repositories наследуют contract и хранят только supported locales, stack, UX,
-исключения и acceptance evidence.
+Статус не повышен до `completed`: исправление active Browser client hash находится вне scope этой
+задачи и потребовало бы изменения защищённого `config.toml`.
 
 ## Реализованный vertical slice
 
-- `specs/system.spec.md` v1.4 содержит `FR-010` / `AC-013`;
-- `rules/i18n-l10n.md` различает `i18n`, `l10n`, `language` и `locale`, включая `en-US` / `en-GB`;
-- user-facing strings маршрутизируются в translation resources, а locale-dependent data contract
-  охватывает dates/time, numbers, currencies, units, plural rules, collation, addresses/phones и
-  time zones;
-- locale resolution, fallback locale, missing/partial translation, text expansion, RTL и
-  accessibility имеют явные инварианты;
-- initial product slice может иметь одну production locale только с реальным resource/fallback/
-  formatting path и pseudo-locale либо alternate test locale;
-- `AGENTS.md`, rules router, `PROJECT_FRAMEWORK.md`, README и architecture ведут к одному owner;
-- compatibility audit подтвердил отсутствие нового Skill/hook/MCP/service/dependency и отсутствие
-  конкурирующей project copy;
-- новый structural contract test зарегистрирован в canonical suite и context validator.
+- Global `AGENTS.md` сокращён до thin router меньше 32 KiB с сохранением critical policy routes,
+  Git/data-safety boundaries, documentation gate и точных merge handoff-вопросов.
+- `hooks/stage_selector.py` задаёт единый pure contract selector-а для session hook и read-only
+  project-overlay validator.
+- Validator fail-visible различает missing, multiple, empty и invalid selector, а также missing и
+  ambiguous exact unfenced heading; fenced examples и частичные token matches не принимаются.
+- Explicit model pins проверены как reviewed allow-list; unpinned agent profiles наследуют
+  active/default Codex model. Active `config.toml` не переписывается.
+- `install-global.ps1` и executable `install-global.sh` выполняют одинаковую последовательность:
+  placement/Git-root check → context validation → Skill sync → context/global validation.
+- Добавлены thin project `AGENTS.md` template и bounded read-only CI gate без materialization или
+  runtime config writes.
+- Требования и acceptance criteria закреплены в
+  `specs/features/global-framework-hardening.spec.md`.
 
 ## Verification evidence
 
-- baseline full suite — PASS, 94 tests; final full suite — PASS, 101 tests;
-- `py -3 -B -m unittest tools.test_i18n_l10n_policy` — PASS, 7 tests;
-- `py -3 -B tools\validate_context.py` — PASS, 201 files;
-- active `tools\sync_global_skills.py` read-enabled check — PASS, 9 sources;
-- active global validator после merge — `BLOCKED` только pre-existing
-  `unmatched-browser-client-hash`;
-- fast-forward merge `96e948b → ee3ea8a` — PASS; managed-file drift между feature source и active
-  `AGENTS.md` устранён интеграцией;
-- `git diff --check` — PASS; line-ending warnings informational.
-- independent read-only re-review — PASS без blockers; P2 про отсутствие uniqueness assertion
-  исправлен negative test-ом второго rules owner и копирования нормативных headings в routers.
+- baseline full suite — PASS, 101 tests; feature full suite — PASS, 110 tests;
+- independent test gate — PASS, 110 tests;
+- `py -3 -B tools\validate_context.py` — PASS, 207 files;
+- Stage selector/hook regression suites — PASS;
+- Windows PowerShell syntax и actual PowerShell wrapper path — PASS до terminal global validator;
+- Git Bash syntax и actual Bash wrapper path (`PYTHON_BIN=py`) — PASS до terminal global validator;
+- оба actual wrapper runs завершились на одном pre-existing issue:
+  `unmatched-browser-client-hash`; Skill parity перед ним — PASS, 9 sources;
+- protected file hashes после обоих wrapper runs — UNCHANGED;
+- `git diff --check` — PASS; line-ending warnings informational;
+- final read-only review выявил stale status, слишком сильную model evidence формулировку и Unix
+  executable-bit gap; все три замечания исправлены до commit.
 
-Structural framework PASS подтверждает доставку global requirement, но не является E2E перевода
-конкретного продукта. Product E2E закрывается только живым locale switch и locale-dependent output
-в соответствующем repository.
+Structural tests подтверждают delivery глобального framework contract. Они не являются product E2E;
+product stage считается закрытым только по живому пути `client → API/CLI → backend`.
 
 ## Синхронизация документации
 
-- Обновлены: global router, rules index/new policy, system SPEC, README, `PROJECT_FRAMEWORK.md`,
-  `ARCHITECTURE.md`, `DECISIONS.md`, `CONTEXT_COMPATIBILITY.md`, `TESTING.md`, context inventory/map,
-  `LEARNING_LOG.md`, manifest/validator/test и AI state docs.
-- Проверены и остались точными: `QUICKSTART.md`, `CONTEXT_POLICY.md`, `WORKFLOW.md`, `DESIGN.md`,
-  `SECURITY.md`, `HOOK_POLICY.md`, `MCP_CATALOG.md`, feature SPECs, `docs/project-context.md`,
-  Skills/hooks/installer.
+- Обновлены: `README.md`, `QUICKSTART.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`,
+  `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`,
+  `docs/CONTEXT_COMPATIBILITY.md`, `docs/CONTEXT_POLICY.md`, `docs/HOOK_POLICY.md`,
+  `docs/TEAM_ARCHITECTURE.md`, `docs/TESTING.md`, `docs/VERIFY_SETUP.md`, `docs/WORKFLOW.md`,
+  affected SPEC/templates, validator inventory и `MANIFEST.txt`.
+- Проверены и не потребовали изменений: `docs/PROJECT_FRAMEWORK.md`, `docs/DESIGN.md`,
+  `docs/SECURITY.md`, `docs/project-context.md`, `docs/MCP_CATALOG.md` и `specs/system.spec.md`.
+- По прямому ограничению задачи не изменены оба `LEARNING_LOG*`.
 - Не применяются в global infrastructure repository: project `prompts/STAGES.md`,
-  `TRACEABILITY.md`, `CHANGELOG.md`, `DEV_LOG.md`.
+  `TRACEABILITY.md`, `CHANGELOG.md` и `DEV_LOG.md`.
 
-## Ограничения
+## Известный blocker и следующее действие
 
-- Active global validator сохраняет pre-existing `unmatched-browser-client-hash`; policy его не
-  меняет.
-- Product rollout, brownfield string migration, реальные translations и product E2E не выполнялись
-  и не являются evidence текущего internal policy slice.
-- Push, external Ideas/Notion writes и release/deploy не выполнялись.
-
-## Следующее действие
-
-Post-merge Completion Documentation Synchronization Gate выполнен. Обязательного следующего
-implementation stage нет; push, product rollout, Browser hash repair и external sync являются
-самостоятельными последующими действиями.
+Владелец active runtime configuration должен отдельно исправить
+`unmatched-browser-client-hash`, после чего повторить соответствующий installer wrapper и
+`tools/validate_global_codex.py`. Только terminal PASS этого пути разрешает перевести item из
+`implemented_unverified` в `completed`.

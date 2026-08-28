@@ -83,9 +83,9 @@ Project-specific инструкции, архитектура, Skills и agents 
 проверяемым. Mock/stub/interface-only результат остаётся `scaffolded`, а отсутствие живого PASS
 evidence — `blocked`, `partial` или `implemented_unverified`, но не `DONE`.
 
-## Установка на Windows
+## Установка
 
-### 1. Глобальное ядро
+### Windows
 
 Repository ДЕВ должен быть клонирован или перемещён непосредственно в `~/.codex`.
 Открой PowerShell в этом каталоге:
@@ -95,8 +95,21 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\install-global.ps1
 ```
 
-Скрипт подтверждает, что ДЕВ уже находится в каноническом каталоге, и запускает
-read-only проверки. Он **не перезаписывает `~/.codex/config.toml`**. Рекомендуемые настройки находятся в:
+### Linux / macOS
+
+Repository также должен находиться непосредственно в `~/.codex`:
+
+```bash
+cd ~/.codex
+./install-global.sh
+```
+
+Если executable bit не сохранился при переносе, запусти `bash ./install-global.sh`; сам script
+не требует изменения active config.
+
+Оба wrapper сначала проверяют canonical Git root, запускают read-only context validation, затем
+materialize-ят Skills существующим Python tool и повторяют context/global validation. Они
+**не перезаписывают `~/.codex/config.toml`**. Рекомендуемые настройки находятся в:
 
 ```text
 config.ai-dev-team.recommended.toml
@@ -172,7 +185,7 @@ $backend-dx-audit
 ```
 
 При смене компьютера сначала синхронизируй отдельный Git repository ДЕВ в `~/.codex` и выполни
-`install-global.ps1`, затем clone/pull нужный product repository в
+`install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS, затем clone/pull нужный product repository в
 `~/codex-workspace/<project>`. Рабочее состояние восстанавливается из Git и project docs по
 [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md), не из истории чата или ручных копий файлов.
 
@@ -184,5 +197,10 @@ $backend-dx-audit
 - средняя межмодульная: 2–3;
 - большой этап: 3–5;
 - больше пяти одновременно — только когда части действительно независимы.
+
+Recommendation задаёт hard ceiling `max_concurrent_threads_per_session = 4`; он ограничивает
+фактический параллелизм и не является целевым количеством агентов. Unpinned agents наследуют
+выбранную/default Codex model; reviewed pins и reasoning описаны в
+[`docs/TEAM_ARCHITECTURE.md`](docs/TEAM_ARCHITECTURE.md).
 
 Цель — не имитировать штат компании, а получать выигрыш от специализации и параллельности.

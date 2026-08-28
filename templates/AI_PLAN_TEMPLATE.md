@@ -13,6 +13,7 @@
 
 - Stage ID:
 - Selector format: stable ASCII ID; exact unique heading token in `prompts/STAGES.md`.
+- Full overlay validation: заполни ID до `validate_project_overlay.py`; пустой selector является FAIL.
 - Completed / verified prerequisites:
 - DAG:
 - Проверка отсутствия self-reference, cycle и forward dependency:
