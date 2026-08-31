@@ -87,6 +87,7 @@ stable `Stage ID` активного `docs/AI_PLAN.md`, exact unique heading sel
 | `specs/README.md` | индекс SPEC |
 | `specs/features/*.spec.md` | проверяемая история изменения framework |
 | `templates/*.md` | project-agnostic формы SPEC, AI plan/status, decisions, журналов и Backend DX delta |
+| `templates/prompt-modes/*.md` | пользовательские opt-in prompts для экспериментов и игр; не DEV rules и не загружаются router-ом автоматически |
 
 Historical `SUPERSEDED` SPEC сохраняет audit trail, но не управляет новой реализацией.
 
