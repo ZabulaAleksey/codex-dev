@@ -10,6 +10,20 @@
 - `CONFLICT` — определения дублируются или задают несовместимое поведение; выбери один канонический источник.
 - `OBSOLETE` — возможность больше не используется и должна быть удалена отдельным согласованным изменением.
 
+## Решение 2026-08-31 — AI Policy Profiling / Agent Economics Observe layer
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический источник |
+|---|---|---|---|---|
+| Stage/status/evidence | governance, AI_PLAN/AI_STATUS и Completion Gate уже каноничны | связать outcomes с policy/experiment без второго status | `INHERITED` → `EXTEND` | optional fields/routes в existing owners |
+| Runtime telemetry | host SQLite/JSONL рядом с `~/.codex` не является versioned API и содержит private runtime state | project-local bounded opt-in events | `CONFLICT` → `PROJECT_ONLY` | ignored `<project>/.metrics/*.jsonl`; не читать host runtime DB/logs |
+| Schema/reporting | versioned telemetry schema и aggregator отсутствуют | portable envelope + JSON/Markdown dashboard | `EXTEND` | `schemas/ai-policy-profiling.schema.json` + `tools/ai_policy_profiler.py` |
+| Hooks/agents/MCP | existing capabilities не дают стабильный documented usage event contract | не создавать обязательный overhead до evidence | `INHERITED` | без нового hook/agent/MCP; explicit instrumented CLI |
+| Storage/dependencies | standard library и append-only files достаточны | bounded concurrent-safe local writes | `INHERITED` | Python stdlib, no SQLite/SaaS/package |
+| Policy tuning | human-owned SPEC/decisions задают requirements | Observe/Measure/Compare до изменения thresholds | `INHERITED` | recommendation only; tuning требует отдельного approval |
+
+Новые hooks, agents, Skills, MCP, dependencies, config mutation и external writes не добавляются.
+Existing projects без `.metrics/` остаются unchanged; mass rollout отсутствует.
+
 ## Решение 2026-08-28 — hardening global router, selector и install path
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический источник |

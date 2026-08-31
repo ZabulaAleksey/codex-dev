@@ -25,6 +25,12 @@
 
 ## Текущее
 
+- AI Policy Profiling / Agent Economics Observe layer — `completed` / `validated locally` на
+  `feature/ai-policy-profiling-observe`: opt-in schema/JSONL CLI, automatic safe command/Git/wall
+  facts, policy/experiment/agent/reuse/handoff events, bounded discovery, false reuse,
+  baseline/variant aggregation и JSON/Markdown report. Full suite 124 tests и 213-file context
+  validation PASS; independent synthetic report создан. Merge/push/product rollout не выполнялись;
+  synthetic sample не является ROI evidence policy.
 - Global framework hardening — `implemented_unverified`: thin global router, exact shared Stage
   selector contract, reviewed model inheritance/pins, Windows/Bash installer parity, thin project
   template и read-only CI реализованы; 110 tests и 207-file context validation PASS. Terminal
@@ -37,6 +43,8 @@
 - развитие model/tool routing;
 - Prompt Compiler и policy validation;
 - tracing/evals;
+- opt-in rollout AI Policy Profiling в один selected project, затем сбор сопоставимых real task
+  families до human-approved threshold recommendation;
 - дополнительные reusable security/testing policies;
 - улучшение validators;
 - semantic broken-link/stage validation только после versioned schema и low-false-positive design;

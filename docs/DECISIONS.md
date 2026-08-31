@@ -279,3 +279,24 @@ project framework и reusable automation, но не хранит канонич�
 **Причина:** произвольные документы на верхнем уровне `docs/` размывают источник истины и увеличивают контекстный шум.
 
 **Последствия:** сначала обновляется существующий canonical source; правило применяется forward-only; legacy files переносятся только после semantic/link audit без потери содержания.
+
+## 2026-08-31 — AI policy profiling запускается opt-in и passive-first
+
+**Статус:** принято для `DEV-AI-PROFILING-001`.
+
+**Решение:** добавить один standard-library CLI/core, versioned JSON Schema и project-local
+ignored `.metrics/*.jsonl`. Использовать существующие SPEC/governance/Stage/status owners и
+добавить только optional policy/experiment linkage. Не добавлять hook, MCP, agent, database,
+network backend или automatic policy mutation.
+
+**Причина:** доступные wall/Git/subprocess facts можно собирать дёшево и детерминированно, но host
+token usage и human active time доступны не всегда. Обязательный global hook создал бы overhead,
+privacy risk и ложную точность для всех задач до подтверждения ROI самого profiler-а.
+
+**Альтернативы:** SQLite отклонён как избыточный и конфликтующий с runtime databases рядом с
+`~/.codex`; web dashboard/SaaS отложен из-за deployment/privacy cost; ручной длинный self-report
+отклонён как profiler overhead; self-tuning запрещён до данных и отдельного approval.
+
+**Последствия:** existing projects остаются backward-compatible; explicit `init` включает
+observation. Corrupt telemetry fail closed. Markdown/JSON report является достаточным dashboard
+Observe-фазы. Threshold tuning остаётся human-approved future scope.

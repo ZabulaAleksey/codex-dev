@@ -340,3 +340,38 @@ git diff --check
 3. Запусти `$backend-dx-audit` и сохрани evidence для применимых gates.
 4. Выполни project validator и релевантные unit/integration/component tests.
 5. Проверь Skill parity и `git diff --check` перед commit или merge.
+
+## 2026-08-31 — profiler должен измерять только себя и проверять каждый writable descendant
+
+**Problem:** первый AI Policy Profiling consumer report завысил profiler overhead; отдельный
+stream/report path также мог быть заменён symlink/junction после проверки родительского
+`.metrics/`.
+
+**Symptom:** instrumented command включал своё wall time в `profiler_overhead_seconds`; child path
+мог resolve-иться за project runtime directory, хотя сам `.metrics/` оставался внутри project.
+
+**Root cause:** overhead timer запускался до subprocess вместо границы telemetry collection, а
+containment проверялся только для parent directory, не для каждого config/stream/report target.
+
+**Failed attempts:** первый synthetic report был построен с неверной timer boundary и исключён из
+acceptance evidence; первоначальная parent-only containment проверка не покрывала descendant
+symlink substitution; первый concurrent test показал, что Windows возвращает `PermissionError`,
+а не только `FileExistsError`, когда lock уже удерживается другим writer.
+
+**Fix:** timer instrumented run начинается после завершения consumer command; каждый writable/read
+target проходит resolve + containment + symlink/junction check. JSONL append дополнительно использует
+bounded exclusive lock и `O_APPEND`; Windows `PermissionError` получает bounded retry, а на
+deadline классифицируется по фактическому наличию lock: contention либо ACL failure. Generated
+reports заменяются atomically.
+
+**Verification:** `py -3 -B -m unittest tools.test_ai_policy_profiler` — PASS, 14 tests, включая
+реальный symlink escape negative path и 20 concurrent writers. Повторный independent consumer report показал
+`profiler_overhead_ratio = 0.000513`; baseline/variant/reuse/handoff/agent sections сформированы,
+raw command output в JSONL отсутствует. Synthetic sample не является evidence ROI policy.
+
+**Prevention:** для любой self-profiling метрики явно отделять measured work от instrumentation;
+для writable tree проверять каждый descendant target непосредственно перед I/O, а не доверять
+только однажды проверенному parent.
+
+**Links:** `specs/features/ai-policy-profiling.spec.md`, `tools/ai_policy_profiler.py`,
+`tools/test_ai_policy_profiler.py`, `docs/SECURITY.md`.

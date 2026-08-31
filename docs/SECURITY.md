@@ -53,3 +53,22 @@ Git-root ДЕВ совмещён с runtime-каталогом `~/.codex`. По�
 - выбрать для GitHub plugin режим `inherit` или `ask_before_writes` вместо текущего app-specific allow-all;
 - после restart проверить, что новый shell не видит secret-like variables, а `/hooks` доверяет новым hashes;
 - восстановить Browser plugin штатным lifecycle, если host не создаст корректный service binding.
+
+## AI Policy Profiling
+
+Profiler работает только после explicit opt-in внутри выбранного project root. Versioned schema
+разрешает bounded identifiers, numbers и короткие observations; prompt/user/source content, raw
+command arguments, stdout/stderr, environment values, secrets и credentials не являются частью
+контракта и не записываются.
+
+Telemetry path resolve-ится с проверкой containment и symlink escape. JSONL line/file имеют
+limits; каждый config/stream/report descendant повторно проверяется непосредственно перед I/O.
+Concurrent JSONL writers используют bounded exclusive lock и append mode; stale lock fail closed.
+Invalid, oversized и unsupported schema fail closed до append. Generated reports сначала
+строятся и валидируются в memory/temporary sibling, затем заменяются atomically, поэтому corrupt
+input не повреждает последний валидный report. Git metadata читается process-local без изменения
+config; отсутствие Git даёт null facts.
+
+Остаточный риск: короткое human observation может содержать чувствительные данные вопреки
+инструкции. Поэтому text fields ограничены, CLI не принимает arbitrary payload/env/output и
+documentation требует записывать только operational summary без private content.

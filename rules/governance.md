@@ -141,6 +141,20 @@ gate допустим только для явно deferred/out-of-scope follow-
 vertical slice, обязательной инфраструктуры, PASS-критерия или end-to-end проверки всегда
 оставляет stage в нетерминальном статусе.
 
+### Optional AI policy profiling
+
+Если project явно включил `rules/ai-policy-profiling.md`, Stage contract дополнительно может
+фиксировать `Policy IDs`, `Experiment ID`, `Experiment arm`, task class и telemetry evidence.
+Поля optional: отсутствие `.metrics/` не является ошибкой existing overlay. При включённом
+experiment baseline/variant сравниваются только для совместимого task class с явным sample-size
+caveat.
+
+Profiler автоматически собирает только доступные безопасные facts; missing token/human cost
+остаётся `unknown`. Telemetry report не заменяет SPEC, acceptance tests, concrete end-to-end PASS,
+review или Completion Documentation Synchronization Gate. Policy thresholds не меняются
+автоматически: Observe → Measure → Compare → Recommend предшествуют отдельному human-approved
+tuning decision.
+
 ## Completion Documentation Synchronization Gate
 
 Перед объявлением задачи или этапа завершённым и после разрешённого merge всегда проводи

@@ -58,6 +58,11 @@ record в `prompts/STAGES.md`. Full overlay сначала проходит read
 `tools/validate_project_overlay.py`: missing/multiple/invalid selector и missing/ambiguous heading
 являются fail-visible issues. Degraded hook context требует ручной проверки полного record.
 
+Если задача вводит или оценивает дорогую AI-policy, agent/retrieval/reuse contour, automation,
+manual handoff либо baseline/variant experiment, подключи `rules/ai-policy-profiling.md`. Начни с
+Observe и не меняй thresholds автоматически. Existing project без `.metrics/` не обязан включать
+profiler.
+
 ## H. Backend developer workflow
 
 Для bootstrap, audit или изменения backend command/config/service/API/DB/test DX
@@ -145,6 +150,18 @@ architecture/ADR owner, затем синхронизируй зависимые
 Git diff. Покажи команды, результаты, scope, commit/environment и caveats; отдельно перечисли
 blockers и deferred items. Не называй локальную проверку merged evidence и не выполняй merge,
 push, PR или удаление ветки без отдельного разрешения.
+```
+
+### Профилировать AI-policy
+
+```text
+Проверь, существует ли comparable baseline и относится ли задача к тому же task class. Если
+profiler не включён, не создавай telemetry без явного opt-in. Для включённого profiler зафиксируй
+stable Policy IDs, Experiment ID/arms и instrumented безопасные facts; unknown token/human metrics
+не оценивай. Ограничь discovery wall/token/cost budget, фиксируй reuse false positives и manual
+handoff reason. После verified Stage outcome создай JSON/Markdown report, покажи sample size,
+median deltas, profiler overhead и caveats. Не изменяй policy thresholds без отдельного human
+approval и approved SPEC/decision.
 ```
 
 ### Поставить проект на паузу

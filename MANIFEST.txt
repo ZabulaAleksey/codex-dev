@@ -25,6 +25,7 @@ docs/DESIGN.md
 docs/HOOK_POLICY.md
 docs/LEARNING_LOG.md
 docs/MCP_CATALOG.md
+docs/notes/AI_POLICY_PROFILING.md
 docs/notes/AUTOMATION_EXTENSIONS.md
 docs/notes/CONTEXT_DEPENDENCY_MAP.md
 docs/notes/CONTEXT_FILE_INVENTORY.md
@@ -86,6 +87,7 @@ presets/tutor-platform/specs/system.spec.md
 QUICKSTART.md
 README.md
 rules/ai-dev-team.rules
+rules/ai-policy-profiling.md
 rules/backend-dx.md
 rules/dependency-management.md
 rules/domains/ai-ml.md
@@ -145,6 +147,7 @@ rules/stacks/wasm.md
 rules/stacks/web-audio.md
 rules/stacks/yjs.md
 rules/word-pdf-academic.md
+schemas/ai-policy-profiling.schema.json
 skill-sources/backend-dx-audit/SKILL.md
 skill-sources/bootstrap-project-framework/agents/openai.yaml
 skill-sources/bootstrap-project-framework/SKILL.md
@@ -171,6 +174,7 @@ skill-sources/implement-stage/SKILL.md
 skill-sources/plan-stage/SKILL.md
 skill-sources/resume-project/SKILL.md
 skill-sources/review-change/SKILL.md
+specs/features/ai-policy-profiling.spec.md
 specs/features/backend-dx-policy.spec.md
 specs/features/codex-home-consolidation.spec.md
 specs/features/dependency-manager-policy.spec.md
@@ -189,9 +193,11 @@ templates/DEV_LOG_TEMPLATE.md
 templates/LEARNING_LOG_TEMPLATE.md
 templates/SPEC_TEMPLATE.md
 templates/SPECS_README_TEMPLATE.md
+tools/ai_policy_profiler.py
 tools/normalize_user_codex.py
 tools/reconcile_project_framework.py
 tools/sync_global_skills.py
+tools/test_ai_policy_profiler.py
 tools/test_backend_dx_policy.py
 tools/test_documentation_sync_policy.py
 tools/test_global_framework_hardening.py

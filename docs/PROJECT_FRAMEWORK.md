@@ -182,6 +182,18 @@ contract tests, а изменение хранения — data model, security/
 не должны становиться конкурирующими полными источниками fallback-правил:
 они содержат только свои инварианты, решения и ссылки на канонический каталог.
 
+## AI Policy Profiling (optional)
+
+КАРКАС может включить project-local AI Policy Profiling для дорогих cross-task policies,
+agent/retrieval/reuse contours, experiments и human handoffs. Global owner —
+`rules/ai-policy-profiling.md`; runtime data остаётся ignored в `<project>/.metrics/` и не становится
+каноническим status/requirements source.
+
+Profiling включается явно, начинает с Observe и добавляет к Stage только optional Policy IDs,
+Experiment ID/arm, task class и telemetry evidence. Existing project без `.metrics/` остаётся
+полным валидным overlay. Report не заменяет tests/E2E/DoD, а automatic threshold tuning запрещён
+до отдельного human-approved решения.
+
 ## i18n / l10n пользовательских продуктов
 
 Каждый проект с пользовательской поверхностью наследует глобальную

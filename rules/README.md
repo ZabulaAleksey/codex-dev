@@ -83,5 +83,8 @@ Feature SPEC
 - Если repository имеет или проектирует пользовательскую поверхность либо задача меняет
   пользовательские строки, locale-dependent данные, layout для переводов или RTL, загрузи
   `rules/i18n-l10n.md`.
+- Если задача вводит или оценивает дорогую AI-policy, agent/retrieval/reuse contour,
+  автоматизацию, human handoff либо baseline/variant experiment, загрузи
+  `rules/ai-policy-profiling.md`.
 - Сквозная policy подключается только при наличии соответствующего риска;
   не загружай её автоматически для каждой простой задачи.

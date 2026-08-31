@@ -190,3 +190,32 @@ Project-specific implementation:
 Архитектура проекта определяет компоненты, границы состояния,
 idempotency/recovery interfaces и места возможной деградации,
 но не дублирует общий fallback contract.
+
+## AI Policy Profiling / Agent Economics
+
+Profiler является opt-in локальным adapter-ом вокруг append-only telemetry, а не новым runtime
+service или владельцем Stage state:
+
+```text
+SPEC + rules/ai-policy-profiling.md
+        ↓
+tools/ai_policy_profiler.py (CLI + pure decisions/aggregation)
+        ↓ explicit init/run/record
+project .metrics/*.jsonl (ignored runtime data)
+        ↓ validated bounded read
+deterministic JSON summary + Markdown report
+        ↓ optional Stage evidence
+existing governance / tests / Documentation Gate
+```
+
+Versioned envelope contract хранится в `schemas/ai-policy-profiling.schema.json`. Writer использует
+allow-list fields и не сохраняет raw command, stdout/stderr, environment, prompt/user/source
+content. Git facts optional и собираются read-only. Absent `.metrics/` означает disabled, поэтому
+существующие projects и validators не получают обязательный новый artifact.
+
+Append-only streams защищены bounded local lock и child-path containment; malformed либо
+unsupported stream не перезаписывает последний atomically generated report.
+
+Границы фаз: Observe/Measure/Compare/Recommend реализуются локально; human-approved tuning и
+bounded automatic tuning остаются будущими отдельными решениями. Profiler report — дополнительное
+evidence, но не source of requirements/status и не замена end-to-end PASS.

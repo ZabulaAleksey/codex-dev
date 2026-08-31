@@ -66,6 +66,8 @@ stage record → относящиеся architecture/decisions/design/security �
   главного агента не меняется молча.
 - User-facing product architecture/strings/locale/RTL: `~/.codex/rules/i18n-l10n.md`. Язык
   project context не определяет product language/locale.
+- Дорогие AI-policies, agent/retrieval/reuse contours, experiments и human handoff economics:
+  `~/.codex/rules/ai-policy-profiling.md`; opt-in Observe предшествует tuning.
 - Global/project КАРКАС, audit, plans/status/roadmap/stages, Notion ideas и synchronization:
   Skill `dev-karkas` и только нужные references.
 

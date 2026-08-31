@@ -10,7 +10,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -91,6 +91,25 @@ pseudo-locale либо alternate test locale.
 Это structural contract test global framework. Он подтверждает, что КАРКАС доставляет требование
 в user-facing product architecture, но не заменяет project unit/component/integration/E2E evidence
 конкретных переводов, форматирования и locale switch.
+
+## AI Policy Profiling contract
+
+`tools.test_ai_policy_profiler` проверяет `FR-AEP-001..012`, privacy allow-list, identifier/number
+limits, opt-in/idempotent init, bounded discovery, human handoff batch guard, false reuse,
+profiler overhead, baseline/variant aggregation, concurrent writers, symlink containment и
+corrupt-input fail-closed behavior.
+
+Executable consumer path создаёт temporary independent Git project и выполняет:
+
+```text
+init → real instrumented subprocess → baseline/variant stage outcomes
+→ reuse + handoff + discovery + agent events → JSON/Markdown report
+```
+
+Он подтверждает, что telemetry реально пишется, command output/raw args не сохраняются, policy и
+experiment linkage агрегируются, а existing project без `.metrics/` остаётся unchanged. Это
+internal profiler E2E, не product E2E и не доказательство ROI конкретной policy на реальной
+выборке.
 
 ## Evidence policy
 

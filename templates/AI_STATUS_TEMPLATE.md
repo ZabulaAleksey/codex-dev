@@ -7,6 +7,15 @@
 - Evidence level: `implemented locally | validated locally | committed | pushed | PR opened | merged | released/deployed`
 - `verified` / `DONE` заявляются только при terminal conditions Stage contract.
 
+## AI policy profiling (optional)
+
+- Profiling: `disabled | observe | experiment`
+- Policy IDs:
+- Experiment ID / arm / task class:
+- Последний report/evidence:
+- Profiler overhead / missing metrics caveat:
+- Policy tuning: только human-approved; отсутствие telemetry не снижает обычное Stage evidence.
+
 ## Prerequisites и runnable path
 
 - Completed / verified prerequisites:

@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openai.local/dev/ai-policy-profiling/v1/event.schema.json",
+  "title": "AI Policy Profiling telemetry envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "timestamp",
+    "event_id",
+    "event_type",
+    "project_id",
+    "stage_id",
+    "policy_ids",
+    "experiment_id",
+    "experiment_arm",
+    "task_class",
+    "metrics",
+    "data"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "timestamp": {"type": "string", "format": "date-time", "maxLength": 40},
+    "event_id": {"$ref": "#/$defs/identifier"},
+    "event_type": {
+      "enum": [
+        "command_run",
+        "handoff",
+        "discovery_decision",
+        "reuse_outcome",
+        "stage_outcome",
+        "policy_definition",
+        "experiment_definition",
+        "agent_outcome"
+      ]
+    },
+    "project_id": {"$ref": "#/$defs/identifier"},
+    "stage_id": {"anyOf": [{"$ref": "#/$defs/identifier"}, {"type": "null"}]},
+    "policy_ids": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/identifier"}
+    },
+    "experiment_id": {"anyOf": [{"$ref": "#/$defs/identifier"}, {"type": "null"}]},
+    "experiment_arm": {"anyOf": [{"$ref": "#/$defs/identifier"}, {"type": "null"}]},
+    "task_class": {
+      "anyOf": [
+        {"enum": ["tiny", "small", "medium", "large", "research-heavy", "integration-heavy", "domain-heavy", "UI-heavy", "infra-heavy"]},
+        {"type": "null"}
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wall_seconds": {"$ref": "#/$defs/nonNegativeNumber"},
+        "profiler_overhead_seconds": {"$ref": "#/$defs/nonNegativeNumber"},
+        "tokens_in": {"$ref": "#/$defs/nonNegativeNumber"},
+        "tokens_out": {"$ref": "#/$defs/nonNegativeNumber"},
+        "tokens_total": {"$ref": "#/$defs/nonNegativeNumber"},
+        "context_tokens": {"$ref": "#/$defs/nonNegativeNumber"},
+        "human_active_minutes": {"$ref": "#/$defs/nonNegativeNumber"},
+        "rework_minutes": {"$ref": "#/$defs/nonNegativeNumber"},
+        "ai_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "effective_cost": {"$ref": "#/$defs/nonNegativeNumber"}
+      }
+    },
+    "data": {"type": "object", "maxProperties": 32}
+  },
+  "allOf": [
+    {"if": {"properties": {"event_type": {"const": "command_run"}}}, "then": {"properties": {"data": {"$ref": "#/$defs/commandRun"}}}},
+    {"if": {"properties": {"event_type": {"const": "handoff"}}}, "then": {"properties": {"data": {"$ref": "#/$defs/handoff"}}}},
+    {"if": {"properties": {"event_type": {"const": "discovery_decision"}}}, "then": {"properties": {"data": {"$ref": "#/$defs/discovery"}}}},
+    {"if": {"properties": {"event_type": {"const": "reuse_outcome"}}}, "then": {"properties": {"data": {"$ref": "#/$defs/reuse"}}}},
+    {"if": {"properties": {"event_type": {"const": "stage_outcome"}}}, "then": {"properties": {"stage_id": {"$ref": "#/$defs/identifier"}, "data": {"$ref": "#/$defs/stage"}}}},
+    {"if": {"properties": {"event_type": {"const": "policy_definition"}}}, "then": {"properties": {"policy_ids": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"$ref": "#/$defs/identifier"}}, "data": {"$ref": "#/$defs/policy"}}}},
+    {"if": {"properties": {"event_type": {"const": "experiment_definition"}}}, "then": {"properties": {"experiment_id": {"$ref": "#/$defs/identifier"}, "experiment_arm": {"$ref": "#/$defs/identifier"}, "data": {"$ref": "#/$defs/experiment"}}}},
+    {"if": {"properties": {"event_type": {"const": "agent_outcome"}}}, "then": {"properties": {"data": {"$ref": "#/$defs/agent"}}}}
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "nonNegativeNumber": {
+      "type": "number",
+      "minimum": 0
+    },
+    "shortText": {"type": "string", "minLength": 1, "maxLength": 500},
+    "nullableShortText": {"anyOf": [{"$ref": "#/$defs/shortText"}, {"type": "null"}]},
+    "commandRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command_class", "exit_code", "success", "git_revision", "git_branch", "git_dirty", "started_at", "ended_at"],
+      "properties": {
+        "command_class": {"$ref": "#/$defs/identifier"},
+        "exit_code": {"type": "integer"},
+        "success": {"type": "boolean"},
+        "git_revision": {"$ref": "#/$defs/nullableShortText"},
+        "git_branch": {"$ref": "#/$defs/nullableShortText"},
+        "git_dirty": {"type": ["boolean", "null"]},
+        "started_at": {"type": "string", "format": "date-time"},
+        "ended_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "action", "expected_response", "completed", "estimated_ai_seconds", "estimated_human_seconds", "estimated_saving_seconds"],
+      "properties": {
+        "reason": {"enum": ["ECONOMIC", "TOOL_LIMITATION", "VISUAL_CHECK", "PHYSICAL_ACTION", "SECURITY_CONFIRMATION", "LEARNING", "AMBIGUITY_RESOLUTION"]},
+        "action": {"$ref": "#/$defs/shortText"},
+        "expected_response": {"$ref": "#/$defs/shortText"},
+        "completed": {"type": "boolean"},
+        "estimated_ai_seconds": {"$ref": "#/$defs/nonNegativeNumber"},
+        "estimated_human_seconds": {"$ref": "#/$defs/nonNegativeNumber"},
+        "estimated_saving_seconds": {"$ref": "#/$defs/nonNegativeNumber"}
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "reason", "elapsed_seconds", "tokens_used", "cost_used", "candidate_strength"],
+      "properties": {
+        "decision": {"enum": ["STOP_DISCOVERY", "CONTINUE_DISCOVERY"]},
+        "reason": {"$ref": "#/$defs/shortText"},
+        "elapsed_seconds": {"$ref": "#/$defs/nonNegativeNumber"},
+        "tokens_used": {"$ref": "#/$defs/nonNegativeNumber"},
+        "cost_used": {"$ref": "#/$defs/nonNegativeNumber"},
+        "candidate_strength": {"enum": ["none", "weak", "strong"]},
+        "estimated_adaptation_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "estimated_greenfield_cost": {"$ref": "#/$defs/nonNegativeNumber"}
+      }
+    },
+    "reuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "selected", "success", "verified", "discovery_cost", "evaluation_cost", "adaptation_cost", "integration_cost", "verification_cost", "actual_reuse_cost", "estimated_greenfield_cost", "classification"],
+      "properties": {
+        "source": {"enum": ["project", "local", "internal", "trusted-upstream", "external"]},
+        "selected": {"type": "boolean"},
+        "success": {"type": "boolean"},
+        "verified": {"type": "boolean"},
+        "discovery_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "evaluation_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "adaptation_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "integration_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "verification_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "actual_reuse_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "estimated_greenfield_cost": {"$ref": "#/$defs/nonNegativeNumber"},
+        "classification": {"enum": ["REUSE_SUCCESS", "REUSE_FALSE_POSITIVE", "REUSE_NOT_SELECTED"]}
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "first_pass_dod", "human_interventions", "post_completion_defects", "outcome_label"],
+      "properties": {
+        "verified": {"type": "boolean"},
+        "first_pass_dod": {"type": "boolean"},
+        "human_interventions": {"type": "integer", "minimum": 0},
+        "post_completion_defects": {"type": "integer", "minimum": 0},
+        "outcome_label": {"$ref": "#/$defs/shortText"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "purpose", "feature_class", "verdict"],
+      "properties": {
+        "status": {"enum": ["experimental", "active", "disabled"]},
+        "purpose": {"$ref": "#/$defs/shortText"},
+        "feature_class": {"enum": ["immediate-optimizer", "compounding-infrastructure", "quality-insurance"]},
+        "verdict": {"enum": ["KEEP", "KEEP_WITH_LIMITS", "EXPERIMENTAL", "TUNE", "DISABLE_BY_DEFAULT", "REMOVE"]}
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hypothesis", "baseline_arm", "variant_arm", "minimum_sample_size"],
+      "properties": {
+        "hypothesis": {"$ref": "#/$defs/shortText"},
+        "baseline_arm": {"$ref": "#/$defs/identifier"},
+        "variant_arm": {"$ref": "#/$defs/identifier"},
+        "minimum_sample_size": {"type": "integer", "minimum": 1}
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent_id", "success", "value_added", "human_interventions"],
+      "properties": {
+        "agent_id": {"$ref": "#/$defs/identifier"},
+        "success": {"type": "boolean"},
+        "value_added": {"$ref": "#/$defs/shortText"},
+        "human_interventions": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

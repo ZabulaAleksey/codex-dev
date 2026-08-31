@@ -83,6 +83,23 @@ Project-specific инструкции, архитектура, Skills и agents 
 проверяемым. Mock/stub/interface-only результат остаётся `scaffolded`, а отсутствие живого PASS
 evidence — `blocked`, `partial` или `implemented_unverified`, но не `DONE`.
 
+## AI Policy Profiling / Agent Economics
+
+Opt-in profiler измеряет стоимость verified outcomes, policy/experiment overhead, reusable
+contours, agent outcomes и manual handoffs. Он не включается автоматически, не читает private
+content и не меняет policies по накопленным данным.
+
+```powershell
+py -3 -B "$env:USERPROFILE\.codex\tools\ai_policy_profiler.py" init --root . --project-id my-project
+py -3 -B "$env:USERPROFILE\.codex\tools\ai_policy_profiler.py" report --root .
+```
+
+Absent `.metrics/` означает disabled. Runtime JSONL/reports остаются ignored внутри project.
+Полное включение, instrumented run, experiments, bounded discovery, reuse/handoff и чтение
+dashboard описаны в [`docs/notes/AI_POLICY_PROFILING.md`](docs/notes/AI_POLICY_PROFILING.md).
+Каноническая policy — [`rules/ai-policy-profiling.md`](rules/ai-policy-profiling.md); telemetry
+является дополнительным evidence и не заменяет Stage DoD/E2E/tests.
+
 ## Установка
 
 ### Windows

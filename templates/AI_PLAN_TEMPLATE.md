@@ -9,6 +9,15 @@
 - SPEC:
 - Идентификаторы требований:
 
+## AI policy profiling (optional)
+
+- Profiling: `disabled | observe | experiment`
+- Policy IDs:
+- Experiment ID / arm:
+- Task class:
+- Baseline и sample-size caveat:
+- Telemetry не заменяет Stage PASS/DoD evidence.
+
 ## Stage identity и dependency DAG
 
 - Stage ID:
@@ -94,6 +103,7 @@
 - [ ] Релевантные проверки выполнены.
 - [ ] `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `prompts/STAGES.md` и другие state-bearing документы проверены.
 - [ ] Изменившиеся факты синхронизированы; точные документы оставлены без churn.
+- [ ] Если profiling включён, policy/experiment linkage и profiler overhead зафиксированы; automatic tuning не выполнялся.
 
 ## Условие остановки
 
