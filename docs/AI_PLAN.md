@@ -1,6 +1,6 @@
 # Текущий план ДЕВ / КАРКАС
 
-Статус: `completed` / validated locally / internal infrastructure item
+Статус: `completed` / merged / pushed / internal infrastructure item
 Stage ID (internal, не selector): `DEV-AI-PROFILING-001`
 Рабочий item: passive AI Policy Profiling / Agent Economics Observe layer
 Дата: 2026-08-31
@@ -68,7 +68,8 @@ governance/templates, architecture/decision/security/testing/workflow/README/sta
 manifest synchronization.
 
 Не входит: active config, runtime host databases/logs, product rollout, external telemetry,
-self-modifying thresholds, MCP/hooks/agents/dependencies, push/merge/release/deploy.
+self-modifying thresholds, MCP/hooks/agents/dependencies, release/deploy. Merge и push выполнены
+отдельно после explicit user approval.
 
 ## Рабочие задачи
 
@@ -106,7 +107,7 @@ self-modifying thresholds, MCP/hooks/agents/dependencies, push/merge/release/dep
 - host-native model usage ingestion;
 - organization-wide telemetry backend;
 - mass migration product repositories;
-- push, merge, release и deployment.
+- release и deployment.
 
 ## Риски и rollback
 

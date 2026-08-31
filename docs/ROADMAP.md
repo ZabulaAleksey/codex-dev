@@ -22,15 +22,14 @@
   language/locale separation, translation resources, locale-aware formats, fallback, text
   expansion/RTL и self-contained initial slice — 101 tests PASS, 201-file manifest PASS; feature
   commit `ee3ea8a` fast-forward merged в локальную `main`, product rollout и push не выполнялись.
+- AI Policy Profiling / Agent Economics Observe layer: opt-in schema/JSONL CLI, automatic safe
+  command/Git/wall facts, policy/experiment/agent/reuse/handoff events, bounded discovery, false
+  reuse, baseline/variant aggregation и JSON/Markdown report — 124 tests и 213-file context
+  validation PASS; implementation commit `ea1fe24` fast-forward merged и pushed в `origin/main`.
+  Product rollout не выполнялся; synthetic sample не является ROI evidence policy.
 
 ## Текущее
 
-- AI Policy Profiling / Agent Economics Observe layer — `completed` / `validated locally` на
-  `feature/ai-policy-profiling-observe`: opt-in schema/JSONL CLI, automatic safe command/Git/wall
-  facts, policy/experiment/agent/reuse/handoff events, bounded discovery, false reuse,
-  baseline/variant aggregation и JSON/Markdown report. Full suite 124 tests и 213-file context
-  validation PASS; independent synthetic report создан. Merge/push/product rollout не выполнялись;
-  synthetic sample не является ROI evidence policy.
 - Global framework hardening — `implemented_unverified`: thin global router, exact shared Stage
   selector contract, reviewed model inheritance/pins, Windows/Bash installer parity, thin project
   template и read-only CI реализованы; 110 tests и 207-file context validation PASS. Terminal

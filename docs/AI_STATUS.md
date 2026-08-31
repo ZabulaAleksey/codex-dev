@@ -4,10 +4,9 @@
 
 ## Статус
 
-- AI Policy Profiling lifecycle: `completed`; evidence: `validated locally` на
-  `feature/ai-policy-profiling-observe`.
-- Integration boundary: isolated worktree/feature branch; merge, push, release, deploy и product
-  rollout не выполнялись.
+- AI Policy Profiling lifecycle: `completed`; evidence: `merged` и `pushed` в `origin/main`;
+  implementation commit `ea1fe24`.
+- Integration boundary: release, deploy и product rollout не выполнялись.
 - Backward compatibility: absent `<project>/.metrics/` = disabled; existing overlays не получают
   обязательный новый artifact или validator failure.
 - Global framework hardening сохраняет отдельный pre-existing статус `implemented_unverified` из-за
@@ -79,6 +78,6 @@ policy: sample size и costs искусственные, automatic tuning зап
 
 ## Следующее действие
 
-После review и разрешённого merge можно выбрать один real project для явного opt-in rollout.
-Сначала собирать Observe/Measure данные по сопоставимым task families; policy threshold меняется
-только отдельным human-approved решением после достаточной выборки.
+Можно выбрать один real project для явного opt-in rollout. Сначала собирать Observe/Measure данные
+по сопоставимым task families; policy threshold меняется только отдельным human-approved решением
+после достаточной выборки.
