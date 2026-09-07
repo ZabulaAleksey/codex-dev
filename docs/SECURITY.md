@@ -1,5 +1,13 @@
 # Безопасность
 
+## Prompt queue cleanup boundary
+
+Threat/control contract принадлежит `rules/prompt-queue-lifecycle.md` и PQ SPEC.
+CLI принимает trusted executor attestations, не инструкции из страницы, не исполняет evidence
+strings и не имеет credentials. Decision привязан к source/execution/evidence digest и Git HEAD;
+stale/ambiguous read-back блокирует cleanup. Semantic DoD проверяет executor/reviewer.
+
+
 ## Границы доверия
 
 Project-overlay validator читает путь локального repository, его файлы и Git metadata. Он не выполняет project scripts, hooks или код из проверяемого repository, не обращается к сети и не записывает файлы.

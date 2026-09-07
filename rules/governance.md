@@ -1,5 +1,11 @@
 # Global DEV governance policy
 
+## Prompt queue routing
+
+Для execution/cleanup внешнего queue item применяй `rules/prompt-queue-lifecycle.md`.
+Queue receipt дополняет существующее task evidence и не заменяет Stage/Completion Gate.
+
+
 Этот документ — канонический общий контракт для структуры контекста, project lifecycle и evidence. Project `AGENTS.md` хранит только подтверждённую delta.
 
 ## Source of truth и независимость

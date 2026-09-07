@@ -1,5 +1,14 @@
 # Существенные решения
 
+## Prompt queue guard — принято 2026-09-07
+
+Добавлен отдельный bounded pure guard в existing tools surface. Stage/evidence owners остаются
+прежними; profiler JSONL не используется как proof DoD. Global policy имеет одного owner
+`rules/prompt-queue-lifecycle.md`; projects наследуют routing и могут добавлять checks.
+Writes остаются за существующим adapter с exact-target/read-back. Новый SDK, hook, service,
+filesystem deleter и shadow task manager не нужны.
+
+
 ## 2026-08-28 — Thin global router, shared Stage selector и platform wrappers
 
 **Статус:** принято в feature branch; merge не выполнялся.

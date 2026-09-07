@@ -1,5 +1,13 @@
 # Архитектура AI Dev Team
 
+## Prompt queue boundary
+
+`rules/prompt-queue-lifecycle.md` → existing task evidence → stdlib-only read-only
+`tools/prompt_queue.py` → existing external adapter → receipt verifier. Guard не scheduler,
+не новый task registry и не часть opt-in profiler. Credentials и writes принадлежат adapter.
+Metadata/receipts сохраняются рядом с project evidence; global actual queue inventory отсутствует.
+
+
 ## Назначение и границы
 
 `~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно active operational layer Codex. `agents/`, `hooks/` и `rules/` используются непосредственно. Versioned source Skills находится в `skill-sources/`, а единственная active runtime-проекция — в `~/.agents/skills/`. `docs/`, `templates/`, `tools/` и `specs/` образуют project-agnostic инженерную библиотеку. Project-specific контекст хранится только в независимых repositories под `~/codex-workspace/*`.

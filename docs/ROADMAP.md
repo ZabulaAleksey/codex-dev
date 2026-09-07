@@ -1,5 +1,12 @@
 # Roadmap AI Dev Team
 
+## Текущий internal delta — Prompt Queue Lifecycle
+
+Retention/guard/receipt implementation и project propagation выполнены и проверены отдельно от product
+master. Source policy: `rules/prompt-queue-lifecycle.md`; current evidence — AI_STATUS.
+Merge/push не выполняются до отдельного разрешения пользователя.
+
+
 ## Выполнено
 
 - базовая AI Dev Team;

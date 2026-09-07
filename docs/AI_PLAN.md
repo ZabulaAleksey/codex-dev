@@ -1,5 +1,19 @@
 # Текущий план ДЕВ / КАРКАС
 
+## Current internal item — DEV-PROMPT-QUEUE-001
+
+Статус: implementation `completed` locally; cleanup `cleaned` / verified; execution = audit → approved PQ SPEC → guard/tests → current-project routing
+→ validators/review → canonical evidence → exact one-shot cleanup/read-back.
+Scope: global governance/tools и minimal project delta, без domain work текущего master.
+Полный source contract: `rules/prompt-queue-lifecycle.md`; requirements: PQ-01..11.
+Prerequisites: explicit execution request, предыдущий product partial checkpoint сохранён.
+Vertical slice: real executor evidence → CLI decision → existing Notion adapter → read-back receipt.
+Rollback: Git revert конкретного commit и restore конкретного archived item; без runtime cleanup.
+Все checks/review и exact one-shot cleanup/read-back PASS; повтор noop. Следующий предметный prompt задаёт пользователь. Merge/push не разрешены.
+
+## Предыдущий internal item (history)
+
+
 Статус: `completed` / merged / pushed / internal infrastructure item
 Stage ID (internal, не selector): `DEV-AI-PROFILING-001`
 Рабочий item: passive AI Policy Profiling / Agent Economics Observe layer

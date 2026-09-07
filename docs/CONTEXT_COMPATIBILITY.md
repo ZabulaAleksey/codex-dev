@@ -1,5 +1,15 @@
 # Аудит совместимости контекста
 
+## Prompt queue delta — 2026-09-07
+
+| Возможность | До изменения | Delta | Статус |
+|---|---|---|---|
+| Stage/evidence/Notion intake | Канон существует | Routing на один queue policy owner | `EXTEND` |
+| Retention/cleanup guard | Только внешний текст, исполнимого guard нет | stdlib tools/prompt_queue.py + tests | `EXTEND` |
+| Queue writes | Existing Notion connector | Exact-item operation и read-back через existing adapter | `INHERITED` |
+| Hooks/runtime Skills/config/profiler | Не обеспечивают queue cleanup | Не изменяются | `INHERITED` |
+
+
 Используй этот шаблон перед добавлением или существенным изменением agent, hook, MCP, Skill, rules или конфигурации.
 
 ## Статусы

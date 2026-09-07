@@ -1,5 +1,8 @@
 # Индекс спецификаций AI Dev Team
 
+- [`features/prompt-queue-lifecycle.spec.md`](features/prompt-queue-lifecycle.spec.md) — retention/cleanup guard, receipts и project inheritance.
+
+
 ## Системная спецификация
 
 - [`system.spec.md`](system.spec.md) — назначение и устойчивые границы общей AI-инфраструктуры.

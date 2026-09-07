@@ -233,6 +233,9 @@ Merge разрешён только после явного ответа: `Да,
 
 ## 11. Notion и идеи
 
+Для явно запущенного queue prompt применяй `~/.codex/rules/prompt-queue-lifecycle.md`
+и read-only guard `~/.codex/tools/prompt_queue.py` до любой cleanup mutation.
+
 Для идей/backlog/requirements из Notion используй connected Notion и `dev-karkas` workflow.
 Сначала найди project mapping и проверь code, AGENTS, SPEC, DESIGN, ROADMAP, AI_PLAN, AI_STATUS,
 STAGES и decisions на duplicate/already implemented. Жизненный цикл:

@@ -228,3 +228,7 @@ tools/test_validate_project_overlay.py
 tools/validate_context.py
 tools/validate_global_codex.py
 tools/validate_project_overlay.py
+rules/prompt-queue-lifecycle.md
+specs/features/prompt-queue-lifecycle.spec.md
+tools/prompt_queue.py
+tools/test_prompt_queue.py

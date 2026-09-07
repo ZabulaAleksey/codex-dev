@@ -1,5 +1,12 @@
 # AI-команда разработки для Codex — набор для нескольких проектов
 
+## Prompt Queue Lifecycle
+
+Канон: `rules/prompt-queue-lifecycle.md`; read-only CLI: `tools/prompt_queue.py`.
+Он проверяет task evidence перед narrow adapter operation; автоматического фонового удаления нет.
+Project наследует правило через global router и добавляет только свои required checks.
+
+
 Актуализировано: 2026-08-27.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.

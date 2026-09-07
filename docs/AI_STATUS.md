@@ -1,5 +1,16 @@
 # Текущее состояние ДЕВ / КАРКАС
 
+## Prompt Queue Lifecycle — текущий delta
+
+Execution: `completed` locally; self-cleanup текущего project queue item `cleaned` / verified. До задачи существовал только внешний текст cleanup policy, а в DEV —
+Stage/evidence/intake contracts без prompt retention guard. Добавлены canonical policy/PQ SPEC,
+read-only guard/receipt verifier и tests; существующие hooks/profiler/runtime config неизменны.
+Global full suite 139 PASS, context 234 files PASS; scoped correctness/security review без code findings.
+Project inheritance/checks validated locally; live exact-item Notion cleanup/read-back PASS, repeat `noop`. Product master status не повышается.
+
+## Предыдущая подтверждённая работа (history)
+
+
 Дата: 2026-08-31
 
 ## Статус

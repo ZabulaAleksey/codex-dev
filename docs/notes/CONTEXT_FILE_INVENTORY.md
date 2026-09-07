@@ -1,5 +1,12 @@
 # Реестр файлов глобального контекста
 
+## Prompt queue extension
+
+- `rules/prompt-queue-lifecycle.md`: единственный policy owner.
+- `specs/features/prompt-queue-lifecycle.spec.md`: PQ acceptance mapping.
+- `tools/prompt_queue.py`, `tools/test_prompt_queue.py`: guard/CLI/receipt verifier и tests.
+
+
 Дата проверки: 2026-08-27.
 
 Точный пофайловый состав Git-контекста задаёт `MANIFEST.txt`. Этот документ объясняет роль каждого класса файлов; любой tracked-файл обязан одновременно присутствовать в manifest и в одной из категорий ниже.

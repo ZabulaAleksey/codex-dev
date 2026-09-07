@@ -1,5 +1,14 @@
 # Проверка глобального ДЕВ
 
+## Prompt Queue Lifecycle
+
+`python -B -m unittest discover -s tools -p "test_prompt_queue.py"` проверяет PQ-01..10,
+CLI на временном Git project, receipt reconciliation и защищённые retention types.
+Full suite: `python -B -m unittest discover -s tools -p "test_*.py"`; manifest gate:
+`python -B tools/validate_context.py`. Real queue mutation/read-back фиксируется в project evidence
+и не подменяется fixtures.
+
+
 Этот документ описывает discoverable verification commands самого global
 framework. Общие правила test contracts остаются в `AGENTS.md`,
 `rules/governance.md` и dev-karkas `references/TESTING_POLICY.md`.
