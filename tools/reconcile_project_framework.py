@@ -18,12 +18,14 @@ FRAMEWORK_FILES = (
     "docs/DECISIONS.md",
     "docs/DESIGN.md",
     "docs/ROADMAP.md",
-    "docs/AI_PLAN.md",
-    "docs/AI_STATUS.md",
+    "prompts/STAGES.md",
     "docs/CONTEXT_COMPATIBILITY.md",
 )
-LEGACY_STATUS_FILES = {
+LEGACY_EXECUTION_FILES = {
+    "ai_plan.md",
+    "ai_status.md",
     "current_status.md",
+    "plan.md",
     "progress.md",
     "project_snapshot.md",
     "project_status.md",
@@ -266,9 +268,12 @@ def reconcile_project(
             continue
         if relative in FRAMEWORK_FILES:
             continue
-        if Path(relative).name.casefold() in LEGACY_STATUS_FILES:
-            entries.append(MatrixEntry(relative, "SUPERSEDED",
-                           "AI_STATUS.md is the canonical current-status source"))
+        if Path(relative).name.casefold() in LEGACY_EXECUTION_FILES:
+            entries.append(MatrixEntry(
+                relative,
+                "MERGE",
+                "merge current facts, blockers and evidence into prompts/STAGES.md before validated removal",
+            ))
         elif any(relative == automation or relative.startswith(f"{automation}/") for automation in AUTOMATION_PATHS) and "conflict" in path.read_text(encoding="utf-8", errors="replace").casefold():
             status = "ADAPT" if relative in resolved else "CONFLICT"
             reason = "conflict has an explicit resolution" if relative in resolved else "project automation explicitly signals an unresolved conflict"

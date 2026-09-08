@@ -15,8 +15,6 @@ agents/reviewer.toml
 agents/security_reviewer.toml
 agents/test_engineer.toml
 config.ai-dev-team.recommended.toml
-docs/AI_PLAN.md
-docs/AI_STATUS.md
 docs/ARCHITECTURE.md
 docs/CONTEXT_COMPATIBILITY.md
 docs/CONTEXT_POLICY.md
@@ -176,6 +174,7 @@ skill-sources/resume-project/SKILL.md
 skill-sources/review-change/SKILL.md
 specs/features/ai-policy-profiling.spec.md
 specs/features/backend-dx-policy.spec.md
+specs/features/canonical-stages-policy.spec.md
 specs/features/codex-home-consolidation.spec.md
 specs/features/dependency-manager-policy.spec.md
 specs/features/full-workspace-governance.spec.md
@@ -185,8 +184,6 @@ specs/features/project-overlay-rollout.spec.md
 specs/README.md
 specs/system.spec.md
 templates/AGENTS_PROJECT_TEMPLATE.md
-templates/AI_PLAN_TEMPLATE.md
-templates/AI_STATUS_TEMPLATE.md
 templates/BACKEND_DX_DELTA_TEMPLATE.md
 templates/DECISIONS_TEMPLATE.md
 templates/DEV_LOG_TEMPLATE.md
@@ -210,6 +207,7 @@ templates/prompt-modes/TIME_TRAVEL.md
 templates/prompt-modes/ZERO_DEPENDENCY.md
 templates/SPEC_TEMPLATE.md
 templates/SPECS_README_TEMPLATE.md
+templates/STAGES_TEMPLATE.md
 tools/ai_policy_profiler.py
 tools/normalize_user_codex.py
 tools/reconcile_project_framework.py
@@ -228,6 +226,7 @@ tools/test_validate_project_overlay.py
 tools/validate_context.py
 tools/validate_global_codex.py
 tools/validate_project_overlay.py
+prompts/STAGES.md
 rules/prompt-queue-lifecycle.md
 specs/features/prompt-queue-lifecycle.spec.md
 tools/prompt_queue.py

@@ -11,7 +11,9 @@ description: Создать или актуализировать проектн
 4. Для brownfield до любых mutations запусти read-only `tools/reconcile_project_framework.py` и зафиксируй compatibility matrix в `docs/CONTEXT_COMPATIBILITY.md`.
 5. Сними baseline тестов до refresh; старые failures зафиксируй отдельно, а новые failures после refresh трактуй как regression.
 6. Если repository уже содержит КАРКАС, выполни inspect → gap analysis; не регенерируй работающие документы.
-7. Отдели стабильные требования от архитектуры, текущего плана и статуса. Используй канонические `specs/system.spec.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md` и `docs/ROADMAP.md`.
+7. Отдели стабильные требования и архитектуру от execution state. Используй канонические
+   `specs/system.spec.md`, `docs/ROADMAP.md` и единственный `prompts/STAGES.md` для selector,
+   current plan, lifecycle/evidence, blockers и NEXT.
 8. Спроектируй минимальную project delta: локальные инварианты, архитектурные границы, решения, контракты, security/testing по риску и `prompts/STAGES.md` для полного staged overlay. Для repository вне полного overlay зафиксируй классификацию и не создавай placeholders.
 9. Перед добавлением agent, hook, MCP, Skill, config или workflow классифицируй его как `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`. Запиши нетривиальный результат в проектный `docs/CONTEXT_COMPATIBILITY.md`.
 10. Настрой в тонком `AGENTS.md` маршрутизацию от типа задачи к минимальному набору SPEC, architecture, decisions, security и tests. Не копируй глобальные правила.
@@ -27,4 +29,5 @@ description: Создать или актуализировать проектн
 - Не создавай приложение, runtime infrastructure или product MCP в рамках bootstrap без прямого запроса.
 - Не создавай локальные generic agents, hooks, Skills, Git workflow или Codex config «на всякий случай».
 - Не выдумывай неизвестное: фиксируй открытые вопросы, owner и момент решения.
-- Не создавай `PROGRESS.md` рядом с `docs/AI_STATUS.md` и не превращай prompt library в источник требований.
+- Не создавай `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md`, `PROGRESS.md` или эквивалентный
+  competing execution-state owner и не превращай stage catalog в источник требований.

@@ -19,7 +19,7 @@
 2. Один агент с правом записи выполняет реализацию по SPEC.
 3. Выполняются тесты, связанные с идентификаторами требований.
 4. Проверяется соответствие SPEC.
-5. Обновляется `docs/AI_STATUS.md`, если это задача дорожной карты.
+5. Обновляется current record/NEXT в `prompts/STAGES.md`, если изменилось execution state.
 
 ## C. Межсервисная функция
 
@@ -53,8 +53,8 @@ Feature flag, benchmark, ADR и план отката добавляй проп�
 ## G. Маршрутизация правил
 
 Перед `STANDARD` или `COMPLEX` задачей определи режим, этап SDLC, домен, стек и соответствующую SPEC. Загружай только относящиеся к задаче файлы из `rules/` согласно `rules/README.md`.
-Для stage-bound задачи stable `Stage ID` активного `docs/AI_PLAN.md` выбирает ровно один heading
-record в `prompts/STAGES.md`. Full overlay сначала проходит read-only
+Для stage-bound задачи stable `Stage ID` в `prompts/STAGES.md` выбирает ровно один heading
+record в этом же файле. Full overlay сначала проходит read-only
 `tools/validate_project_overlay.py`: missing/multiple/invalid selector и missing/ambiguous heading
 являются fail-visible issues. Degraded hook context требует ручной проверки полного record.
 
@@ -79,8 +79,8 @@ profiler.
 `rules/governance.md`. Заблокированный primary gate нельзя закрыть как `DONE`; используй
 `blocked`, `scaffolded`, `implemented_unverified` или `partial`.
 
-Всегда проверь `README.md`, `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`,
-`prompts/STAGES.md` и другие state-bearing документы; обнови изменившиеся факты, а точные
+Всегда проверь `README.md`, `prompts/STAGES.md`, `docs/ROADMAP.md`
+и другие state-bearing документы; обнови изменившиеся факты, а точные
 документы оставь без формального churn. После merge повтори gate по target branch и только
 тогда фиксируй интеграцию как завершённую. Merge и push выполняются только в рамках явного
 разрешения пользователя и Git-правил проекта.
@@ -94,7 +94,7 @@ profiler.
 
 ```text
 Открой проект <project> в ~/codex-workspace. Прочитай глобальный ДЕВ из ~/.codex,
-project AGENTS.md, README.md, docs/AI_PLAN.md, docs/AI_STATUS.md, относящиеся к задаче
+project AGENTS.md, README.md, current selector/record из prompts/STAGES.md, относящиеся к задаче
 SPEC/архитектурные документы и только релевантные записи docs/LEARNING_LOG.md. Проверь
 Git branch/status/diff и определи последний подтверждённый результат, blockers, monitoring class
 и первый незавершённый шаг. Старый чат не используй как source of truth. Сначала дай компактный
@@ -104,8 +104,8 @@ evidence-backed снимок; не начинай новую реализаци�
 ### Выполнить stage
 
 ```text
-Выполни следующий явно выбранный stage из project docs/AI_PLAN.md и единственного
-prompts/STAGES.md. До кода проверь dependency DAG, completed prerequisites, входные
+Выполни следующий явно выбранный stage из единственного project prompts/STAGES.md. До кода
+проверь dependency DAG, completed prerequisites, входные
 предпосылки, runnable vertical slice, concrete end-to-end scenario, PASS criteria/evidence,
 допустимую полностью рабочую temporary implementation и deferred scope. Реализуй и проверь slice
 без зависимости от будущего stage. Mock/stub/interface-only путь не закрывай как completed.
@@ -124,7 +124,7 @@ stage-specific end-to-end evidence. Для product/user-facing stage требу�
 `client → API/CLI → backend`; отсутствие обязательного backend означает `BLOCKED_BY_BACKEND`, а не
 завершение. Для internal/docs/policy stage прими исполнимый structural consumer path. Проверь также
 tests/linters/build/migrations и Git diff. Выполни Completion Documentation
-Synchronization Gate: проверь README.md, AI_PLAN.md, AI_STATUS.md, ROADMAP.md, prompts/STAGES.md и
+Synchronization Gate: проверь README.md, prompts/STAGES.md, ROADMAP.md и
 затронутые canonical docs; изменяй только устаревшие факты. Значимую нетривиальную ошибку оформи
 в LEARNING_LOG.md по формату Problem/Symptom/Root cause/Failed attempts/Fix/Verification/
 Prevention/Links. Отдельно укажи lifecycle и evidence level. Не делай commit, push или merge без
@@ -137,7 +137,7 @@ Prevention/Links. Отдельно укажи lifecycle и evidence level. Не 
 Сравни изменение с утверждённой SPEC, текущими ARCHITECTURE.md/DECISIONS.md, глобальным ДЕВ и
 project compatibility mapping. Определи затронутые boundaries, contracts, migrations, security,
 fallback, rollback и альтернативы. Зафиксируй принятое решение только в каноническом
-architecture/ADR owner, затем синхронизируй зависимые plan/status/schema representations.
+architecture/ADR owner, затем синхронизируй зависимые STAGES/schema representations.
 Не копируй одно решение в несколько независимых sources of truth и не делай внешние записи без
 отдельного разрешения.
 ```
@@ -146,7 +146,7 @@ architecture/ADR owner, затем синхронизируй зависимые
 
 ```text
 Проведи read-only pre-merge review текущей ветки относительно target branch: scope/SPEC,
-тесты, lint/static checks, build, migrations, security, документация, AI_PLAN.md, AI_STATUS.md и
+тесты, lint/static checks, build, migrations, security, документация, prompts/STAGES.md и
 Git diff. Покажи команды, результаты, scope, commit/environment и caveats; отдельно перечисли
 blockers и deferred items. Не называй локальную проверку merged evidence и не выполняй merge,
 push, PR или удаление ветки без отдельного разрешения.
@@ -167,9 +167,9 @@ approval и approved SPEC/decision.
 ### Поставить проект на паузу
 
 ```text
-Подготовь project к паузе. Зафиксируй в AI_STATUS.md только изменившиеся факты: текущую branch,
+Подготовь project к паузе. Зафиксируй в current STAGES record только изменившиеся факты: текущую branch,
 последний подтверждённый результат, незавершённый slice, blockers, выполненные checks, monitoring
-class и точный следующий шаг. Сверь AI_PLAN.md и Git status/diff; важный контекст не оставляй
+class и точный следующий шаг. Сверь selector/NEXT в prompts/STAGES.md и Git status/diff; важный контекст не оставляй
 только в чате. Commit/push выполняй лишь по отдельному разрешению; если его нет, явно укажи, что
 dirty worktree не перенесён на другое устройство.
 ```
@@ -178,8 +178,8 @@ dirty worktree не перенесён на другое устройство.
 
 ```text
 Восстанови project без истории старого чата. Проверь Git root, branch/status/log, затем прочитай
-глобальный ~/.codex/AGENTS.md, project AGENTS.md, README.md, AI_STATUS.md, AI_PLAN.md, выбранную
-SPEC, architecture/decisions, exact STAGES record и релевантные learning entries. Сверь ссылки,
+глобальный ~/.codex/AGENTS.md, project AGENTS.md, README.md, current/exact STAGES record, выбранную
+SPEC, architecture/decisions и релевантные learning entries. Сверь ссылки,
 dependency/toolchain state и external pending sync. Если источник отсутствует или расходится,
 верни DEGRADED/BLOCKED с точным gap; не выбирай следующий stage наугад.
 ```
@@ -188,8 +188,8 @@ dependency/toolchain state и external pending sync. Если источник �
 
 ```text
 Не превращай идею автоматически в глобальное правило, утверждённую SPEC или implementation
-stage. Сначала сопоставь её с существующим кодом, SPEC, DESIGN/ARCHITECTURE, ROADMAP, AI_PLAN,
-AI_STATUS, prompts/STAGES.md и decisions. Классифицируй как IDEA/REFINED/PROMPT_READY,
+stage. Сначала сопоставь её с существующим кодом, SPEC, DESIGN/ARCHITECTURE, ROADMAP,
+prompts/STAGES.md и decisions. Классифицируй как IDEA/REFINED/PROMPT_READY,
 NEEDS_RESEARCH, NEEDS_DECISION, DUPLICATE, ALREADY_IMPLEMENTED или BLOCKED; определи, относится ли
 она к существующему project или требует отдельного Git repository. Подготовь запись для
 назначенного Notion/backlog source, но выполняй внешнюю запись и реализацию только при явном
@@ -201,7 +201,7 @@ NEEDS_RESEARCH, NEEDS_DECISION, DUPLICATE, ALREADY_IMPLEMENTED или BLOCKED; �
 Перед переключением устройства:
 
 1. останови текущую операцию в консистентной точке и проверь `git status`/`git diff`;
-2. выполни применимые checks и обнови `AI_STATUS.md`, только если изменились важные факты;
+2. выполни применимые checks и обнови current STAGES record/NEXT, только если изменились важные факты;
 3. commit/push завершённого или сохранение незавершённого в отдельной ветке выполняй только при
    явном разрешении; без push зафиксируй, что другое устройство не получит dirty worktree;
 4. если менялся глобальный ДЕВ, переноси его отдельным Git lifecycle от product repository;

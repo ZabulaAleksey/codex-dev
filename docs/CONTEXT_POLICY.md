@@ -20,18 +20,17 @@
 3. Затрагиваемые требования и критерии приёмки из SPEC.
 4. Только выбранный stage record из `prompts/STAGES.md`, если задача относится к stage.
 5. Релевантные разделы `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md` и `SECURITY.md`.
-6. Текущий `AI_PLAN`, целевой код, тесты и diff.
-7. Компактный снимок `AI_STATUS`.
+6. Целевой код, тесты и diff; current plan/status уже входят в selected STAGES record.
 
 Не загружай по умолчанию все stages целиком, полные исторические roadmap, все fixtures/references,
 старые generated reports и общие правила, уже унаследованные проектом.
 
-Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `docs/AI_PLAN.md`;
-тот же ID должен быть отдельным token ровно одного Markdown heading в `prompts/STAGES.md`.
-SessionStart/SubagentStart hook проецирует bounded запись первой. Без selector catalog не читается;
+Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `prompts/STAGES.md`;
+тот же ID должен быть отдельным token ровно одного Markdown heading в этом же файле.
+SessionStart/SubagentStart hook проецирует bounded запись первой. Без valid selector запись не проецируется;
 invalid/ambiguous/oversized явный selector либо отсутствующий выбранный heading даёт видимый
 `DEGRADED` context. В этом случае открой полный record вручную и не используй completion claim до
-проверки. Отсутствие selector сохраняет compact snapshot для незаполненного template, но full
+проверки. Отсутствие selector даёт visible `DEGRADED`, а full
 overlay validator классифицирует его как `missing-stage-id`.
 
 Для full project overlay read-only `tools/validate_project_overlay.py` является preflight gate:
@@ -45,8 +44,8 @@ overlay validator классифицирует его как `missing-stage-id`.
 1. Git root, current branch/status/diff/log и подтверждённый target/upstream;
 2. global `~/.codex/AGENTS.md` и только применимые global rules/Skills;
 3. project `AGENTS.md` / ближайший `AGENTS.override.md`;
-4. `README.md`, компактный `AI_STATUS.md`, затем текущий `AI_PLAN.md`;
-5. затронутая SPEC, canonical architecture/decisions и один exact `prompts/STAGES.md` record;
+4. `README.md`, затронутая SPEC, canonical architecture/decisions и один exact
+   current `prompts/STAGES.md` record;
 6. target code/tests/manifests и только релевантные `LEARNING_LOG.md` entries;
 7. явно назначенные external mappings и их `synced | pending sync | blocked` state.
 
@@ -61,7 +60,7 @@ missing selector, dirty state без provenance или противоречие 
 
 - доменные и проектные правила;
 - SPEC, архитектуру, дизайн и решения;
-- текущие `AI_PLAN`, `AI_STATUS` и `ROADMAP`;
+- current selector/state в `prompts/STAGES.md` и долгосрочный `ROADMAP`;
 - проектные agents, Skills, hooks и MCP только при подтверждённом пробеле общей конфигурации.
 
 Не создавай второй глобальный config Codex, второй Git workflow, дубли универсальных агентов или MCP «на всякий случай».
@@ -70,10 +69,10 @@ missing selector, dirty state без provenance или противоречие 
 
 - Уровни сложности: `SIMPLE`, `STANDARD`, `COMPLEX`; строгий режим для `COMPLEX` задаёт `rules/modes/strict.md`.
 - Стабильные требования: `specs/system.spec.md` и `specs/features/<feature>.spec.md`.
-- Текущий исполняемый срез: `docs/AI_PLAN.md`.
-- Текущее фактическое состояние: `docs/AI_STATUS.md`; отдельный `PROGRESS.md` не нужен.
+- Текущий исполняемый срез и фактическое состояние: `prompts/STAGES.md`; отдельные
+  `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md` и `PROGRESS.md` не нужны.
 - Долгосрочный порядок развития: `docs/ROADMAP.md`.
-- Учебный журнал и подробная хронология создаются только при реальной пользе и не подменяют `AI_STATUS`.
+- Учебный журнал и подробная хронология создаются только при реальной пользе и не подменяют STAGES state.
 
 ## Совместимость расширений
 

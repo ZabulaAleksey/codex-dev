@@ -34,18 +34,19 @@ Project `AGENTS.md` должен отвечать на вопросы:
 - что агенту запрещено делать;
 - как определить завершённость задачи.
 
-## 3. Planning and status
+## 3. Stages, planning and status
 
 Полный staged overlay использует:
 
-- `prompts/STAGES.md` — единственный detailed stage source;
+- `prompts/STAGES.md` — единственный detailed stage и execution-state source: current selector,
+  plan, lifecycle/evidence, blockers и NEXT;
 - `docs/ROADMAP.md` — порядок развития;
-- `docs/AI_PLAN.md` — что делать дальше в текущем slice;
-- `docs/AI_STATUS.md` — что подтверждённо сделано сейчас.
 
-`SPEC` не равен `AI_PLAN`.
+`SPEC` не равен текущему stage plan.
 
-Не вводи третий статусный файл без необходимости. Если исторически существует PROGRESS, сначала реши, можно ли его роль безопасно объединить с существующим каноном без потери данных.
+Не создавай отдельные AI plan/status files. Если они исторически существуют, сначала семантически
+объедини актуальные facts/blockers/evidence в `prompts/STAGES.md`, проверь links/validator и только
+после этого удаляй legacy files.
 
 Следуй `STATUS_WORKFLOW.md`.
 

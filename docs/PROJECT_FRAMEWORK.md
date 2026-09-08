@@ -30,12 +30,11 @@ Implementation → tests → state update
 
 - `specs/system.spec.md` и при необходимости `specs/features/*` — стабильные требования и критерии приёмки;
 - `AGENTS.md` — тонкий project overlay с локальными инвариантами и маршрутизацией контекста;
-- `prompts/STAGES.md` — единственный подробный источник самостоятельных stages;
+- `prompts/STAGES.md` — единственный подробный источник stages и execution state: selector,
+  current plan, lifecycle/evidence, blockers и NEXT;
 - `docs/ARCHITECTURE.md` — границы, зависимости, интерфейсы и потоки данных;
 - `docs/DECISIONS.md` — существенные решения и их последствия;
 - `docs/ROADMAP.md` — долгосрочная последовательность этапов;
-- `docs/AI_PLAN.md` — один текущий ограниченный исполняемый срез;
-- `docs/AI_STATUS.md` — один актуальный снимок состояния;
 - `docs/LEARNING_LOG.md` — повторно полезные инженерные выводы без копирования Git history;
 - `docs/project-context.md` — устойчивые project facts и применимая Backend DX delta.
 
@@ -44,8 +43,8 @@ test strategy, integration contracts и другие предметные док
 когда подробная хронология действительно полезна; отсутствие UI не является причиной для
 пустого `DESIGN.md`.
 
-`prompts/STAGES.md` не заменяет SPEC, ROADMAP или текущий `AI_PLAN`: SPEC определяет стабильные
-требования, STAGES — подробные stage contracts, ROADMAP — порядок, AI_PLAN — активный slice.
+`prompts/STAGES.md` не заменяет SPEC или ROADMAP: SPEC определяет стабильные требования,
+STAGES — detailed/current execution contract, ROADMAP — долгосрочный порядок.
 
 ### Backend DX profile
 
@@ -66,7 +65,7 @@ OpenAPI, queue или tracing.
 
 ### Каталог дополнительных Markdown-файлов
 
-До создания нового документа определи его роль. Если содержание относится к существующим SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `AI_PLAN.md`, `AI_STATUS.md`, `ROADMAP.md` или другому каноническому контракту, обнови этот источник вместо создания параллельного файла.
+До создания нового документа определи его роль. Если содержание относится к существующим SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `prompts/STAGES.md`, `ROADMAP.md` или другому каноническому контракту, обнови этот источник вместо создания параллельного файла.
 
 На верхнем уровне `docs/` остаются только обязательные и условные канонические документы КАРКАСА. Новый долговечный материал без канонической роли — исследовательская заметка, разбор, handoff, audit note или вспомогательное объяснение — размещается в `docs/notes/<topic>.md`. Одноразовый временный материал не входит в repository.
 
@@ -79,8 +78,7 @@ SPEC                 что система обязана делать
 DECISIONS            почему принято существенное решение
 ARCHITECTURE/API     как соблюдаются границы и контракты
 ROADMAP              в каком порядке развивается проект
-current AI_PLAN      что выполняется сейчас
-AI_STATUS            что фактически завершено и что дальше
+STAGES               что выполняется сейчас, что подтверждено, blockers и NEXT
 implementation/tests фактическое состояние и доказательства
 ```
 
@@ -91,7 +89,7 @@ implementation/tests фактическое состояние и доказат
 Полный канонический контракт находится в `rules/governance.md`. Каждый stage до реализации
 фиксирует DAG только из завершённых prerequisites, входные предпосылки, runnable vertical slice,
 конкретный end-to-end сценарий, PASS-критерии/evidence, допустимую полностью рабочую временную
-реализацию и deferred scope. `PROMPT_TEMPLATE.md` и `AI_PLAN_TEMPLATE.md` являются операционными
+реализацию и deferred scope. `PROMPT_TEMPLATE.md` и `STAGES_TEMPLATE.md` являются операционными
 проекциями этого контракта, а не отдельными владельцами требований.
 
 Future stage может расширить или заменить работающий slice, но не может впервые сделать
@@ -147,19 +145,18 @@ nearest instructions
 + affected SPEC requirements
 + selected record from prompts/STAGES.md when stage-bound
 + relevant architecture/decisions/security
-+ current AI_PLAN
 + target files/tests/diff
-+ compact AI_STATUS
++ current/selected STAGES record
 ```
 
 Не загружай автоматически все stages, roadmap, fixtures, logs и общую библиотеку. Для stage-bound
-задачи укажи stable `Stage ID` в `docs/AI_PLAN.md` и загружай только exact unique heading record из
-`prompts/STAGES.md`. Degraded-warning selector требует ручного чтения полного record и запрещает
+задачи укажи stable `Stage ID` в `prompts/STAGES.md` и загружай только exact unique heading record
+из этого же файла. Degraded-warning selector требует ручного чтения полного record и запрещает
 completion claim до проверки. Остальная маршрутизация должна быть
 предметной: например изменение публичного API подтягивает API-контракт, compatibility decision и
 contract tests, а изменение хранения — data model, security/retention rules и migration plan.
 
-После этапа всегда проверяй `README.md`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`, `prompts/STAGES.md` и
+После этапа всегда проверяй `README.md`, `prompts/STAGES.md`, `ROADMAP` и
 другие state-bearing документы по Completion Documentation Synchronization Gate из
 `rules/governance.md`. Обновляй только документы, чья фактическая информация изменилась;
 для остальных достаточно подтверждения `checked, still accurate` без timestamp-only churn.
@@ -213,7 +210,7 @@ Project `SPEC` и `DESIGN.md` не копируют глобальный ста�
 
 ## Язык проектного контекста
 
-По умолчанию человекочитаемый проектный контекст создаётся и поддерживается на русском языке. Это относится к `AGENTS.md`, SPEC, архитектуре, решениям, безопасности, тестовой стратегии, `AI_PLAN`, `AI_STATUS`, roadmap, stage prompts и инструкциям проектных agents/Skills.
+По умолчанию человекочитаемый проектный контекст создаётся и поддерживается на русском языке. Это относится к `AGENTS.md`, SPEC, архитектуре, решениям, безопасности, тестовой стратегии, roadmap, `prompts/STAGES.md` и инструкциям проектных agents/Skills.
 
 Не переводятся программные идентификаторы, публичные API и wire-контракты, команды, пути, имена файлов, названия технологий и машинные ключи конфигурации. Другой основной язык допустим по прямому указанию пользователя либо когда его требует внешний стандарт, аудитория или контракт проекта.
 
@@ -225,7 +222,7 @@ Project `SPEC` и `DESIGN.md` не копируют глобальный ста�
 - архитектурные границы и существенные решения явны;
 - этапы архитектурно завершены: каждый имеет completed prerequisites, runnable vertical slice,
   end-to-end PASS evidence и не зависит от будущего stage для основного пути;
-- один `AI_STATUS` описывает фактическое состояние, а один `AI_PLAN` — текущую работу;
+- один `prompts/STAGES.md` описывает текущую работу, lifecycle/evidence, blockers и NEXT;
 - security и testing соответствуют рискам проекта;
 - context routing использует минимально достаточный набор источников;
 - нет необоснованных локальных копий глобальной AI Dev Team;

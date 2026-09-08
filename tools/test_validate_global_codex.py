@@ -225,8 +225,11 @@ class HookRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             (repo / ".git").mkdir()
-            (repo / "docs").mkdir()
-            (repo / "docs/AI_STATUS.md").write_text("Статус → готово\n", encoding="utf-8")
+            (repo / "prompts").mkdir()
+            (repo / "prompts/STAGES.md").write_text(
+                "- Stage ID: `STAGE-001`\n\n## STAGE-001\n\nСтатус → готово\n",
+                encoding="utf-8",
+            )
             result = self.run_session_hook(repo)
             output = json.loads(result.stdout.decode("utf-8"))
             self.assertIn("Статус → готово", output["hookSpecificOutput"]["additionalContext"])
@@ -237,11 +240,11 @@ class HookRegressionTests(unittest.TestCase):
             repo = base / "repo"
             repo.mkdir()
             (repo / ".git").mkdir()
-            (repo / "docs").mkdir()
+            (repo / "prompts").mkdir()
             outside = base / "outside.txt"
             outside.write_text("DO-NOT-EXPOSE", encoding="utf-8")
             try:
-                (repo / "docs/AI_STATUS.md").symlink_to(outside)
+                (repo / "prompts/STAGES.md").symlink_to(outside)
             except OSError as exc:
                 self.skipTest(f"symlink creation is unavailable: {exc}")
             result = self.run_session_hook(repo)
@@ -251,8 +254,8 @@ class HookRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             (repo / ".git").mkdir()
-            (repo / "docs").mkdir()
-            (repo / "docs/AI_STATUS.md").write_text("x" * 1_000_000, encoding="utf-8")
+            (repo / "prompts").mkdir()
+            (repo / "prompts/STAGES.md").write_text("x" * 1_000_000, encoding="utf-8")
             result = self.run_session_hook(repo)
             self.assertLess(len(result.stdout), 12_000)
 

@@ -44,8 +44,8 @@ end-to-end PASS evidence, fully working temporary implementation и deferred sco
 не может впервые сделать предыдущий stage исполнимым или проверяемым; mock-only результат остаётся
 `scaffolded`.
 
-При завершении задачи или этапа Skill всегда проверяет `README`, `AI_PLAN`,
-`AI_STATUS`, `ROADMAP`, `prompts/STAGES.md` и другие state-bearing документы по
+При завершении задачи или этапа Skill всегда проверяет `README`, `prompts/STAGES.md`,
+`ROADMAP` и другие state-bearing документы по
 `references/STATUS_WORKFLOW.md`. Изменившиеся факты обновляются; точные документы
 остаются без timestamp-only churn. После merge gate повторяется по target branch.
 

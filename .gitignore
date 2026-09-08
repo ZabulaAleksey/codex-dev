@@ -15,6 +15,7 @@
 !/agents/
 !/docs/
 !/hooks/
+!/prompts/
 !/presets/
 !/rules/
 !/schemas/

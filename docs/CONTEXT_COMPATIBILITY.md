@@ -1,5 +1,21 @@
 # Аудит совместимости контекста
 
+## Canonical STAGES delta — 2026-09-08
+
+| Возможность | До изменения | Delta | Статус |
+|---|---|---|---|
+| Execution-state owner | `prompts/STAGES.md` + отдельные AI plan/status | один STAGES selector/plan/lifecycle/evidence/blocker/NEXT | `CONFLICT` → `EXTEND` |
+| Session context | selector читался из отдельного plan | selector и exact record читаются из одного bounded STAGES | `EXTEND` |
+| Greenfield bootstrap | два AI templates плюс STAGES | один `STAGES_TEMPLATE.md` | `SUPERSEDED` → `EXTEND` |
+| Brownfield migration | legacy status names только отклонялись | read-only `MERGE` classification, semantic/link audit до удаления | `EXTEND` |
+| Product repositories | независимые Git roots | mass rollout не выполняется; каждый project мигрируется отдельно | `INHERITED` |
+| Runtime config/data | вне versioned source | не изменяются | `INHERITED` |
+
+Detailed contract: `specs/features/canonical-stages-policy.spec.md`; decision:
+`docs/DECISIONS.md`; executable owners: `hooks/stage_selector.py`,
+`hooks/session_context.py`, `tools/validate_project_overlay.py` и
+`tools/reconcile_project_framework.py`.
+
 ## Prompt queue delta — 2026-09-07
 
 | Возможность | До изменения | Delta | Статус |
@@ -24,7 +40,7 @@
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический источник |
 |---|---|---|---|---|
-| Stage/status/evidence | governance, AI_PLAN/AI_STATUS и Completion Gate уже каноничны | связать outcomes с policy/experiment без второго status | `INHERITED` → `EXTEND` | optional fields/routes в existing owners |
+| Stage/status/evidence | governance и Completion Gate уже каноничны | связать outcomes с policy/experiment без второго status | `INHERITED` → `EXTEND` | optional fields/routes в STAGES owner |
 | Runtime telemetry | host SQLite/JSONL рядом с `~/.codex` не является versioned API и содержит private runtime state | project-local bounded opt-in events | `CONFLICT` → `PROJECT_ONLY` | ignored `<project>/.metrics/*.jsonl`; не читать host runtime DB/logs |
 | Schema/reporting | versioned telemetry schema и aggregator отсутствуют | portable envelope + JSON/Markdown dashboard | `EXTEND` | `schemas/ai-policy-profiling.schema.json` + `tools/ai_policy_profiler.py` |
 | Hooks/agents/MCP | existing capabilities не дают стабильный documented usage event contract | не создавать обязательный overhead до evidence | `INHERITED` | без нового hook/agent/MCP; explicit instrumented CLI |
@@ -92,8 +108,8 @@ brownfield projects. Project-specific реализации остаются ис
 | Возможность | Что уже есть | Потребность | Статус | Канонический источник |
 |---|---|---|---|---|
 | Stage lifecycle/evidence | Stage contract, completion gate и разрозненные fields в Skills/templates | запрет forward dependency, обязательный runnable slice/E2E/PASS evidence и scaffold-safe statuses | `EXTEND` | `specs/system.spec.md` → `rules/governance.md` |
-| Planning/bootstrap/execution | `dev-karkas`, `plan-stage`, `implement-stage`, bootstrap и AI templates | собрать обязательные fields без копирования policy | `EXTEND` | короткие routes к governance + operational projections |
-| Task-aware context routing | SPEC и AI_PLAN загружались, detailed stage source мог остаться вне активного context | доставлять контракт без загрузки всего catalog | `CONFLICT` → `EXTEND` | stable `Stage ID` в AI_PLAN → exact unique heading selector существующего SessionStart/SubagentStart hook |
+| Planning/bootstrap/execution | `dev-karkas`, `plan-stage`, `implement-stage`, bootstrap и STAGES template | собрать обязательные fields без копирования policy | `EXTEND` | короткие routes к governance + operational projections |
+| Task-aware context routing | SPEC и отдельный plan загружались, detailed stage source мог остаться вне активного context | доставлять контракт без загрузки всего catalog | `CONFLICT` → `EXTEND` | stable `Stage ID` в STAGES → exact unique heading selector существующего SessionStart/SubagentStart hook |
 | Tests vs requirements | `TESTING_POLICY.md` называл tests источником требований, SDD — evidence | один source of requirements | `CONFLICT` → `INHERITED` | SPEC/ADR задают требования; accepted tests — executable contract/evidence |
 | Project-file baseline | governance требовал полный overlay, references описывали часть baseline как optional | единый applicability threshold | `CONFLICT` → `INHERITED` | governance обязателен для active full staged product overlay; прочие repositories явно классифицируются |
 | Architecture/ADR paths | references допускали альтернативные каноны без mapping rule | один source of truth в brownfield | `CONFLICT` → `EXTEND` | `docs/ARCHITECTURE.md` / `docs/DECISIONS.md`; legacy только через compatibility mapping и semantic/link audit |
@@ -187,7 +203,7 @@ presets остаются неактивным `BLOCKED` quarantine и не по�
 | Терминология КАРКАСА | Project overlay и context policy без общего определения команды | одинаковое значение для всех `projects/*` | `EXTEND` | канонический `docs/PROJECT_FRAMEWORK.md` |
 | Context routing | корневой и глобальный `AGENTS.md` | распознавать команды «создай КАРКАС» / «автоматизация контекста» | `EXTEND` | короткие routers; полный текст не копируется |
 | Bootstrap workflow | generic planning/implementation Skills | повторяемый inspect → gap → minimal delta процесс | `EXTEND` | общий `bootstrap-project-framework` Skill |
-| SessionStart hook | компактный активный context hook | task-aware выбор одного stage record | `EXTEND` | stable AI_PLAN `Stage ID`; exact unique heading; не загружать всю библиотеку docs/prompts |
+| SessionStart hook | компактный активный context hook | task-aware выбор одного stage record | `EXTEND` | stable STAGES `Stage ID`; exact unique heading; не загружать всю библиотеку docs/prompts |
 | Project overlays | локальные overlays | распространить определение | `INHERITED` | не копировать документ/Skill в каждый repository |
 | OCR-примеры исходного brief | только Text Recognition Core | общая терминология | `CONFLICT` | оставить в TRC; глобальный документ domain-neutral |
 | Язык проектного контекста | единого правила не было, часть agents и документов была на английском | единый читаемый язык новых КАРКАСОВ | `EXTEND` | русский по умолчанию в `AGENTS.md`, `PROJECT_FRAMEWORK.md` и bootstrap Skill; программные идентификаторы и внешние контракты не переводятся |

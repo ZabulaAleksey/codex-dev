@@ -85,8 +85,9 @@ class GlobalFrameworkHardeningTests(unittest.TestCase):
     def test_greenfield_router_template_uses_bootstrap_without_local_automation(self) -> None:
         template = read("templates/AGENTS_PROJECT_TEMPLATE.md")
         self.assertIn("bootstrap-project-framework", template)
-        self.assertIn("docs/AI_PLAN.md", template)
-        self.assertIn("docs/AI_STATUS.md", template)
+        self.assertIn("prompts/STAGES.md", template)
+        self.assertNotIn("docs/AI_PLAN.md", template)
+        self.assertNotIn("docs/AI_STATUS.md", template)
         self.assertNotIn(".codex/agents", template)
         self.assertNotIn(".agents/skills", template)
 

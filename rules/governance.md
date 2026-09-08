@@ -26,11 +26,9 @@ Queue receipt дополняет существующее task evidence и не 
 | Product implementation и фактическое поведение | `<project>` Git repository, текущий worktree/branch, production code и migrations | build/release artifacts, GitHub views |
 | Требования и acceptance contract | утверждённые `specs/system.spec.md` / `specs/features/*` и согласованные ADR | stage prompts, plans, issues, human summaries |
 | Архитектурные границы и решения | `docs/ARCHITECTURE.md` и `docs/DECISIONS.md` | Eraser/другие диаграммы после подтверждённого изменения |
-| Подробный stage contract | `prompts/STAGES.md` | selected record в session context, `ROADMAP` index |
-| Текущий исполнимый slice | `docs/AI_PLAN.md` | handoff/чат текущей сессии |
-| Подтверждённое состояние, blockers и следующий факт | `docs/AI_STATUS.md` | Notion/project overview, handoff |
+| Stage contracts, текущий selector/plan, lifecycle/evidence, blockers и NEXT | `prompts/STAGES.md` | selected record в session context, `ROADMAP` index, handoff |
 | Назначение, setup, запуск и публичный developer workflow | `README.md` | внешняя onboarding-страница |
-| Повторно полезная диагностика | `docs/LEARNING_LOG.md` | краткая ссылка/итог в `AI_STATUS.md` |
+| Повторно полезная диагностика | `docs/LEARNING_LOG.md` | краткая ссылка/итог в соответствующем STAGES record |
 | Сырая идея до approval | назначенный Notion/backlog source | `PROMPT_READY` draft; после approval контракт переносится в repository |
 | Операционный реестр | Airtable или другой сервис только при явном project mapping | repository-ссылка/schema; не product requirement |
 | UI contract | project `docs/DESIGN.md`, код и явный mapping design artifact | Figma после подтверждённого изменения; Figma не доказывает implementation |
@@ -59,8 +57,6 @@ Queue receipt дополняет существующее task evidence и не 
 
 - `AGENTS.md`;
 - `prompts/STAGES.md`;
-- `docs/AI_PLAN.md`;
-- `docs/AI_STATUS.md`;
 - `docs/ROADMAP.md`;
 - `docs/ARCHITECTURE.md`;
 - `docs/DECISIONS.md`;
@@ -86,18 +82,39 @@ Queue receipt дополняет существующее task evidence и не 
 - Произвольные новые `.md` в корне repository и непосредственно в `docs/` запрещены. Временный scratch/audit output не коммитится.
 - Политика действует на новые файлы; legacy layout меняется только после semantic content audit, проверки ссылок и сохранения уникального содержания.
 
-- `AI_PLAN` описывает текущий/следующий исполнимый срез.
-- `AI_STATUS` содержит только подтверждённые факты и evidence.
+- `prompts/STAGES.md` одновременно описывает current/next slice и подтверждённые lifecycle/evidence;
+  отдельные plan/status owners запрещены после migration.
 - `ROADMAP` — короткий индекс этапов, не копия prompts.
 - `DECISIONS` хранит permanent decisions/ADR; `LEARNING_LOG` — диагностику, root cause, fix и regression prevention.
 - Для одной роли существует один canonical документ; legacy объединяется только после проверки уникального содержания и ссылок.
 
+### Brownfield migration к canonical STAGES
+
+1. Запусти read-only reconciliation и собери существующие `STAGES.md`, plan/status/progress/snapshot
+   files и все ссылки на них; до разрешения `CONFLICT` mutation запрещена.
+2. Семантически объедини в `prompts/STAGES.md` актуальные stages, selector, current/next work,
+   lifecycle/evidence, blockers, acceptance/DoD и `NEXT`. При расхождении приоритет имеют
+   проверяемое evidence и более свежий подтверждённый факт; неоднозначность остаётся blocker.
+3. Обнови router, Skills, hooks, prompts, templates, scripts и documentation, которые читали или
+   создавали legacy source. Исторический журнал не превращай в current state.
+4. Запусти project validator, relevant tests, reference scan и semantic content audit. Legacy file
+   удаляется только после подтверждения отсутствия unique current content и stale links.
+5. Reconciliation/validator лишь классифицируют `MERGE`/conflict и fail visibly; они не удаляют и
+   не перезаписывают project-owned files автоматически.
+
 ## Stage contract
 
-`prompts/STAGES.md` — единственный detailed stage source полного project overlay. Stable stage
-включает status, goal, context, scope, out-of-scope, invariants, tasks, contracts,
+`prompts/STAGES.md` — единственный detailed stage и execution-state source полного project overlay.
+Файл содержит ordered execution sequence и ровно один current selector `- Stage ID: <stable-id>`, а stable stage
+включает status/evidence, goal, context, scope, out-of-scope, invariants, tasks, contracts,
 documentation/security/performance/fallback/migration impact, DoD и handoff, а также
 обязательный контракт архитектурной завершённости ниже.
+
+Компактный `Status` использует vocabulary `planned | implemented | verified | partial | blocked |
+unavailable` и является projection двух точных осей: `implemented` = production implementation
+без terminal verification, `verified` = `completed` с требуемым evidence, `unavailable` =
+`blocked` из-за недоступной prerequisite/capability. Lifecycle и evidence level всегда остаются
+явными; компактный status не может повысить completion claim.
 
 ### Архитектурно завершённый этап
 
@@ -170,8 +187,7 @@ tuning decision.
 Обязательный минимум проверки:
 
 - `README.md`;
-- `docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`;
-- `prompts/STAGES.md`; во время согласованной brownfield migration также mapped legacy tracker;
+- `prompts/STAGES.md`, `docs/ROADMAP.md`; во время согласованной brownfield migration также mapped legacy tracker;
 - `docs/TRACEABILITY.md`, `CHANGELOG.md` и `docs/DEV_LOG.md`, если проект их использует;
 - затронутые SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`,
   `TESTING.md`, `API.md`, `DATA_MODEL.md`, `DEPENDENCIES.md` и `FALLBACKS.md`.
@@ -197,13 +213,12 @@ feature branch не доказывает, что merge-level status и след�
 
 | Событие | Обязательное действие |
 |---|---|
-| Изменился detailed stage contract, его DAG, scope или PASS criteria | обновить единственный `prompts/STAGES.md`; `ROADMAP` и `AI_PLAN` менять только если изменились порядок или активный slice |
-| Изменился состав, порядок, dependencies или содержание текущей работы | обновить `docs/AI_PLAN.md` и ссылку на canonical stage record |
-| Выполнена работа, изменился progress, появился blocker или следующий шаг | обновить `docs/AI_STATUS.md`; `AI_PLAN` — если изменилась следующая работа |
+| Изменился detailed stage contract, его DAG, scope, PASS criteria, активный slice или порядок текущей работы | обновить единственный `prompts/STAGES.md`; `ROADMAP` менять только при изменении долгосрочного порядка |
+| Выполнена работа, изменился progress/evidence, появился blocker или следующий шаг | обновить lifecycle/evidence/blocker/NEXT соответствующего record и current selector в `prompts/STAGES.md` |
 | Изменились назначение, setup, запуск, публичный интерфейс или user/developer workflow | обновить `README.md` |
-| Принято архитектурное решение | обновить `ARCHITECTURE.md` и/или `DECISIONS.md`; plan/status — только по затронутым фактам |
-| Возникла значимая нетривиальная ошибка с повторно полезным выводом | добавить evidence-backed запись в `LEARNING_LOG.md`; в status оставить краткий blocker и ссылку, если он активен |
-| Ошибка исправлена и проверена | дополнить ту же learning entry полями `Verification` и `Prevention`; закрыть blocker в status |
+| Принято архитектурное решение | обновить `ARCHITECTURE.md` и/или `DECISIONS.md`; STAGES — только по затронутым execution facts |
+| Возникла значимая нетривиальная ошибка с повторно полезным выводом | добавить evidence-backed запись в `LEARNING_LOG.md`; в STAGES оставить краткий blocker и ссылку, если он активен |
+| Ошибка исправлена и проверена | дополнить ту же learning entry полями `Verification` и `Prevention`; закрыть blocker в STAGES |
 | Выполнен разрешённый merge | повторить documentation gate по target branch; не создавать формальную правку без изменения фактов |
 | Изменился общий межпроектный стандарт | обновить его единственного global owner, связанные validators/tests и только затем projections; не копировать policy в проекты |
 
@@ -286,7 +301,7 @@ read-back; без него синхронизация остаётся непр�
 ## Переключение устройств и восстановление
 
 Перед сменой компьютера безопасно останови работу, проверь Git status/diff, выполни применимые
-checks и обнови `AI_STATUS` только если иначе потеряется существенное состояние. Commit и push
+checks и обнови current record/NEXT в `prompts/STAGES.md` только если иначе потеряется существенное состояние. Commit и push
 выполняются лишь при явном разрешении и по Git policy; без них незакоммиченный worktree не считается
 перенесённым на другое устройство, а handoff получает явный blocker.
 

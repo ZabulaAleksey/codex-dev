@@ -50,7 +50,7 @@ codex --ask-for-approval never "Кратко изложи активные ин�
 после просмотра versioned files. Для `STANDARD`/`COMPLEX` функции прочитай затронутую SPEC.
 
 Full staged overlay обязан иметь ровно один stable selector `- Stage ID: <id>` в
-`docs/AI_PLAN.md` и ровно один unfenced heading с этим ID как отдельным token в
-`prompts/STAGES.md`. Сначала запусти `validate_project_overlay.py`, затем загружай только exact
+`prompts/STAGES.md` и ровно один unfenced heading с этим ID как отдельным token в том же файле.
+Сначала запусти `validate_project_overlay.py`, затем загружай только exact
 selected record. `DEGRADED` warning hook требует ручного чтения полного record и запрещает
 completion claim до проверки.

@@ -134,7 +134,7 @@ Backend DX checks только к явной delta. High-confidence security che
   missing fields, unsafe reset, high-confidence secret и missing drift command.
 - AC-007 Existing unit/context/global validators не ослаблены; новые failures
   отделены от pre-existing runtime issues.
-- AC-008 Architecture, decisions, testing, commands, plan/status, manifest и
+- AC-008 Architecture, decisions, testing, commands, STAGES execution state, manifest и
   learning evidence синхронизированы с фактическими результатами.
 - AC-009 Product repositories, hooks, dependencies и production systems не изменены.
 - AC-010 `git diff --check` и итоговый review не находят blocking defects.

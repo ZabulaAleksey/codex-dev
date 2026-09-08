@@ -76,7 +76,7 @@ Project-specific инструкции, архитектура, Skills и agents 
 ## Синхронизация завершения
 
 Перед завершением задачи или этапа всегда проверяются существующие `README.md`,
-`docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, stage tracker и другие
+`prompts/STAGES.md`, `docs/ROADMAP.md` и другие
 документы, которые отражают выполненные шаги или текущее состояние. Изменившиеся факты
 обновляются, а точные документы остаются без timestamp-only churn. После merge эта
 проверка повторяется по target branch до фиксации merge-level status.
@@ -193,7 +193,7 @@ codex mcp list
 Для большого этапа:
 
 ```text
-Реализуй следующий этап из docs/ROADMAP.md. До кода проверь Stage contract: completed prerequisites, DAG, runnable vertical slice, concrete E2E, PASS/evidence, temporary implementation и deferred scope. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Не закрывай mock-only или зависящий от будущего stage путь. Перед DONE проверь README, AI_PLAN, AI_STATUS, ROADMAP, prompts/STAGES.md и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
+Реализуй current selector/record из prompts/STAGES.md. До кода проверь Stage contract: completed prerequisites, DAG, runnable vertical slice, concrete E2E, PASS/evidence, temporary implementation и deferred scope. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Не закрывай mock-only или зависящий от будущего stage путь. Перед DONE проверь README, prompts/STAGES.md, ROADMAP и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
 ```
 
 Или явно вызови skill:

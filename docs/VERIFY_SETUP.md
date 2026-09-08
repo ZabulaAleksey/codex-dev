@@ -59,7 +59,7 @@ codex execpolicy check --pretty --rules "$HOME\.codex\rules\ai-dev-team.rules" -
 '{"cwd":"~/codex-workspace/<project>","hook_event_name":"SessionStart","source":"startup"}' | py -3 "$HOME\.codex\hooks\session_context.py"
 ```
 
-Для репозитория с `docs/AI_STATUS.md` ожидается JSON, содержащий `additionalContext`.
+Для репозитория с canonical `prompts/STAGES.md` ожидается JSON, содержащий `additionalContext`.
 До hook запусти `validate_project_overlay.py`: full overlay обязан иметь ровно один валидный
 unfenced selector и ровно один unfenced heading с ID как отдельным token. Если selector отсутствует,
 validator возвращает `missing-stage-id`; multiple/invalid selector и missing/ambiguous heading
@@ -84,4 +84,4 @@ py -3 "$HOME\.codex\tools\validate_project_overlay.py" ~\codex-workspace\<projec
 ```
 
 Затем используй copy-ready запрос «Возобновить проект» из `docs/WORKFLOW.md`. Broken links,
-dirty work без provenance или stale plan/status дают `DEGRADED`/`BLOCKED`, а не ложный PASS.
+dirty work без provenance или stale STAGES execution state дают `DEGRADED`/`BLOCKED`, а не ложный PASS.

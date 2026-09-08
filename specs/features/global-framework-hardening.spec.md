@@ -16,8 +16,7 @@ install/validation path на Windows и Unix-like системах.
 - read-only Stage selector validation в `tools/validate_project_overlay.py`;
 - Windows и Unix-like install wrappers вокруг существующих Python tools;
 - относящиеся к изменению tests, onboarding, architecture/state и manifest;
-- минимальная project-agnostic заготовка project `AGENTS.md`, дополняющая существующие
-  `AI_PLAN` / `AI_STATUS` templates и bootstrap Skill;
+- минимальная project-agnostic заготовка project `AGENTS.md`, `STAGES` template и bootstrap Skill;
 - небольшой CI gate только для read-only context validation, unit suite и shell syntax.
 
 ## Non-goals
@@ -25,7 +24,8 @@ install/validation path на Windows и Unix-like системах.
 - изменение `~/.codex/config.toml`, secrets, credentials или runtime state Codex;
 - изменение `docs/LEARNING_LOG.md`, `docs/notes/LEARNING_LOG.md` либо личных learning-журналов;
 - создание новых agents, hooks, Skills, MCP или второго source of truth;
-- превращение global infrastructure repository в полный project overlay с `prompts/STAGES.md`;
+- превращение global infrastructure repository в product overlay; собственный internal
+  `prompts/STAGES.md` разрешён последующим canonical-stages contract;
 - semantic validation полного Stage contract, product E2E, mass rollout project repositories;
 - удаление legacy presets, изменение hook size limits, push, merge, release или deployment.
 
@@ -49,9 +49,9 @@ role-specific `model_reasoning_effort`. Recommendation file не устанав�
 
 Для полного project overlay validator обязан fail visibly, если:
 
-- в `docs/AI_PLAN.md` нет ровно одной unfenced строки `- Stage ID: <id>`;
+- в `prompts/STAGES.md` нет ровно одной unfenced строки `- Stage ID: <id>`;
 - ID пуст, длиннее 64 символов или содержит символы вне ASCII letters/digits/`.`/`_`/`-`;
-- в `prompts/STAGES.md` нет ровно одного unfenced Markdown heading, содержащего ID как отдельный
+- в том же `prompts/STAGES.md` нет ровно одного unfenced Markdown heading, содержащего ID как отдельный
   token;
 - heading отсутствует или неоднозначен.
 
@@ -116,3 +116,9 @@ Unix-like installer evidence.
 Изменение откатывается отдельным `git revert`. Runtime Skill materialization имеет recoverable
 backup contract существующего `sync_global_skills.py`; `config.toml` rollback не требуется,
 поскольку installers не должны его изменять.
+
+## Compatibility update
+
+С 2026-09-08 selector и execution state принадлежат одному `prompts/STAGES.md` согласно
+`canonical-stages-policy.spec.md`. Это заменяет только прежнюю AI plan/status projection и не
+изменяет остальные требования/acceptance этого завершённого hardening contract.

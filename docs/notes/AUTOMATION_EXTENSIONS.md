@@ -5,7 +5,7 @@
 ## Когда расширение оправдано
 
 - маршрутизатор правил выбирает только относящиеся к задаче фрагменты из `rules/`;
-- curator архивирует устаревший контекст и сохраняет `AI_STATUS` компактным;
+- curator архивирует устаревший контекст и сохраняет current STAGES record компактным;
 - architecture check обнаруживает расхождение кода с `ARCHITECTURE.md` и предлагает ADR для намеренного изменения;
 - benchmark check хранит воспроизводимую базовую линию для performance- или hardware-решений;
 - design drift check сравнивает UI с `DESIGN.md`, tokens, components и эталонными screenshots;

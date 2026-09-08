@@ -183,13 +183,13 @@ caveat: TUTOR-01 уже завершён другим project-owned workflow; un
   `completed`/`verified`/`DONE`; mocks/stubs/interfaces подтверждают подготовку, но не product path.
 - SPEC/ADR закреплены как source of requirements, accepted tests — как executable contract/evidence.
 - Existing SessionStart/SubagentStart hook теперь выбирает bounded stage record по stable
-  `Stage ID` из AI_PLAN. Selector не вводит вымышленное поле hook payload и не загружает весь
+  `Stage ID` из `prompts/STAGES.md`. Selector не вводит вымышленное поле hook payload и не загружает весь
   catalog.
 
 ### Поток и fallback
 
 ```text
-SPEC → governance Stage contract → Skills/templates → project AI_PLAN Stage ID
+SPEC → governance Stage contract → Skills/templates → project STAGES selector
                                                     ↓
                          exact unique STAGES heading → selected context first
                                                     ↓
@@ -231,7 +231,7 @@ git diff --check
 1. Найди canonical requirement в SPEC и единственного полного policy owner.
 2. Для stage заполни DAG, prerequisites, runnable slice, concrete E2E, PASS/evidence, temporary и
    deferred fields до реализации.
-3. Укажи stable `Stage ID` в AI_PLAN и проверь, что он встречается ровно в одном STAGES heading.
+3. Укажи stable `Stage ID` в `prompts/STAGES.md` и проверь, что он встречается ровно в одном heading.
 4. Прогони primary selector и missing/duplicate/oversized degraded scenarios.
 5. Выполни unit/integration/component и ближайший реальный consumer E2E; mock не называй E2E.
 6. Сверь lifecycle отдельно от commit/merge/release evidence.
@@ -251,7 +251,7 @@ git diff --check
 
 Формулировка «обновляй документ, если информация изменилась» предполагала, что агент уже
 обнаружил изменение. Без явного обязательного списка легко пропустить завершённую задачу в
-`AI_PLAN`, старый blocker в `AI_STATUS`, устаревшую возможность README или неверный статус
+выбранный/current record в `prompts/STAGES.md`, устаревшую возможность README или неверный статус
 merge/deploy. Новый gate сначала требует аудит, а затем решает, нужна ли запись.
 
 ### Проверка
@@ -272,7 +272,7 @@ git diff --check
 ### Как повторить самостоятельно
 
 1. Перед `DONE` открой diff и фактические результаты проверок.
-2. Проверь `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP` и stage tracker.
+2. Проверь `README`, `prompts/STAGES.md` и `ROADMAP`.
 3. Проверь затронутые SPEC, architecture, decisions, design, security и testing docs.
 4. Удали завершённые будущие шаги, снятые blockers и старое verification evidence.
 5. Не меняй точные документы ради даты; отметь их как проверенные без изменений.

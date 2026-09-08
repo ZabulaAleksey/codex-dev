@@ -7,7 +7,7 @@
 
 При явном запуске конкретного prompt сначала fetch полного source, зафиксируй backend,
 queue ID, item ID, revision и разрешение пользователя; классифицируй тип до `running`.
-Queue metadata хранится вместе с task evidence, а lifecycle проекта — в его AI_PLAN/AI_STATUS.
+Queue metadata хранится вместе с task evidence, а lifecycle проекта — в его `prompts/STAGES.md`.
 Типы: `one_shot`, `canonicalization_candidate`, `master_prompt`, `reusable_template`,
 `reference`, `unknown`; retention: `auto` или `keep`. Неоднозначность означает `unknown`.
 Master/template/reference и `keep` сохраняются независимо от completion.

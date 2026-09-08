@@ -239,7 +239,7 @@ Preset-шаблоны перенесены в `presets/`. Каталог `projec
 
 1. Прочитать `docs/PROJECT_FRAMEWORK.md` и context policy.
 2. В новом repository вызвать `$bootstrap-project-framework` или попросить «создай КАРКАС».
-3. Проверить canonical SPEC, один AI_STATUS/AI_PLAN и compatibility matrix.
+3. Проверить canonical SPEC, один `prompts/STAGES.md` и compatibility matrix.
 
 ## 2026-08-13 — Русский язык проектного контекста
 

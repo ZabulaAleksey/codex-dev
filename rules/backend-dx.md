@@ -344,7 +344,7 @@ Backend DX requirement
 → implementation or command
 → validator/test/smoke evidence
 → documentation
-→ AI_STATUS / Definition of Done
+→ STAGES evidence / Definition of Done
 ```
 
 ## Quality gates

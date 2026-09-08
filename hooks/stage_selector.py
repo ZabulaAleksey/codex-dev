@@ -42,13 +42,13 @@ def unfenced_lines(text: str):
             yield line
 
 
-def parse_stage_id(plan: str) -> SelectorResult:
-    candidates = [line for line in unfenced_lines(plan) if STAGE_ID_PREFIX.match(line)]
+def parse_stage_id(stages: str) -> SelectorResult:
+    candidates = [line for line in unfenced_lines(stages) if STAGE_ID_PREFIX.match(line)]
     if not candidates:
         return SelectorResult(
             issue_code="missing-stage-id",
             message=(
-                "docs/AI_PLAN.md must contain exactly one unfenced "
+                "prompts/STAGES.md must contain exactly one unfenced "
                 "`- Stage ID: <id>` selector"
             ),
         )
@@ -56,7 +56,7 @@ def parse_stage_id(plan: str) -> SelectorResult:
         return SelectorResult(
             issue_code="ambiguous-stage-id",
             message=(
-                "docs/AI_PLAN.md must contain exactly one unfenced Stage ID selector; "
+                "prompts/STAGES.md must contain exactly one unfenced Stage ID selector; "
                 f"found {len(candidates)}"
             ),
         )
@@ -82,24 +82,22 @@ def parse_stage_id(plan: str) -> SelectorResult:
     return SelectorResult(stage_id=stage_id)
 
 
-def stage_id_from_plan(plan: str) -> tuple[str | None, str | None]:
-    result = parse_stage_id(plan)
+def stage_id_from_stages(stages: str) -> tuple[str | None, str | None]:
+    result = parse_stage_id(stages)
     if result.issue_code == "missing-stage-id":
-        return None, None
-    if result.issue_code == "ambiguous-stage-id":
-        count = sum(1 for line in unfenced_lines(plan) if STAGE_ID_PREFIX.match(line))
         return None, (
-            f"AI_PLAN содержит неоднозначный Stage ID selector: строк найдено {count}. "
+            "STAGES не содержит единственный Stage ID selector. "
+            "Запись stage не загружена."
+        )
+    if result.issue_code == "ambiguous-stage-id":
+        count = sum(1 for line in unfenced_lines(stages) if STAGE_ID_PREFIX.match(line))
+        return None, (
+            f"STAGES содержит неоднозначный Stage ID selector: строк найдено {count}. "
             "Запись stage не загружена."
         )
     if result.issue_code:
-        candidates = [line for line in unfenced_lines(plan) if STAGE_ID_PREFIX.match(line)]
-        if len(candidates) == 1 and candidates[0].partition(":")[2].strip() in {"", "``"}:
-            # Preserve the hook's no-selector behavior for an unfilled AI_PLAN template.
-            # The project validator still reports the explicit empty selector as invalid.
-            return None, None
         return None, (
-            "AI_PLAN содержит некорректный Stage ID. Допустимы 1–64 ASCII-символа: "
+            "STAGES содержит некорректный Stage ID. Допустимы 1–64 ASCII-символа: "
             "буквы, цифры, `.`, `_`, `-`. Запись stage не загружена."
         )
     return result.stage_id, None

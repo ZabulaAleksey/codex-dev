@@ -1,5 +1,8 @@
 # Индекс спецификаций AI Dev Team
 
+- [`features/canonical-stages-policy.spec.md`](features/canonical-stages-policy.spec.md) — единый
+  `prompts/STAGES.md` для selector, execution state, blockers/evidence и NEXT; безопасная
+  brownfield migration без конкурирующих AI plan/status файлов.
 - [`features/prompt-queue-lifecycle.spec.md`](features/prompt-queue-lifecycle.spec.md) — retention/cleanup guard, receipts и project inheritance.
 
 

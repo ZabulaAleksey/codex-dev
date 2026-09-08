@@ -49,7 +49,7 @@ docs/WORKFLOW.md (copy-ready operational request)
       ↓
 rules/governance.md + SPEC (canonical contract)
       ↓
-project AGENTS / STAGES / AI_PLAN / AI_STATUS
+project AGENTS / canonical STAGES execution record
       ↓
 implementation + evidence + documentation gate
       ↓
@@ -65,19 +65,17 @@ Stage lifecycle проходит через отдельный policy/evidence c
 ```text
 SPEC requirement
       ↓
-prompts/STAGES.md: DAG + prerequisites + runnable slice + E2E + PASS/evidence
-      ↓
-docs/AI_PLAN.md: текущий ограниченный slice
+prompts/STAGES.md: selector + current slice + lifecycle/evidence + DAG/E2E/PASS
       ↓
 implementation → unit/integration/component → concrete end-to-end path
       ↓
 lifecycle status + evidence level → documentation synchronization
 ```
 
-Task-aware context projection использует обратную ссылку из активного плана:
+Task-aware context projection использует current selector из canonical STAGES:
 
 ```text
-docs/AI_PLAN.md: stable Stage ID
+prompts/STAGES.md: stable Stage ID + stage catalog
       ↓ hooks/stage_selector.py: exact unique heading selector
 hooks/session_context.py → bounded selected prompts/STAGES.md record first
 tools/validate_project_overlay.py → preflight PASS или stable issue code
@@ -86,8 +84,8 @@ visible DEGRADED warning → manual full-record check → no completion claim д
 ```
 
 Selector не является semantic parser: он не выводит dependency DAG, не проверяет prerequisites и
-не объявляет stage завершённым. Без `Stage ID` hook сохраняет обычный compact project snapshot и
-не загружает stage catalog.
+не объявляет stage завершённым. Missing/invalid `Stage ID` в существующем STAGES даёт visible
+`DEGRADED` и не проецирует произвольный stage или весь catalog в session context.
 
 Полным владельцем stage contract является `rules/governance.md`. Skills и templates только
 маршрутизируют к нему и собирают операционные поля. `tools/test_stage_completion_policy.py`

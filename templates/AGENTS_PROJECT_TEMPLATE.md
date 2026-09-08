@@ -16,8 +16,7 @@
 
 - Requirements: `specs/system.spec.md` и `specs/features/*` при наличии.
 - Architecture/decisions: `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`.
-- Current work/state: `docs/AI_PLAN.md`, `docs/AI_STATUS.md`.
-- Detailed stages: `prompts/STAGES.md` после полного staged bootstrap.
+- Current work/state and detailed stages: `prompts/STAGES.md` после полного staged bootstrap.
 
 ## Verification delta
 

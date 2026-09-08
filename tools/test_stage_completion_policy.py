@@ -15,8 +15,6 @@ SESSION_HOOK = ROOT / "hooks/session_context.py"
 FULL_OVERLAY_DOCS = (
     "AGENTS.md",
     "prompts/STAGES.md",
-    "docs/AI_PLAN.md",
-    "docs/AI_STATUS.md",
     "docs/ROADMAP.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISIONS.md",
@@ -35,6 +33,24 @@ class StageCompletionPolicyTests(unittest.TestCase):
         for marker in markers:
             with self.subTest(path=relative, marker=marker):
                 self.assertIn(marker, content)
+
+    def test_global_execution_state_is_owned_only_by_stages(self) -> None:
+        self.assertTrue((ROOT / "prompts/STAGES.md").is_file())
+        self.assertTrue((ROOT / "templates/STAGES_TEMPLATE.md").is_file())
+        for relative in (
+            "docs/AI_PLAN.md",
+            "docs/AI_STATUS.md",
+            "templates/AI_PLAN_TEMPLATE.md",
+            "templates/AI_STATUS_TEMPLATE.md",
+        ):
+            with self.subTest(path=relative):
+                self.assertFalse((ROOT / relative).exists())
+
+        stages = read("prompts/STAGES.md")
+        self.assertEqual(1, stages.count("- Stage ID:"))
+        self.assertIn("## DEV-CANONICAL-STAGES-001", stages)
+        self.assertIn("- Sequence:", stages)
+        self.assertIn("- NEXT:", stages)
 
     def test_system_spec_defines_stage_requirement_and_acceptance(self) -> None:
         self.assert_markers(
@@ -138,7 +154,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
         self.assert_markers(
             "hooks/session_context.py",
             (
-                "stage_id_from_plan",
+                "stage_id_from_stages",
                 "select_stage_record",
                 "Stage context — DEGRADED",
                 "selected_stage_chunk",
@@ -165,13 +181,15 @@ class StageCompletionPolicyTests(unittest.TestCase):
         output = json.loads(result.stdout.decode("utf-8"))
         return output["hookSpecificOutput"]["additionalContext"]
 
-    def create_stage_repo(self, root: Path, stage_id: str = "STAGE-002") -> None:
+    def create_stage_repo(self, root: Path) -> None:
         (root / ".git").mkdir()
         (root / "docs").mkdir()
         (root / "prompts").mkdir()
-        selector = f"`{stage_id}`" if stage_id else ""
-        (root / "docs/AI_PLAN.md").write_text(
-            f"# Plan\n\n## Stage identity и dependency DAG\n\n- Stage ID: {selector}\n",
+
+    def write_stages(self, root: Path, body: str, stage_id: str | None = "STAGE-002") -> None:
+        selector = f"- Stage ID: `{stage_id}`\n\n" if stage_id is not None else ""
+        (root / "prompts/STAGES.md").write_text(
+            "# Stages\n\n" + selector + body,
             encoding="utf-8",
         )
 
@@ -179,13 +197,12 @@ class StageCompletionPolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
-                "# Stage catalog\n\n"
+            self.write_stages(
+                repo,
                 "## STAGE-001 — first\n\nDO-NOT-LOAD-FIRST\n\n"
                 "## STAGE-002 — selected\n\nSELECTED-STAGE-BODY\n\n"
                 "### PASS criteria\n\n- selected-pass\n\n"
                 "## STAGE-003 — future\n\nDO-NOT-LOAD-FUTURE\n",
-                encoding="utf-8",
             )
             context = self.run_session_hook(repo)
             self.assertIn("SELECTED-STAGE-BODY", context)
@@ -193,24 +210,20 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.assertNotIn("DO-NOT-LOAD-FIRST", context)
             self.assertNotIn("DO-NOT-LOAD-FUTURE", context)
 
-    def test_session_hook_does_not_load_stage_catalog_without_selector(self) -> None:
+    def test_session_hook_marks_stage_catalog_without_selector_as_degraded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
-            self.create_stage_repo(repo, stage_id="")
-            (repo / "prompts/STAGES.md").write_text(
-                "# Stages\n\nCATALOG-MUST-STAY-OUT\n", encoding="utf-8"
-            )
+            self.create_stage_repo(repo)
+            self.write_stages(repo, "CATALOG-MUST-STAY-OUT\n", stage_id=None)
             context = self.run_session_hook(repo)
             self.assertNotIn("CATALOG-MUST-STAY-OUT", context)
-            self.assertNotIn("Stage context — DEGRADED", context)
+            self.assertIn("Stage context — DEGRADED", context)
 
     def test_session_hook_marks_missing_selected_stage_as_degraded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
-                "# Stages\n\n## STAGE-001\n\nOnly stage\n", encoding="utf-8"
-            )
+            self.write_stages(repo, "## STAGE-001\n\nOnly stage\n")
             context = self.run_session_hook(repo)
             self.assertIn("Stage context — DEGRADED", context)
             self.assertIn("STAGE-002", context)
@@ -220,10 +233,10 @@ class StageCompletionPolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
+            self.write_stages(
+                repo,
                 "## STAGE-002 — duplicate A\n\nA\n\n"
                 "## STAGE-002 — duplicate B\n\nB\n",
-                encoding="utf-8",
             )
             context = self.run_session_hook(repo)
             self.assertIn("Stage context — DEGRADED", context)
@@ -233,23 +246,22 @@ class StageCompletionPolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
-                "# Examples\n\n```markdown\n## STAGE-002 — example only\nFAKE-BODY\n```\n\n"
+            self.write_stages(
+                repo,
+                "```markdown\n## STAGE-002 — example only\nFAKE-BODY\n```\n\n"
                 "## STAGE-002 — real\n\nREAL-BODY\n",
-                encoding="utf-8",
             )
             context = self.run_session_hook(repo)
             self.assertIn("REAL-BODY", context)
             self.assertNotIn("FAKE-BODY", context)
             self.assertNotIn("Stage context — DEGRADED", context)
 
-    def test_session_hook_rejects_multiple_plan_selectors(self) -> None:
+    def test_session_hook_rejects_multiple_stages_selectors(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            with (repo / "docs/AI_PLAN.md").open("a", encoding="utf-8") as handle:
-                handle.write("\n- Stage ID: `STAGE-003`\n")
             (repo / "prompts/STAGES.md").write_text(
+                "- Stage ID: `STAGE-002`\n- Stage ID: `STAGE-003`\n\n"
                 "## STAGE-002\n\nA\n\n## STAGE-003\n\nB\n", encoding="utf-8"
             )
             context = self.run_session_hook(repo)
@@ -257,39 +269,35 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.assertIn("selector", context)
             self.assertNotIn("## prompts/STAGES.md — selected", context)
 
-    def test_session_hook_finds_selector_after_old_plan_prefix_limit(self) -> None:
+    def test_session_hook_finds_selector_after_old_prefix_limit(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "docs/AI_PLAN.md").write_text(
-                "# Plan\n\n" + ("x" * 9000) + "\n\n- Stage ID: `STAGE-002`\n",
-                encoding="utf-8",
-            )
             (repo / "prompts/STAGES.md").write_text(
-                "## STAGE-002 — selected\n\nLATE-SELECTOR-BODY\n", encoding="utf-8"
+                "# Stages\n\n" + ("x" * 9000) +
+                "\n\n- Stage ID: `STAGE-002`\n\n## STAGE-002 — selected\n\nLATE-SELECTOR-BODY\n",
+                encoding="utf-8",
             )
             context = self.run_session_hook(repo)
             self.assertIn("LATE-SELECTOR-BODY", context)
             self.assertNotIn("Stage context — DEGRADED", context)
 
-    def test_session_hook_marks_oversized_plan_as_degraded(self) -> None:
+    def test_session_hook_marks_oversized_stages_as_degraded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "docs/AI_PLAN.md").write_text(
-                "# Plan\n\n" + ("x" * 100_100) + "\n- Stage ID: `STAGE-002`\n",
-                encoding="utf-8",
-            )
             (repo / "prompts/STAGES.md").write_text(
-                "## STAGE-002\n\nMUST-NOT-BE-SELECTED\n", encoding="utf-8"
+                "# Stages\n\n" + ("x" * 500_100) +
+                "\n- Stage ID: `STAGE-002`\n\n## STAGE-002\n\nMUST-NOT-BE-SELECTED\n",
+                encoding="utf-8",
             )
             context = self.run_session_hook(repo)
             self.assertIn("Stage context — DEGRADED", context)
-            self.assertIn("AI_PLAN.md", context)
+            self.assertIn("prompts/STAGES.md", context)
             self.assertIn("scan-limit", context)
             self.assertNotIn("MUST-NOT-BE-SELECTED", context)
 
-    def test_prompt_and_ai_templates_collect_operational_fields(self) -> None:
+    def test_prompt_and_stages_template_collect_operational_fields(self) -> None:
         self.assert_markers(
             "skill-sources/dev-karkas/references/PROMPT_TEMPLATE.md",
             (
@@ -302,7 +310,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
             ),
         )
         self.assert_markers(
-            "templates/AI_PLAN_TEMPLATE.md",
+            "templates/STAGES_TEMPLATE.md",
             (
                 "dependency DAG",
                 "runnable vertical slice",
@@ -313,8 +321,10 @@ class StageCompletionPolicyTests(unittest.TestCase):
             ),
         )
         self.assert_markers(
-            "templates/AI_STATUS_TEMPLATE.md",
+            "templates/STAGES_TEMPLATE.md",
             (
+                "Status:",
+                "planned | implemented | verified | partial | blocked | unavailable",
                 "Lifecycle:",
                 "Evidence level:",
                 "implemented_unverified",

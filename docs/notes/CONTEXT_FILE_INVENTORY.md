@@ -42,7 +42,7 @@
 Каждый файл в этих каталогах выбирается router-ом по текущей задаче; каталог целиком в prompt не подмешивается.
 Для stage-bound задачи `rules/governance.md` и выбранный record из project
 `prompts/STAGES.md` добавляются явно; остальные stages не загружаются. Session hook использует
-stable `Stage ID` активного `docs/AI_PLAN.md`, exact unique heading selector и visible
+ровно одну строку `- Stage ID: <stable-id>` из того же `prompts/STAGES.md`, exact unique heading selector и visible
 `DEGRADED` result при ошибке явного selector.
 
 ## Skills
@@ -63,7 +63,7 @@ stable `Stage ID` активного `docs/AI_PLAN.md`, exact unique heading sel
 
 | Путь | Роль |
 |---|---|
-| `docs/AI_STATUS.md`, `docs/AI_PLAN.md` | текущее состояние и ближайший план |
+| `prompts/STAGES.md` | selector, текущее состояние, ближайший план, blockers, evidence и `NEXT` |
 | `docs/ARCHITECTURE.md`, `docs/SECURITY.md`, `docs/DESIGN.md`, `docs/TESTING.md` | устойчивые глобальные границы и verification contract |
 | `docs/PROJECT_FRAMEWORK.md` | contract project КАРКАСА |
 | `docs/CONTEXT_POLICY.md`, `docs/CONTEXT_COMPATIBILITY.md` | загрузка и reconciliation |
@@ -93,7 +93,7 @@ stable `Stage ID` активного `docs/AI_PLAN.md`, exact unique heading sel
 | `specs/system.spec.md` | system contract глобального framework |
 | `specs/README.md` | индекс SPEC |
 | `specs/features/*.spec.md` | проверяемая история изменения framework |
-| `templates/*.md` | project-agnostic формы SPEC, AI plan/status, decisions, журналов и Backend DX delta |
+| `templates/*.md` | project-agnostic формы SPEC, canonical STAGES, decisions, журналов и Backend DX delta |
 | `templates/prompt-modes/*.md` | пользовательские opt-in prompts для экспериментов и игр; не DEV rules и не загружаются router-ом автоматически |
 
 Historical `SUPERSEDED` SPEC сохраняет audit trail, но не управляет новой реализацией.

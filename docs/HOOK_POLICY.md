@@ -6,7 +6,8 @@ Codex загружает все подходящие hooks из активных
 
 В этом наборе локальные проектные hooks **намеренно не создаются по умолчанию**. Вместо этого:
 
-- глобальный `SessionStart` читает `docs/AI_STATUS.md`, `docs/AI_PLAN.md` и `docs/ARCHITECTURE.md` текущего репозитория;
+- глобальный `SessionStart` читает exact selected record из `prompts/STAGES.md` и
+  относящиеся `specs/*`/`docs/ARCHITECTURE.md` текущего репозитория;
 - глобальный `SubagentStart` передаёт тот же компактный контекст проекта субагенту;
 - глобальный `PreToolUse` блокирует небольшой набор необратимых команд;
 - специфичная для проекта политика хранится в `AGENTS.md`, `AGENTS.override.md` и `.codex/rules/project.rules`.
@@ -20,14 +21,14 @@ Pure parsing contract находится в `hooks/stage_selector.py` и пер�
 projection, а read-only validator — за fail-visible structural preflight; расхождение правил
 selector-а между ними считается regression.
 
-Для stage-bound работы `docs/AI_PLAN.md` содержит ровно одну непустую строку `Stage ID` вне
+Для stage-bound работы `prompts/STAGES.md` содержит ровно одну непустую строку `Stage ID` вне
 fenced code block: 1–64 ASCII-символа из букв, цифр, `.`, `_`, `-`. Hook находит ровно один
 Markdown heading вне fenced code block с этим ID как отдельным token в `prompts/STAGES.md` и
 ставит bounded record первым в дополнительном контексте; весь catalog не загружается. Это context
 projection, а не semantic validation DAG, prerequisites или evidence.
 
-Fallback-цепочка детерминирована: без `Stage ID` hook возвращает обычный project snapshot; при
-явном, но invalid/missing/ambiguous selector либо oversized plan/catalog выдаёт
+Fallback-цепочка детерминирована: repository без `prompts/STAGES.md` получает обычный bounded
+project snapshot; существующий STAGES без valid unique selector либо oversized catalog выдаёт
 `Stage context — DEGRADED` и не подставляет другую запись. Retry отсутствует. Агент обязан открыть
 и проверить полный record вручную, если hook
 пометил запись как усечённую или degraded; такой context не разрешает completion claim.

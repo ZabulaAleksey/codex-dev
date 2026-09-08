@@ -1,9 +1,16 @@
 # Roadmap AI Dev Team
 
-## Текущий internal delta — Prompt Queue Lifecycle
+## Текущий internal delta — Canonical STAGES.md Policy
+
+Единый `prompts/STAGES.md` теперь владеет selector, current plan, lifecycle/evidence, blockers и
+`NEXT`. Global governance/hooks/validators/Skills/templates мигрированы; legacy AI plan/status
+sources удалены после semantic/link audit. Full suite 140 PASS, context validator 233 files PASS,
+`git diff --cached --check` PASS. Commit/merge/push не выполнялись по contract source prompt.
+
+## Предыдущий internal delta — Prompt Queue Lifecycle
 
 Retention/guard/receipt implementation и project propagation выполнены и проверены отдельно от product
-master. Source policy: `rules/prompt-queue-lifecycle.md`; current evidence — AI_STATUS.
+master. Source policy: `rules/prompt-queue-lifecycle.md`; current evidence — `prompts/STAGES.md`.
 Merge/push не выполняются до отдельного разрешения пользователя.
 
 
@@ -19,7 +26,7 @@ Merge/push не выполняются до отдельного разреше�
 - Completion Documentation Synchronization Gate для task/stage/merge closeout;
 - отделение состояния ДЕВ от live-состояния product repositories.
 - канонический контракт архитектурно завершённых stages, scaffold-safe lifecycle/evidence и
-  task-aware `AI_PLAN → selected STAGES record` projection — fast-forward merged locally,
+  task-aware `STAGES selector → selected STAGES record` projection — fast-forward merged locally,
   88 tests PASS, runtime Skill parity 9/9.
 - единый project workflow: actual `~/.codex` source ownership, восемь lifecycle requests,
   documentation/LEARNING triggers, external projection rules, computer↔laptop restore, monitoring
@@ -34,6 +41,9 @@ Merge/push не выполняются до отдельного разреше�
   reuse, baseline/variant aggregation и JSON/Markdown report — 124 tests и 213-file context
   validation PASS; implementation commit `ea1fe24` fast-forward merged и pushed в `origin/main`.
   Product rollout не выполнялся; synthetic sample не является ROI evidence policy.
+- Canonical STAGES.md Policy: single execution-state owner, same-file selector, deterministic
+  brownfield `MERGE` classification и greenfield single template — 140 tests и 233-file context
+  validation PASS; validated locally without commit/merge/push.
 
 ## Текущее
 

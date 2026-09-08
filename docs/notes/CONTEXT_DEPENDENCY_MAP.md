@@ -7,7 +7,7 @@
 ```text
 ~/.codex/AGENTS.md
   ├─ локальный project AGENTS.md (более специфичная delta)
-  │    └─ affected SPEC → selected prompts/STAGES.md record → AI_PLAN/AI_STATUS
+  │    └─ affected SPEC → selected/current prompts/STAGES.md record
   ├─ rules/README.md
   │    ├─ mode
   │    ├─ SDLC
@@ -31,9 +31,9 @@
 | Engineering rules | `rules/**` | summaries в docs |
 | Skill workflow | `skill-sources/**` | `~/.agents/skills/**` |
 | Hook wiring | `hooks.json`, `hooks/**` | session output |
-| Current state/plan | `docs/AI_STATUS.md`, `docs/AI_PLAN.md` | handoff |
+| Current state/plan | project `prompts/STAGES.md` | handoff |
 | Framework contract | `docs/PROJECT_FRAMEWORK.md`, `specs/**` | project overlay |
-| Stage lifecycle/evidence | `rules/governance.md` | selected project `prompts/STAGES.md` record, AI plan/status |
+| Stage lifecycle/evidence | `rules/governance.md` | selected project `prompts/STAGES.md` record |
 | Product i18n/l10n | `rules/i18n-l10n.md` | project SPEC, DESIGN, architecture и testing delta |
 | Project facts | project repository | external projections |
 | Project bindings | внешний project-aware слой | schema `PROJECT_REGISTRY.md` |
@@ -47,8 +47,8 @@ sync direction, pending state и read-back contract определены в `rul
 
 `hooks.json` выбирает скрипт. Hook определяет project root, читает только bounded набор существующих
 project-файлов, не следует наружу по symlink и не подмешивает глобальную библиотеку целиком.
-Stable `Stage ID` из `docs/AI_PLAN.md` выбирает exact unique heading record из
-`prompts/STAGES.md`; selected record идёт первым. Ошибка явного selector даёт visible `DEGRADED`
+Ровно одна строка `- Stage ID: <stable-id>` в `prompts/STAGES.md` выбирает exact unique heading
+record из того же файла; selected record идёт первым. Ошибка явного selector даёт visible `DEGRADED`
 warning без retry или произвольного fallback. События additive: project hook допустим лишь для
 доказанного локального gap.
 
@@ -94,7 +94,10 @@ schema/discovery policy и намеренно не содержит actual proje
 
 ## Documents
 
-Канонические `docs/*.md` хранят только устойчивые global contracts и единственные AI plan/status. Дополнительные долговечные материалы находятся в `docs/notes/` и читаются on demand. Новая тема сначала пытается дополнить существующий канон; отдельный note создаётся только при отсутствии подходящего owner.
+Канонические `docs/*.md` хранят устойчивые global contracts. Execution state, текущий план,
+blockers, evidence и `NEXT` принадлежат `prompts/STAGES.md`. Дополнительные долговечные материалы
+находятся в `docs/notes/` и читаются on demand. Новая тема сначала пытается дополнить существующий
+канон; отдельный note создаётся только при отсутствии подходящего owner.
 
 ## Specifications/templates/tools
 
@@ -102,7 +105,7 @@ schema/discovery policy и намеренно не содержит actual proje
 requirements
   → specs/**
   → selected prompts/STAGES.md record
-  → architecture/AI_PLAN
+  → architecture/selected STAGES record
   → implementation
   → tests
   → validators

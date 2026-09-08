@@ -61,7 +61,7 @@ Notion
 - код;
 - DESIGN / architecture docs;
 - ROADMAP;
-- AI_PLAN / AI_STATUS;
+- current selector/state в `prompts/STAGES.md`;
 - existing `prompts/STAGES.md` и принятый project backlog;
 - decisions;
 - тесты и TODO, если релевантно.

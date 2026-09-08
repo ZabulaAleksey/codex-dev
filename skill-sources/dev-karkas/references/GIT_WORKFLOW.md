@@ -52,4 +52,4 @@ Commit должен быть атомарным и соответствоват�
 
 ## Status synchronization
 
-Не обновляй AI_STATUS как `merged`, пока merge не подтверждён target branch/evidence.
+Не обновляй evidence level stage как `merged`, пока merge не подтверждён target branch/evidence.

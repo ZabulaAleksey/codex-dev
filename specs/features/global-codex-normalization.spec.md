@@ -73,7 +73,8 @@ Product repositories не изменяются автоматически тол
 - AC-GC-003 активный config не содержит `--api-key`, отсутствующей browser service, неподтверждённых browser hashes, старых project path aliases и broad home trust;
 - AC-GC-004 GitHub/Atlassian MCP и отсутствующие Calendar/Slack plugins выключены обратимо;
 - AC-GC-005 unit, integration и component проверки проходят;
-- AC-GC-006 `docs/CONTEXT_COMPATIBILITY.md`, `docs/SECURITY.md`, `docs/DECISIONS.md`, `docs/AI_PLAN.md` и `docs/AI_STATUS.md` отражают фактический результат;
+- AC-GC-006 `docs/CONTEXT_COMPATIBILITY.md`, `docs/SECURITY.md`, `docs/DECISIONS.md` и
+  соответствующий record `prompts/STAGES.md` отражают фактический результат;
 - AC-GC-007 все неустранённые пункты перечислены с причиной и следующим безопасным действием.
 
 ## 6. Откат

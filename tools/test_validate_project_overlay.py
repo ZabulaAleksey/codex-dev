@@ -10,14 +10,12 @@ from tools.validate_project_overlay import validate_project
 
 REQUIRED_CONTENT = {
     "AGENTS.md": "# Project router\n",
-    "prompts/STAGES.md": "# Stages\n\n## STAGE-001 — first slice\n\nPLANNED\n",
+    "prompts/STAGES.md": "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-001 — first slice\n\n- Lifecycle: `planned`\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",
     "docs/LEARNING_LOG.md": "# Learning log\n",
     "docs/project-context.md": "# Project context\n",
     "docs/ROADMAP.md": "# Roadmap\n",
-    "docs/AI_PLAN.md": "# Current plan\n\n- Stage ID: `STAGE-001`\n",
-    "docs/AI_STATUS.md": "# Current status\n",
 }
 
 
@@ -63,14 +61,14 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual((), result.issues)
 
-    def test_incomplete_overlay_reports_missing_files_and_alternate_status(self) -> None:
+    def test_incomplete_overlay_reports_missing_stages_and_competing_state(self) -> None:
         project = self.make_project()
-        (project / "docs/AI_PLAN.md").unlink()
-        (project / "docs/PROGRESS.md").write_text("old status\n", encoding="utf-8")
+        (project / "prompts/STAGES.md").unlink()
+        (project / "docs/AI_STATUS.md").write_text("old status\n", encoding="utf-8")
         result = validate_project(project, self.workspace)
         self.assertFalse(result.ok)
         self.assertIn("missing-required-file", self.issue_codes(project))
-        self.assertIn("alternate-status-file", self.issue_codes(project))
+        self.assertIn("competing-execution-state-file", self.issue_codes(project))
 
     def test_legacy_stage_file_and_stale_workspace_path_are_reported(self) -> None:
         project = self.make_project()
@@ -145,19 +143,21 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         for index, (expected_code, content) in enumerate(cases):
             with self.subTest(expected_code=expected_code, index=index):
                 project = self.make_project(f"{expected_code}-{index}")
-                (project / "docs/AI_PLAN.md").write_text(content, encoding="utf-8")
+                (project / "prompts/STAGES.md").write_text(
+                    content + "\n## STAGE-001 — current\n", encoding="utf-8"
+                )
                 self.assertIn(expected_code, self.issue_codes(project))
 
     def test_stage_selector_rejects_missing_or_ambiguous_heading(self) -> None:
         project = self.make_project("missing-heading")
         (project / "prompts/STAGES.md").write_text(
-            "# Stages\n\n## STAGE-002 — other\n", encoding="utf-8"
+            "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-002 — other\n", encoding="utf-8"
         )
         self.assertIn("missing-stage-heading", self.issue_codes(project))
 
         project = self.make_project("ambiguous-heading")
         (project / "prompts/STAGES.md").write_text(
-            "## STAGE-001 — first\n\nA\n\n## STAGE-001 — duplicate\n\nB\n",
+            "- Stage ID: `STAGE-001`\n\n## STAGE-001 — first\n\nA\n\n## STAGE-001 — duplicate\n\nB\n",
             encoding="utf-8",
         )
         self.assertIn("ambiguous-stage-heading", self.issue_codes(project))
@@ -165,7 +165,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
     def test_stage_selector_uses_token_boundaries_and_ignores_fenced_examples(self) -> None:
         project = self.make_project()
         (project / "prompts/STAGES.md").write_text(
-            "# Stages\n\n"
+            "# Stages\n\n- Stage ID: `STAGE-001`\n\n"
             "```markdown\n## STAGE-001 — example only\n```\n\n"
             "## PRE-STAGE-001-POST — not a token match\n\n"
             "## STAGE-001 — selected\n\nRunnable slice\n",

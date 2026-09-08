@@ -3,21 +3,18 @@ import sys
 from pathlib import Path
 
 try:
-    from .stage_selector import select_stage_record, stage_id_from_plan
+    from .stage_selector import select_stage_record, stage_id_from_stages
 except ImportError:  # Script execution: hooks/ is sys.path[0].
     hook_directory = str(Path(__file__).resolve().parent)
     if hook_directory not in sys.path:
         sys.path.insert(0, hook_directory)
-    from stage_selector import select_stage_record, stage_id_from_plan
+    from stage_selector import select_stage_record, stage_id_from_stages
 
 MAX_CHARS = 9000
-MAX_PLAN_SCAN_CHARS = 100_000
 MAX_STAGE_SCAN_CHARS = 500_000
 FILES = [
-    "docs/AI_STATUS.md",
     "specs/README.md",
     "specs/system.spec.md",
-    "docs/AI_PLAN.md",
     "docs/ARCHITECTURE.md",
 ]
 
@@ -53,30 +50,18 @@ def resolve_repo_file(root: Path, relative: str) -> Path | None:
 
 
 def selected_stage_chunk(root: Path) -> tuple[str | None, str | None]:
-    plan_path = resolve_repo_file(root, "docs/AI_PLAN.md")
-    if plan_path is None:
-        return None, None
-    plan = read_bounded_text(plan_path, MAX_PLAN_SCAN_CHARS + 1)
-    if len(plan) > MAX_PLAN_SCAN_CHARS:
-        return None, (
-            "`docs/AI_PLAN.md` превышает scan-limit context hook; "
-            "Stage ID не выбран."
-        )
-    stage_id, warning = stage_id_from_plan(plan)
-    if warning or stage_id is None:
-        return None, warning
-
     stages_path = resolve_repo_file(root, "prompts/STAGES.md")
     if stages_path is None:
-        return None, (
-            f"AI_PLAN выбирает Stage ID `{stage_id}`, но безопасный `prompts/STAGES.md` недоступен."
-        )
+        return None, None
     catalog = read_bounded_text(stages_path, MAX_STAGE_SCAN_CHARS + 1)
     if len(catalog) > MAX_STAGE_SCAN_CHARS:
         return None, (
             "`prompts/STAGES.md` превышает scan-limit context hook; "
             "запись stage не загружена."
         )
+    stage_id, warning = stage_id_from_stages(catalog)
+    if warning or stage_id is None:
+        return None, warning
     record, warning = select_stage_record(catalog, stage_id)
     if warning:
         return None, warning

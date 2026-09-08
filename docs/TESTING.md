@@ -58,7 +58,7 @@ Completion Documentation Synchronization Gate, а не эвристически�
 владельца полного Stage contract, обязательные planning/status fields, routes Skills/templates,
 разделение lifecycle/evidence, SPEC authority и отсутствие конкурирующего local backlog path.
 Subprocess-тесты дополнительно проходят внутренний путь
-`AI_PLAN Stage ID → session_context.py → exact selected STAGES record` и проверяют no-selector,
+`STAGES Stage ID → session_context.py → exact selected STAGES record` и проверяют no-selector,
 missing и ambiguous degraded-сценарии.
 
 Policy-часть остаётся structural contract test глобальной автоматизации, а hook-часть — internal

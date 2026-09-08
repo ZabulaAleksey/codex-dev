@@ -1,6 +1,6 @@
 ---
 name: dev-karkas
-description: Bootstrap, audit, maintain, and evolve software projects using the user's DEV / КАРКАС engineering framework. Use for repository bootstrapping, project structure and governance, AGENTS.md and AI planning/status files, architecture/security/testing/fallback policies, prompt and stage generation, Notion Ideas intake, backlog refinement, implementation planning, project audits, and keeping documentation synchronized with verified repository state.
+description: Bootstrap, audit, maintain, and evolve software projects using the user's DEV / КАРКАС engineering framework. Use for repository bootstrapping, project structure and governance, AGENTS.md and canonical STAGES execution state, architecture/security/testing/fallback policies, prompt and stage generation, Notion Ideas intake, backlog refinement, implementation planning, project audits, and keeping documentation synchronized with verified repository state.
 ---
 
 # DEV / КАРКАС
@@ -39,7 +39,7 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - `references/PROJECT_FILES.md` — назначение файлов и правила их создания;
 - `references/NOTION_INTAKE.md` — Notion `Идеи → <проект> → backlog`;
 - `references/PROMPT_TEMPLATE.md` — стандарт implementation prompt;
-- `references/STATUS_WORKFLOW.md` — AI_PLAN / AI_STATUS / evidence / этапы;
+- `references/STATUS_WORKFLOW.md` — canonical STAGES selector/state/evidence/NEXT и migration;
 - `references/TESTING_POLICY.md` — тесты, quality gates и evidence;
 - `references/SECURITY_BASELINE.md` — security baseline и abuse protection;
 - `references/FALLBACK_POLICY.md` — graceful degradation и fallback policy;
@@ -59,8 +59,8 @@ Stage contract из `~/.codex/rules/governance.md`; references ниже не п�
 - дерево репозитория;
 - `AGENTS.md` / `AGENTS.override.md`;
 - README, SPEC, DESIGN, SECURITY, ROADMAP;
-- AI_PLAN, AI_STATUS, PROGRESS, DEV_LOG, LEARNING, decisions;
-- `prompts/STAGES.md`, docs, tests, CI/CD;
+- canonical `prompts/STAGES.md`, legacy competing state files при migration, DEV_LOG, LEARNING, decisions;
+- docs, tests, CI/CD;
 - package/workspace manifests;
 - dependency manager, canonical lockfile, CI restore command and tracked generated
   dependency/build directories when an ecosystem is present;
@@ -113,8 +113,8 @@ Stage contract из `~/.codex/rules/governance.md`; references ниже не п�
 - неизвестно / требует evidence.
 
 Перед завершением выполни Completion Documentation Synchronization Gate из
-`references/STATUS_WORKFLOW.md`: всегда проверь README, AI_PLAN, AI_STATUS, ROADMAP,
-`prompts/STAGES.md` и другие state-bearing документы; обнови изменившиеся факты, а точные
+`references/STATUS_WORKFLOW.md`: всегда проверь README, `prompts/STAGES.md`, ROADMAP
+и другие state-bearing документы; обнови изменившиеся факты, а точные
 документы оставь без churn. После merge повтори gate по target branch.
 
 ### 7. Report
@@ -154,8 +154,8 @@ vertical slice, concrete end-to-end scenario, PASS/evidence, fully working tempo
 1. фактическое состояние репозитория и результаты проверок;
 2. явно утверждённая спецификация / архитектурное решение;
 3. project-specific `AGENTS.md` и project policy;
-4. AI_STATUS / AI_PLAN;
-5. backlog / `prompts/STAGES.md`;
+4. current selector/record в `prompts/STAGES.md`;
+5. backlog / Notion;
 6. Notion-идеи и brainstorm.
 
 Более низкий уровень не должен молча переписывать более высокий.

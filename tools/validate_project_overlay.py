@@ -25,12 +25,13 @@ REQUIRED_FILES = (
     "docs/LEARNING_LOG.md",
     "docs/project-context.md",
     "docs/ROADMAP.md",
-    "docs/AI_PLAN.md",
-    "docs/AI_STATUS.md",
 )
 
-ALTERNATE_STATUS_NAMES = {
+COMPETING_EXECUTION_STATE_NAMES = {
+    "ai_plan.md",
+    "ai_status.md",
     "current_status.md",
+    "plan.md",
     "progress.md",
     "project_snapshot.md",
     "project_status.md",
@@ -592,23 +593,21 @@ def _backend_dx_issues(project: Path, workspace: Path) -> list[Issue]:
 
 
 def _stage_selector_issues(project: Path) -> list[Issue]:
-    plan_path = project / "docs/AI_PLAN.md"
     stages_path = project / "prompts/STAGES.md"
-    if not plan_path.is_file() or not stages_path.is_file():
+    if not stages_path.is_file():
         return []
 
-    plan = plan_path.read_text(encoding="utf-8-sig", errors="replace")
-    selector = parse_stage_id(plan)
+    catalog = stages_path.read_text(encoding="utf-8-sig", errors="replace")
+    selector = parse_stage_id(catalog)
     if selector.issue_code:
         return [
             Issue(
                 selector.issue_code,
-                "docs/AI_PLAN.md",
+                "prompts/STAGES.md",
                 selector.message or "invalid Stage ID selector",
             )
         ]
 
-    catalog = stages_path.read_text(encoding="utf-8-sig", errors="replace")
     record = find_stage_record(catalog, selector.stage_id or "")
     if record.issue_code:
         return [
@@ -653,12 +652,12 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
         if not base.is_dir():
             continue
         for candidate in sorted(base.iterdir(), key=lambda item: item.name.casefold()):
-            if candidate.is_file() and candidate.name.casefold() in ALTERNATE_STATUS_NAMES:
+            if candidate.is_file() and candidate.name.casefold() in COMPETING_EXECUTION_STATE_NAMES:
                 issues.append(
                     Issue(
-                        "alternate-status-file",
+                        "competing-execution-state-file",
                         _posix_relative(candidate, project),
-                        "use docs/AI_STATUS.md as the only current-status source",
+                        "merge current facts into prompts/STAGES.md, validate, then remove this competing state file",
                     )
                 )
 

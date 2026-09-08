@@ -45,12 +45,12 @@ SDLC, домен, стек и соответствующую SPEC. Сначал�
 ```
 
 Порядок загрузки: ближайшие instructions → выбранные rules → затронутая SPEC → один выбранный
-stage record → относящиеся architecture/decisions/design/security → `docs/AI_PLAN.md`, code/tests →
-компактный `docs/AI_STATUS.md`. Не загружай целиком архивы prompts, все rules/specs/fixtures или
+stage record → относящиеся architecture/decisions/design/security → code/tests/diff. Current plan,
+status, blockers/evidence и NEXT находятся в выбранном STAGES record. Не загружай целиком архивы prompts, все rules/specs/fixtures или
 старые reports.
 
-Для stage-bound project task ровно одна строка `- Stage ID: <stable-id>` в `docs/AI_PLAN.md`
-выбирает ровно один heading в `prompts/STAGES.md`, где ID является отдельным token. Загружай только
+Для stage-bound project task ровно одна строка `- Stage ID: <stable-id>` в `prompts/STAGES.md`
+выбирает ровно один heading в этом же файле, где ID является отдельным token. Загружай только
 выбранный record. Invalid/missing/ambiguous selector даёт visible `DEGRADED`; прочитай полный record
 вручную и не используй completion claim, пока контракт не проверен.
 
@@ -113,8 +113,6 @@ idea-intake, prompt-build или execute.
 
 - `AGENTS.md`;
 - `prompts/STAGES.md`;
-- `docs/AI_PLAN.md`;
-- `docs/AI_STATUS.md`;
 - `docs/ROADMAP.md`;
 - `docs/ARCHITECTURE.md`;
 - `docs/DECISIONS.md`;
@@ -189,13 +187,13 @@ Architecture/decisions/design/security/testing/status меняй только п
 
 Перед завершением task/stage и после разрешённого merge выполни Completion Documentation
 Synchronization Gate из `rules/governance.md`. Всегда проверь существующие README,
-`docs/AI_PLAN.md`, `docs/AI_STATUS.md`, `docs/ROADMAP.md`, `prompts/STAGES.md`, затронутые SPEC,
+`prompts/STAGES.md`, `docs/ROADMAP.md`, затронутые SPEC,
 architecture/decisions/design/security/testing/API/data/dependencies/fallback и используемые
 traceability/changelog/dev-log sources. Устрани stale status, blockers, next-step, test counts и
 ложные `merged/released/deployed` claims.
 
 В handoff явно укажи, какие state-bearing документы обновлены и какие проверены без изменений.
-`docs/AI_STATUS.md` — compact current truth, не action log. `docs/LEARNING_LOG.md` обновляй только
+`prompts/STAGES.md` — compact current execution truth, не action log. `docs/LEARNING_LOG.md` обновляй только
 для evidence-backed повторно полезной диагностики; не записывай скрытые рассуждения и не дублируй
 Git history.
 
@@ -237,7 +235,7 @@ Merge разрешён только после явного ответа: `Да,
 и read-only guard `~/.codex/tools/prompt_queue.py` до любой cleanup mutation.
 
 Для идей/backlog/requirements из Notion используй connected Notion и `dev-karkas` workflow.
-Сначала найди project mapping и проверь code, AGENTS, SPEC, DESIGN, ROADMAP, AI_PLAN, AI_STATUS,
+Сначала найди project mapping и проверь code, AGENTS, SPEC, DESIGN, ROADMAP,
 STAGES и decisions на duplicate/already implemented. Жизненный цикл:
 `IDEA → REFINED → PROMPT_READY → APPROVED → IMPLEMENTING → DONE`, с дополнительными
 `NEEDS_RESEARCH`, `NEEDS_DECISION`, `DUPLICATE`, `ALREADY_IMPLEMENTED`, `BLOCKED`.

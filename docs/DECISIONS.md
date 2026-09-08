@@ -1,5 +1,28 @@
 # Существенные решения
 
+## 2026-09-08 — Один STAGES.md владеет execution state
+
+**Статус:** принято пользователем; реализовано и validated locally в
+`feature/canonical-stages-policy`, без commit/merge/push.
+
+**Решение:** active full staged overlay использует `prompts/STAGES.md` одновременно как current
+selector, detailed stage catalog, current plan, lifecycle/evidence, blockers и NEXT. Отдельные
+AI plan/status documents выводятся из новых templates и validators. Brownfield reconciler только
+классифицирует legacy files как `MERGE`; semantic merge, link audit и PASS validator обязательны
+до их удаления.
+
+**Причина:** разделение plan/status/catalog создавало drift и противоречивые next-step claims.
+Один record рядом с acceptance/evidence делает состояние readable человеком и машиной без второго
+источника истины.
+
+**Альтернативы:** сохранить пару AI plan/status отклонено прямым requirement; автоматически
+переписывать и удалять legacy files отклонено из-за риска потери brownfield content; root
+`STAGES.md` вместо существующего переносимого `prompts/STAGES.md` отклонён как ненужный path churn.
+
+**Последствия:** selector parser читает один файл; greenfield получает один STAGES template;
+product repositories мигрируются отдельно через read-only reconciliation. SPEC, ROADMAP,
+architecture, decisions, learning и Git сохраняют собственные роли.
+
 ## Prompt queue guard — принято 2026-09-07
 
 Добавлен отдельный bounded pure guard в existing tools surface. Stage/evidence owners остаются
@@ -103,15 +126,15 @@ materialize-ится в active runtime до разрешённой интегр�
 evidence и не запрещали forward dependency на будущую обязательную инфраструктуру. Дополнительно
 `TESTING_POLICY.md` называл tests источником требований, а project-file references расходились в
 порогах полного staged overlay. Detailed stage source также отсутствовал в минимальном
-task-aware context route между SPEC и `AI_PLAN`.
+task-aware context route между SPEC и current stage contract.
 
 **Решение:** стабильное требование принадлежит `specs/system.spec.md` (`FR-007`/`AC-007`), а
 единственный полный lifecycle/evidence contract — `rules/governance.md`. Planning/execution Skills,
 `dev-karkas`, templates и workflow содержат только ссылки и поля проекции. Полный project overlay
 имеет единый baseline из governance; UI `DESIGN.md` остаётся условным. Tests являются исполняемым
 контрактом принятого поведения и evidence, но не первичным source of requirements. Stage-bound
-задача задаёт stable `Stage ID` в `docs/AI_PLAN.md`; существующий SessionStart/SubagentStart hook
-проецирует только один exact unique heading record из `prompts/STAGES.md`, а не весь catalog.
+задача задаёт stable `Stage ID` в `prompts/STAGES.md`; существующий SessionStart/SubagentStart hook
+проецирует только один exact unique heading record из этого же файла, а не весь catalog.
 
 **Альтернативы:** копирование полной нормы во все Skills отклонено из-за drift; эвристический parser
 произвольных `prompts/STAGES.md` отклонён до появления versioned schema/migration, чтобы не создать
@@ -120,15 +143,15 @@ false positives и несовместимость существующих proje
 
 **Последствия:** future stage не может задним числом завершить primary path предыдущего stage;
 mock/stub-only результат остаётся `scaffolded`; structural global test защищает маршрутизацию,
-production hook test подтверждает путь `AI_PLAN → selected STAGES record`, а фактический
+production hook test подтверждает путь `STAGES selector → selected STAGES record`, а фактический
 end-to-end PASS stage по-прежнему подтверждается project evidence и review. Invalid, missing,
 ambiguous или oversized selector даёт видимый `DEGRADED` context и запрещает completion claim.
 
 ## 2026-08-26 — Обязательный documentation audit без формального churn
 
 - Решение: перед завершением task/stage и после merge всегда выполнять Completion
-  Documentation Synchronization Gate для `README`, `AI_PLAN`, `AI_STATUS`, `ROADMAP`,
-  stage tracker и других state-bearing документов.
+  Documentation Synchronization Gate для `README`, `prompts/STAGES.md`, `ROADMAP`
+  и других state-bearing документов.
 - Причина: условное «обновить документацию при необходимости» не выявляло stale plan/status,
   старое verification evidence и возможности README, уже не совпадающие с кодом.
 - Альтернатива: обновлять все документы и даты после каждой задачи; отклонена, потому что
@@ -197,8 +220,8 @@ ambiguous или oversized selector даёт видимый `DEGRADED` context �
 project framework и reusable automation, но не хранит канонический live inventory
 этапов, blockers или очереди отдельных product repositories.
 
-Состояние конкретного продукта принадлежит его собственным `AI_STATUS`,
-`AI_PLAN`, `ROADMAP` и другим project-specific источникам.
+Состояние конкретного продукта принадлежит его собственному `prompts/STAGES.md`,
+`ROADMAP` и другим project-specific каноническим источникам.
 
 `validate_project_overlay.py` остаётся универсальным read-only инструментом,
 который запускается для явно выбранного repository, но ДЕВ не обязан хранить
@@ -210,7 +233,7 @@ project framework и reusable automation, но не хранит канонич�
 **Последствия:**
 
 - `docs/PROJECT_CATALOG.md` удаляется;
-- blockers конкретных продуктов не входят в `docs/AI_STATUS.md` ДЕВ;
+- blockers конкретных продуктов не входят в global `prompts/STAGES.md` ДЕВ;
 - product repository не становится следующим этапом ДЕВ;
 - исторический pilot/forward-test может оставаться evidence в истории решений,
   если он действительно происходил;

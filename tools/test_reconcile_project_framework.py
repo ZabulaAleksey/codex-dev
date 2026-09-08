@@ -87,7 +87,7 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual("FORBIDDEN_TO_OVERWRITE",
                          self.statuses(project)["README.md"])
 
-    def test_keep_merge_and_superseded_are_classified(self) -> None:
+    def test_keep_and_legacy_execution_files_are_classified_for_merge(self) -> None:
         project = self.make_project(
             files={
                 "AGENTS.md": (self.workspace / "AGENTS.md").read_text(encoding="utf-8"),
@@ -97,7 +97,7 @@ class ReconciliationTests(unittest.TestCase):
         statuses = self.statuses(project)
         self.assertEqual("KEEP", statuses["AGENTS.md"])
         self.assertEqual("MERGE", statuses["docs/AI_STATUS.md"])
-        self.assertEqual("SUPERSEDED", statuses["docs/progress.md"])
+        self.assertEqual("MERGE", statuses["docs/progress.md"])
 
     def test_pre_existing_failure_is_not_a_regression(self) -> None:
         baseline = capture_test_baseline(
