@@ -2,11 +2,11 @@
 
 ## Текущий master — Brownfield Canonical Stage Compatibility
 
-`DEV-BCSC-001` расширяет integrated CME generic compatibility adapter-ом. Первый runnable slice
-`DEV-BCSC-A` создаёт deterministic classification, same-file retained-legacy manifest contract и
-read-only dry-run migration plan. Product repositories не изменяются; electro-tutor используется
-только как первый real evidence. После checkpoint selector переходит на `DEV-BCSC-B`, где
-explicit materialization потребует отдельного bounded contract.
+`DEV-BCSC-001` расширяет integrated CME generic compatibility adapter-ом. Runnable slice
+`DEV-BCSC-A` verified at `2e442a9`: deterministic classification, same-file retained-legacy
+manifest contract и read-only dry-run migration plan реализованы без product mutations.
+Selector автоматически перешёл на dependency-ready `DEV-BCSC-B`; explicit digest-matched
+materialization остаётся следующим bounded slice, а controlled rollout — отдельным `DEV-BCSC-C`.
 
 ## Текущий internal delta — Continuous Master Execution
 

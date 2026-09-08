@@ -73,8 +73,18 @@ class ContinuousMasterPolicyTests(unittest.TestCase):
         self.assertIn(stage_id, {item["id"] for item in state["slices"]})
         self.assertTrue(all(item["master_id"] == state["master"]["id"] for item in state["slices"]))
         decision = next_execution_decision(state)
-        expected = "complete" if state["master"]["status"] == "completed" else "await_result"
+        selected = next(item for item in state["slices"] if item["id"] == stage_id)
+        if state["master"]["status"] == "completed":
+            expected = "complete"
+        elif selected["status"] == "running":
+            expected = "await_result"
+        elif selected["status"] == "ready":
+            expected = "continue"
+        else:
+            self.fail(f"selected slice has non-routable status: {selected['status']}")
         self.assertEqual(decision.action, expected)
+        if expected in {"await_result", "continue"}:
+            self.assertEqual(decision.slice_id, stage_id)
         before = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, check=True,
                                 capture_output=True, text=True).stdout
         completed = subprocess.run(
