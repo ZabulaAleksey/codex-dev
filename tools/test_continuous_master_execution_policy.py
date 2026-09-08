@@ -70,9 +70,11 @@ class ContinuousMasterPolicyTests(unittest.TestCase):
 
     def test_current_embedded_graph_is_selected_and_cli_is_read_only(self) -> None:
         stage_id, state = load_selected_state(ROOT)
-        self.assertTrue(stage_id.startswith("DEV-CME-"))
-        self.assertEqual(state["master"]["id"], "DEV-CME-001")
-        self.assertEqual(next_execution_decision(state).action, "await_result")
+        self.assertIn(stage_id, {item["id"] for item in state["slices"]})
+        self.assertTrue(all(item["master_id"] == state["master"]["id"] for item in state["slices"]))
+        decision = next_execution_decision(state)
+        expected = "complete" if state["master"]["status"] == "completed" else "await_result"
+        self.assertEqual(decision.action, expected)
         before = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, check=True,
                                 capture_output=True, text=True).stdout
         completed = subprocess.run(

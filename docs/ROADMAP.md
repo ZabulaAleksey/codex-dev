@@ -5,7 +5,10 @@
 Approved master выполняется поверх checkpoint `72197b2` в том же isolated track. Phase A фиксирует
 SPEC/ADR/gap map; следующие backward-complete slices добавляют deterministic worktree routing,
 execution graph/auto-continue, low-context handoff, evidence/integration gates и hierarchical
-prompt lifecycle. Master сохраняется в Notion до overall DoD; merge/push не выполняются.
+prompt lifecycle. Phases A–F completed; implementation checkpoint `c81ee81`, full 181 tests и
+238-file context validation PASS. Master сохраняется в Notion из-за retention `keep`.
+Read-only Tutor compatibility check выявил pre-existing legacy state/selector migration gap;
+product mutation не выполнялась. Merge/push не выполнялись.
 
 ## Предыдущий internal delta — Canonical STAGES.md Policy
 
