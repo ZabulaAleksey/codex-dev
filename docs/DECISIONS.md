@@ -21,6 +21,27 @@ orchestration framework.
 plan и explicit review boundary; materialization, validator/hook adoption и cleanup разнесены по
 следующим dependency-safe slices.
 
+## 2026-09-08 — Materialization требует externally approved digest и read-back transaction
+
+**Контекст:** dry-run plan должен стать исполнимым без повторной эвристической интерпретации legacy
+files. Проверки только Git HEAD или embedded digest не защищают от source drift и подмены plan с
+пересчитанным digest; последовательные writes без rollback могут оставить partial state.
+
+**Решение:** materializer принимает plan file и отдельно подтверждённый full `plan_digest`, под
+exclusive repository lock повторно сверяет identity и byte-digests всех известных state paths,
+готовит sibling temporary file с fsync, атомарно заменяет только allow-listed
+`prompts/STAGES.md`, затем проверяет exact intended selector/projection существующим router-ом.
+Ошибка publish/read-back восстанавливает pre-image. Unknown leftover lock требует manual recovery;
+legacy `AI_PLAN`/`AI_STATUS` остаются retained и никогда не входят в Slice B write-set.
+
+**Альтернативы:** Git HEAD-only CAS, доверие embedded digest без external approval, in-place write,
+автоматическое удаление stale lock и общий multi-product transaction framework отклонены как
+недостаточно fail-closed либо преждевременно широкие.
+
+**Последствия:** repeated exact apply возвращает `already_materialized`; drift/tampering/path escape
+не выполняют publish; rollback failure имеет отдельный typed outcome. Полная защита от враждебного
+same-user junction race на Windows остаётся residual platform risk.
+
 ## 2026-09-08 — Continuous master расширяет Stage contract, а не создаёт scheduler
 
 **Контекст:** один явно запущенный master должен проходить однозначные slices без ручной диспетчеризации,

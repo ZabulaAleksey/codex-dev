@@ -4,11 +4,21 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tools.stage_compatibility import LEGACY_FILES, STATUSES, inspect_compatibility
+import tools.stage_compatibility as stage_compatibility
+
+from tools.stage_compatibility import (
+    LEGACY_FILES,
+    STATUSES,
+    _FaultHooks,
+    _publish_transaction,
+    inspect_compatibility,
+    materialize_plan,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -91,7 +101,10 @@ class StageCompatibilityTests(unittest.TestCase):
         self.assertFalse(result["runnable"])
         self.assertEqual(result["projection"], PROJECTION)
         self.assertFalse(result["plan"]["destructive_removals"])
-        self.assertEqual(result["plan"]["preserve_sources"], ["docs/AI_PLAN.md", "docs/AI_STATUS.md"])
+        self.assertEqual(
+            [item["path"] for item in result["plan"]["preconditions"] if item["exists"]],
+            ["docs/AI_PLAN.md", "docs/AI_STATUS.md"],
+        )
 
     def test_missing_legacy_next_is_explicitly_incomplete(self):
         plan = LEGACY_PLAN.replace("- NEXT: DEV-TEST-B\n", "")
@@ -266,6 +279,331 @@ class StageCompatibilityTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
         self.assertFalse(json.loads(completed.stdout)["ok"])
 
+    def materialization_fixture(self):
+        root = self.make(plan=LEGACY_PLAN, status=LEGACY_STATUS)
+        report = inspect_compatibility(root)
+        self.assertIsNotNone(report["plan"])
+        plan_path = root / "migration-plan.json"
+        plan_path.write_text(json.dumps(report["plan"], ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        return root, plan_path, report["plan"]["plan_digest"]
+
+    def test_materialization_is_explicit_and_preserves_legacy_bytes(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        self.assertRegex(plan["plan_id"], r"^bsc-[0-9a-f]{16}$")
+        self.assertEqual(len(plan["plan_digest"]), 64)
+        self.assertEqual(plan["detected"]["projection"], plan["intended_state"]["projection"])
+        self.assertIsNone(plan["detected"]["stage_selector"])
+        self.assertEqual(plan["intended_state"]["stage_selector"], "DEV-TEST-A")
+        before = {name: (root / name).read_bytes() for name in LEGACY_FILES}
+        with patch.object(Path, "read_bytes", side_effect=AssertionError("unbounded read-back")):
+            result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
+        self.assertEqual(result["status"], "materialized")
+        self.assertEqual(result["writes"], 1)
+        self.assertEqual(before, {name: (root / name).read_bytes() for name in LEGACY_FILES})
+        second = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
+        self.assertEqual(second["status"], "already_materialized")
+        self.assertEqual(second["writes"], 0)
+
+    def test_expected_digest_and_tampering_fail_before_write(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        self.assertEqual(materialize_plan(root, plan_path)["status"], "invalid_plan")
+        tampered = json.loads(plan_path.read_text(encoding="utf-8"))
+        tampered["operations"][0]["content"] += "\n# tampered\n"
+        plan_path.write_text(json.dumps(tampered, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
+        self.assertEqual(result["status"], "invalid_plan")
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_plan_cannot_be_replayed_against_another_repository(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        other = self.make(plan=LEGACY_PLAN, status=LEGACY_STATUS)
+        result = materialize_plan(other, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "invalid_plan")
+        self.assertIn("repository identity mismatch", result["error"])
+        self.assertFalse((other / "prompts" / "STAGES.md").exists())
+
+    @unittest.skipIf(os.name == "nt", "case-only roots are not distinct on Windows")
+    def test_repository_identity_preserves_case_and_backslash_on_posix(self):
+        base = Path(tempfile.mkdtemp())
+        upper = base / "Root"
+        lower = base / "root"
+        slash_name = base / "part\\name"
+        slash_path = base / "part" / "name"
+        for path in (upper, lower, slash_name, slash_path):
+            path.mkdir(parents=True, exist_ok=True)
+        identities = {
+            stage_compatibility._repository_identity(path)
+            for path in (upper, lower, slash_name, slash_path)
+        }
+        self.assertEqual(len(identities), 4)
+
+    def test_digest_valid_malformed_nested_plan_is_typed_invalid(self):
+        root, plan_path, _ = self.materialization_fixture()
+        malformed = json.loads(plan_path.read_text(encoding="utf-8"))
+        malformed["intended_state"] = None
+        unsigned = dict(malformed)
+        unsigned.pop("plan_id")
+        unsigned.pop("plan_digest")
+        malformed["plan_digest"] = hashlib.sha256(
+            json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        malformed["plan_id"] = "bsc-" + malformed["plan_digest"][:16]
+        plan_path.write_text(json.dumps(malformed, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=malformed["plan_digest"])
+        self.assertEqual(result["status"], "invalid_plan")
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_huge_json_integer_is_typed_invalid(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        raw = plan_path.read_text(encoding="utf-8")
+        raw = raw.replace('"schema_version": 1', '"schema_version": ' + ('9' * 5000), 1)
+        plan_path.write_text(raw, encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "invalid_plan")
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_over_count_evidence_is_typed_invalid(self):
+        root, plan_path, _ = self.materialization_fixture()
+        malformed = json.loads(plan_path.read_text(encoding="utf-8"))
+        malformed["evidence"] = ["x"] * 129
+        unsigned = dict(malformed)
+        unsigned.pop("plan_id")
+        unsigned.pop("plan_digest")
+        malformed["plan_digest"] = hashlib.sha256(
+            json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        malformed["plan_id"] = "bsc-" + malformed["plan_digest"][:16]
+        plan_path.write_text(json.dumps(malformed, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=malformed["plan_digest"])
+        self.assertEqual(result["status"], "invalid_plan")
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_unclosed_manifest_marker_fails_closed_without_plan(self):
+        stages = STAGES + "\n```stage-compatibility\n"
+        result = inspect_compatibility(self.make(stages=stages, plan=LEGACY_PLAN, status=LEGACY_STATUS))
+        self.assertEqual((result["classification"], result["route"]), ("conflict", "migration_required"))
+        self.assertIsNone(result["plan"])
+        self.assertIn("invalid_stage-compatibility_manifest", result["issues"])
+
+    def test_target_change_during_plan_generation_emits_no_plan(self):
+        root = self.make(plan=LEGACY_PLAN, status=LEGACY_STATUS)
+        original_snapshot = stage_compatibility._snapshot_known_state
+
+        def drift_before_snapshot(project):
+            (project / "prompts" / "STAGES.md").write_text("concurrent state", encoding="utf-8")
+            return original_snapshot(project)
+
+        with patch.object(stage_compatibility, "_snapshot_known_state", side_effect=drift_before_snapshot):
+            result = inspect_compatibility(root)
+        self.assertIsNone(result["plan"])
+        self.assertTrue(any(issue.startswith("plan_generation_error:state changed") for issue in result["issues"]))
+
+    def test_recomputed_embedded_digest_still_requires_external_digest(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        tampered = json.loads(plan_path.read_text(encoding="utf-8"))
+        tampered["evidence"].append("tampered")
+        unsigned = dict(tampered)
+        unsigned.pop("plan_id")
+        unsigned.pop("plan_digest")
+        tampered["plan_digest"] = hashlib.sha256(
+            json.dumps(unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        tampered["plan_id"] = "bsc-" + tampered["plan_digest"][:16]
+        plan_path.write_text(json.dumps(tampered, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "invalid_plan")
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_stale_source_drift_has_zero_writes(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        source = root / "docs" / "AI_STATUS.md"
+        source.write_text(source.read_text(encoding="utf-8") + "\nchanged\n", encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
+        self.assertEqual(result["status"], "stale_plan")
+        self.assertEqual(result["writes"], 0)
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_target_drift_and_mixed_drift_have_zero_writes(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        (root / "prompts" / "STAGES.md").write_text("target drift", encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "stale_plan")
+        self.assertEqual(result["writes"], 0)
+
+        root, plan_path, plan_digest = self.materialization_fixture()
+        (root / "docs" / "AI_STATUS.md").write_text("source drift", encoding="utf-8")
+        (root / "prompts").mkdir(exist_ok=True)
+        (root / "prompts" / "STAGES.md").write_text("target drift", encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "stale_plan")
+        self.assertEqual(result["writes"], 0)
+
+    def test_apply_time_parent_symlink_fails_closed(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        outside = Path(tempfile.mkdtemp())
+        (outside / "STAGES.md").write_text("outside", encoding="utf-8")
+        prompts = root / "prompts"
+        prompts.rmdir()
+        try:
+            os.symlink(outside, prompts, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlink unavailable: {exc}")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
+        self.assertEqual(result["status"], "stale_plan")
+        self.assertEqual((outside / "STAGES.md").read_text(encoding="utf-8"), "outside")
+
+    def test_readback_failure_rolls_back_preimage(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        hooks = _FaultHooks(before_readback=lambda: (_ for _ in ()).throw(RuntimeError("injected readback")))
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_id, _fault_hooks=hooks)
+        self.assertEqual(result["status"], "readback_failed_rolled_back")
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_rollback_cas_preserves_external_edit_and_retains_recovery_lock(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+
+        def external_edit(_index, target_path):
+            Path(target_path).write_text("external edit", encoding="utf-8")
+
+        hooks = _FaultHooks(
+            before_readback=lambda: (_ for _ in ()).throw(RuntimeError("readback")),
+            before_rollback=external_edit,
+        )
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest, _fault_hooks=hooks)
+        self.assertEqual(result["status"], "rollback_failed")
+        self.assertEqual(result["writes"], 1)
+        self.assertEqual((root / "prompts" / "STAGES.md").read_text(encoding="utf-8"), "external edit")
+        lock = root / ".stage-compatibility.lock"
+        self.assertTrue(lock.exists())
+        retry = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(retry["status"], "recovery_required")
+        lock.unlink()
+
+    def test_first_staging_failure_has_zero_writes(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        hooks = _FaultHooks(before_staging=lambda _index: (_ for _ in ()).throw(RuntimeError("staging")))
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest, _fault_hooks=hooks)
+        self.assertEqual(result["status"], "write_failed_rolled_back")
+        self.assertEqual(result["writes"], 0)
+        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+
+    def test_private_transaction_mid_publish_restores_all_targets(self):
+        root = Path(tempfile.mkdtemp())
+        first = root / "first.txt"
+        second = root / "second.txt"
+        first.write_text("old-first", encoding="utf-8")
+        second.write_text("old-second", encoding="utf-8")
+        operations = [
+            {"path": "first.txt", "before_sha256": hashlib.sha256(b"old-first").hexdigest(), "content": "new-first"},
+            {"path": "second.txt", "before_sha256": hashlib.sha256(b"old-second").hexdigest(), "content": "new-second"},
+        ]
+        def fail_mid(index, _path):
+            if index == 1:
+                raise RuntimeError("mid publish")
+        with self.assertRaises(RuntimeError):
+            _publish_transaction(root, operations, _fault_hooks=_FaultHooks(before_publish=fail_mid))
+        self.assertEqual(first.read_text(encoding="utf-8"), "old-first")
+        self.assertEqual(second.read_text(encoding="utf-8"), "old-second")
+
+    def test_private_transaction_rejects_preimage_digest_drift_before_write(self):
+        root = Path(tempfile.mkdtemp())
+        target = root / "target.txt"
+        target.write_text("drifted", encoding="utf-8")
+        operations = [{
+            "path": "target.txt",
+            "before_sha256": hashlib.sha256(b"expected").hexdigest(),
+            "content": "new",
+        }]
+        with self.assertRaisesRegex(ValueError, "pre-image digest mismatch"):
+            _publish_transaction(root, operations)
+        self.assertEqual(target.read_text(encoding="utf-8"), "drifted")
+
+    def test_private_transaction_rollback_failure_is_distinct(self):
+        root = Path(tempfile.mkdtemp())
+        target = root / "target.txt"
+        target.write_text("old", encoding="utf-8")
+        operations = [
+            {"path": "target.txt", "before_sha256": hashlib.sha256(b"old").hexdigest(), "content": "new"},
+            {"path": "second.txt", "before_sha256": hashlib.sha256(b"old-second").hexdigest(), "content": "new-second"},
+        ]
+        (root / "second.txt").write_text("old-second", encoding="utf-8")
+        def fail_publish(index, _path):
+            if index == 1:
+                raise RuntimeError("publish")
+        def fail_rollback(_index, _path):
+            raise RuntimeError("rollback")
+        with self.assertRaisesRegex(ValueError, "rollback_failed"):
+            _publish_transaction(
+                root, operations,
+                _fault_hooks=_FaultHooks(before_publish=fail_publish, before_rollback=fail_rollback),
+            )
+
+    def test_busy_lock_is_typed_and_non_mutating(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        lock = root / ".stage-compatibility.lock"
+        lock.write_text("held", encoding="utf-8")
+        try:
+            result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
+        finally:
+            lock.unlink()
+        self.assertEqual(result["status"], "recovery_required")
+        self.assertEqual(result["writes"], 0)
+
+    def test_unknown_existing_lock_requires_recovery(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        lock = root / ".stage-compatibility.lock"
+        lock.write_text("unknown stale lock", encoding="utf-8")
+        result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "recovery_required")
+        self.assertTrue(lock.exists())
+        lock.unlink()
+
+    def test_untrusted_lock_pid_is_never_probed_or_signalled(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        lock = root / ".stage-compatibility.lock"
+        lock.write_text(
+            json.dumps({"owner": "untrusted", "pid": 4, "plan_id": "bsc-0000000000000000"}),
+            encoding="utf-8",
+        )
+        with patch.object(os, "kill", side_effect=AssertionError("must not signal lock PID")):
+            result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        self.assertEqual(result["status"], "recovery_required")
+        self.assertTrue(lock.exists())
+        lock.unlink()
+
+    def test_actual_concurrent_double_apply_is_typed(self):
+        root, plan_path, plan_digest = self.materialization_fixture()
+        entered = threading.Event()
+        release = threading.Event()
+        results = []
+        def hold_staging(_index):
+            entered.set()
+            release.wait(5)
+        first = threading.Thread(
+            target=lambda: results.append(materialize_plan(
+                root, plan_path, expected_plan_digest=plan_digest,
+                _fault_hooks=_FaultHooks(before_staging=hold_staging),
+            ))
+        )
+        first.start()
+        self.assertTrue(entered.wait(5))
+        second = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
+        release.set()
+        first.join(5)
+        self.assertEqual(second["status"], "concurrent_materialization")
+        self.assertEqual(results[0]["status"], "materialized")
+
+    def test_materialization_cli_requires_expected_digest(self):
+        root, plan_path, plan_id = self.materialization_fixture()
+        completed = subprocess.run(
+            [sys.executable, "-B", str(ROOT / "tools" / "master_execution.py"), str(root),
+             "--materialize-compatibility", str(plan_path), "--expected-plan-digest", plan_id],
+            cwd=ROOT, text=True, encoding="utf-8", capture_output=True, check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(json.loads(completed.stdout)["materialization"]["status"], "materialized")
+
     def test_schema_matches_runtime_manifest_vocabulary(self):
         schema = json.loads((ROOT / "schemas" / "stage-compatibility.schema.json").read_text(
             encoding="utf-8"
@@ -275,6 +613,19 @@ class StageCompatibilityTests(unittest.TestCase):
         source_properties = properties["legacy_sources"]["items"]["properties"]
         self.assertEqual(source_properties["disposition"]["const"], "retained")
         self.assertEqual(set(source_properties["path"]["enum"]), set(LEGACY_FILES))
+
+        plan_schema = json.loads((ROOT / "schemas" / "stage-materialization-plan.schema.json").read_text(
+            encoding="utf-8"
+        ))
+        plan_properties = plan_schema["properties"]
+        self.assertEqual(plan_properties["operations"]["maxItems"], 1)
+        self.assertEqual(
+            plan_properties["operations"]["items"]["properties"]["path"]["const"],
+            "prompts/STAGES.md",
+        )
+        self.assertEqual(plan_properties["destructive_removals"]["const"], False)
+        self.assertIn("plan_id", plan_schema["required"])
+        self.assertIn("plan_digest", plan_schema["required"])
 
 
 if __name__ == "__main__":

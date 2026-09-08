@@ -19,12 +19,14 @@ docs/AI_STATUS.md. Adapter должен детерминированно кла�
 - versioned stage-compatibility manifest внутри selected prompts/STAGES.md record;
 - content digests retained legacy sources и drift detection;
 - dry-run migration plan с stable idempotency key;
+- explicit digest-matched materialization API с typed stale/already-materialized/failure outcomes;
+- bounded transactional writes, read-back validation и rollback на pre-materialization bytes;
 - integration в существующий tools/master_execution.py CLI;
 - temporary-repository tests и read-only evidence на electro-tutor.
 
 Не входит:
 
-- автоматическая запись или удаление файлов product repositories;
+- автоматическая либо неявная запись или удаление файлов product repositories;
 - semantic guessing из произвольного prose;
 - массовый rollout, merge, push, deployment или изменение runtime config;
 - второй scheduler, task registry, hook или orchestration framework.
@@ -98,6 +100,78 @@ migration plan. Already migrated repository с совпадающими digests 
 electro-tutor используется только как read-only brownfield evidence. Его текущий legacy pair и
 missing same-file selector должны давать migration_required без изменения Git status.
 
+### BSC-011 Self-contained materialization plan
+
+Executable plan является strict versioned JSON contract и содержит portable root marker,
+path-bound repository identity, исходную classification/routing projection, intended canonical
+state, полный ordered список writes, before/after SHA-256, source/target preconditions,
+generator version, reasons/evidence, `plan_id` и собственный `plan_digest`. Materializer требует
+отдельно переданный approved `expected_plan_digest`, выполняет только объявленные bytes и не
+повторяет semantic inference planner-а.
+
+### BSC-012 Stale-plan rejection
+
+После exclusive lock и до первого write materializer повторно проверяет repository identity,
+все known state sources, target existence/type/digest и plan digest. Любой relevant drift даёт
+typed `stale_plan`, `writes=0`; Git HEAD сам по себе не заменяет byte preconditions.
+
+### BSC-013 Target allow-list and apply-time containment
+
+Operations допускают только project-relative canonical targets из versioned allow-list,
+не содержат duplicate/absolute/parent traversal paths и имеют существующий contained regular
+parent. Symlink/junction/non-file/escape проверяются при plan validation, после lock и
+непосредственно перед staging/replace/rollback.
+
+### BSC-014 Transactional materialization
+
+Все intended bytes сначала записываются в exclusive sibling temporary files, flush/fsync-ятся и
+только затем заменяют targets через atomic replace. Pre-image каждого target сохраняется bounded
+in-memory. Ошибка до/during multi-file publish восстанавливает каждый уже опубликованный target
+либо удаляет созданный target, не выдавая partial state за success.
+
+### BSC-015 Read-back and rollback
+
+После publish materializer сверяет target digests, запускает existing compatibility parser/router
+и требует exact intended selector/projection, `classification=migrated`, `route=canonical` и
+`runnable=true`. Любое несовпадение вызывает rollback и typed `readback_failed`; rollback failure
+имеет отдельный fail-closed result и не маскируется как success.
+
+### BSC-016 Idempotency and concurrency
+
+Повторный apply того же untampered plan при unchanged non-target sources и уже совпадающих target
+digests возвращает deterministic `already_materialized` без rewrite. Per-repository exclusive
+create-only lock сериализует concurrent attempts; занятый lock возвращает typed
+`concurrent_materialization`, не ждёт и не выполняет writes. Неизвестный/stale lock не удаляется
+по возрасту автоматически и даёт `recovery_required` до явной reconciliation.
+
+### BSC-017 Legacy preservation
+
+`docs/AI_PLAN.md` и `docs/AI_STATUS.md` являются retained preconditions: Slice B не включает их
+в write/delete operations. Manifest сохраняет provenance/digests; destructive cleanup требует
+отдельного будущего разрешения.
+
+### BSC-018 Explicit CLI boundary
+
+Existing `tools/master_execution.py` принимает materialization только через отдельный explicit
+plan-file option и отдельно переданный `expected_plan_digest`; mode несовместим с analysis/
+execution options. Compatibility inspection без него остаётся read-only. CLI exit code равен нулю
+только для `materialized` и `already_materialized`. Slice B применяет CLI только к temporary
+repositories.
+
+### BSC-019 Failure injection contract
+
+Transaction имеет private deterministic test seam перед staging/publish/read-back, чтобы tests
+доказывали zero-write и full rollback без ослабления production checks. Test seam не управляется
+plan content и не экспортируется как CLI option. Public plan allow-list содержит только
+`prompts/STAGES.md`; обязательная multi-write rollback проверка использует private transaction
+primitive с synthetic targets внутри temporary repository и не создаёт второго state owner.
+
+### BSC-020 No real product rollout in Slice B
+
+Все positive materialization evidence создаётся в temporary repositories. `electro-tutor`
+проверяется только analysis mode и остаётся non-runnable/unchanged; mass rollout и product hook/
+validator adoption принадлежат `DEV-BCSC-C`.
+
 ## 4. Non-functional and security requirements
 
 - NFR-BSC-001: stdlib-only, deterministic JSON, sorted sources/issues, bounded reads и bounded
@@ -105,6 +179,12 @@ missing same-file selector должны давать migration_required без �
 - NFR-BSC-002: unknown/conflicting state fails closed; no silent fallback or prose inference.
 - NFR-BSC-003: portable project-relative paths; no machine-specific path in persisted manifest.
 - NFR-BSC-004: canonical repositories and existing CME/STAGES tests retain behavior.
+- NFR-BSC-005: plan/operations имеют exact fields, count/byte/depth limits и duplicate-key/type
+  rejection; boolean не принимается как integer version.
+- NFR-BSC-006: side-effect outcomes содержат plan_id, typed status, writes, rollback/read-back
+  evidence без raw secret-bearing content.
+- NFR-BSC-007: lock/temp artifacts удаляются best-effort после terminal outcome; неизвестная
+  partial side effect не retry-ится автоматически.
 
 ## 5. Compatibility state contract
 
@@ -131,6 +211,14 @@ invalid paths/schema/encoding or inconsistent canonical/legacy facts.
 Recovery: rerun after a human-approved migration updates the canonical record and manifest.
 Deletion of retained legacy sources is a separate destructive stage and is not implied.
 
+Slice B primary: validate plan → acquire exclusive lock → revalidate every byte precondition →
+stage and fsync all writes → atomic replaces → read-back through existing adapter → success.
+
+Non-retryable: invalid/tampered plan, repository mismatch, stale precondition, path violation and
+read-back mismatch. `concurrent_materialization` допускает bounded caller retry only after
+reconciliation; materializer сам не retry-ит mutation. Publish failure triggers rollback;
+`rollback_failed` requires manual reconciliation before any new attempt.
+
 ## 7. Acceptance criteria
 
 - AC-BSC-001: pure canonical, pure legacy, mixed, conflicting, migrated and none fixtures have
@@ -144,8 +232,41 @@ Deletion of retained legacy sources is a separate destructive stage and is not i
 - AC-BSC-005: master_execution compatibility CLI is read-only and emits deterministic JSON.
 - AC-BSC-006: electro-tutor returns migration_required as read-only evidence and remains Git-clean.
 - AC-BSC-007: existing CME/STAGES regression suite and global context validator pass.
+- AC-BSC-008: valid plan materializes exact canonical bytes in a temporary repo, read-back sees
+  intended same-file selector/projection and retained legacy bytes remain unchanged.
+- AC-BSC-009: source/target drift, plan tampering and apply-time path escape return fail-closed
+  before write; tests assert unchanged target bytes.
+- AC-BSC-010: first/mid-publish/read-back injected failures restore all pre-images and never return
+  success; rollback failure has a distinct typed outcome.
+- AC-BSC-011: repeated successful apply returns `already_materialized`; concurrent double apply
+  yields one writer and one `concurrent_materialization`/already-materialized result without
+  duplicate writes.
+- AC-BSC-012: analysis CLI remains read-only, materialization requires explicit plan file, all
+  materialization tests use temporary repositories, and `electro-tutor` remains Git-clean.
+- AC-BSC-013: existing CME/STAGES/full DEV suites, context validator, independent reviewer and
+  security reviewer pass after Slice B.
 
-## 8. Stage map
+## 8. Materialization plan v1
+
+Canonical schema owner: `schemas/stage-materialization-plan.schema.json`.
+
+Top-level exact fields:
+
+- `schema_version=1`, `generator_version`, `repository`, `detected`, `intended_state`;
+- ordered `preconditions` for all known state paths and targets, including explicit absent state;
+- ordered `operations` with `op=write`, allow-listed relative path, expected before digest,
+  after digest and exact UTF-8 content;
+- `lock_path`, `reasons`, `evidence`, `destructive_removals=false`, `plan_id`, `plan_digest`.
+
+`plan_digest` is SHA-256 of canonical JSON for every field except `plan_id` and `plan_digest`;
+`plan_id` is derived from that digest. Apply recomputes it and compares it in constant time with
+the separately supplied `expected_plan_digest`, so editing both plan content and its embedded
+digest cannot silently expand approved work. Repository identity is a SHA-256 binding to the
+resolved local root while persisted paths remain portable. No wall-clock field is required:
+deterministic repeated planning is stronger evidence than mutable generated-at metadata;
+generator/schema versions provide provenance.
+
+## 9. Stage map
 
 - DEV-BCSC-A: detection, manifest parser and dry-run plan; no writes.
 - DEV-BCSC-B: explicit migration materialization/validation contract with rollback evidence.

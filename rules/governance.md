@@ -124,8 +124,13 @@ recommendation существующему runtime router и не подменя�
    lifecycle/evidence, blockers, acceptance/DoD и `NEXT`. При расхождении приоритет имеют
    проверяемое evidence и более свежий подтверждённый факт; adapter не выбирает один из
    конфликтующих legacy facts эвристически, неоднозначность остаётся blocker.
-3. До любой записи получи dry-run plan, привязанный к SHA-256 всех retained legacy sources.
-   Завершённая migration хранит versioned `stage-compatibility` manifest в том же selected
+3. До любой записи получи deterministic dry-run plan с exact intended bytes, before/after SHA-256
+   всех known state paths и отдельно сохрани его approved `plan_digest`. Explicit materialization
+   принимает plan file только вместе с этим digest, под exclusive lock повторно сверяет repository,
+   source/target bytes и path boundaries, пишет sibling temp + atomic replace, затем выполняет
+   canonical parser/router read-back. Drift даёт zero-write `stale_plan`; publish/read-back failure
+   восстанавливает pre-image, а unknown leftover lock требует explicit recovery. Завершённая
+   migration хранит versioned `stage-compatibility` manifest в том же selected
    `prompts/STAGES.md` record; manifest projection и same-file selector обязаны совпадать.
 4. Обнови router, Skills, hooks, prompts, templates, scripts и documentation, которые читали или
    создавали legacy source. Исторический журнал не превращай в current state.

@@ -102,6 +102,7 @@ evidence — `blocked`, `partial` или `implemented_unverified`, но не `DO
 ```powershell
 py -3 -B .\tools\master_execution.py <project-root>
 py -3 -B .\tools\master_execution.py <project-root> --compatibility
+py -3 -B .\tools\master_execution.py <project-root> --materialize-compatibility <plan.json> --expected-plan-digest <sha256>
 py -3 -B -m unittest tools.test_master_execution
 ```
 
@@ -111,6 +112,12 @@ Compatibility mode классифицирует bounded canonical/legacy state �
 при mixed/conflicting state controller не запускает product stage и не переписывает repository.
 Consumer обязан разрешать исполнение только при `runnable=true`; successful inspection process
 не означает, что detected state можно запускать.
+
+Materialization является отдельным explicit two-phase действием: caller сохраняет byte-exact plan
+и его independently approved digest, затем передаёт оба CLI. Перед первым publish повторно
+проверяются все known state bytes и contained paths; единственный public target —
+`prompts/STAGES.md`. Legacy files сохраняются. Успех требует canonical read-back; stale state,
+unknown lock и rollback failure возвращаются как typed non-zero outcomes.
 
 ## AI Policy Profiling / Agent Economics
 

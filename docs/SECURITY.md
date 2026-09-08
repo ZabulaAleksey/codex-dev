@@ -27,8 +27,13 @@ Brownfield reconciler соблюдает те же границы: он толь
 Stage compatibility adapter читает только три known project-relative state path с отдельными
 size limits, запрещает symlink/non-file sources и декодирует только UTF-8. Legacy fields
 извлекаются по exact labels; duplicate/conflicting facts, malformed same-file manifest и source
-digest drift дают `conflict` / `migration_required`. Dry-run plan не исполняет Markdown, не
-запускает product code и не имеет write/apply path; retained legacy files не удаляются.
+digest drift дают `conflict` / `migration_required`. Dry-run plan не исполняет Markdown и не
+запускает product code. Explicit materializer принимает только strict bounded plan JSON и отдельно
+подтверждённый digest, разрешает write только `prompts/STAGES.md`, повторно проверяет repository
+identity, все source/target bytes и path containment под exclusive lock. Sibling temp file
+fsync-ится до atomic replace; exact parser/router read-back обязателен, failure восстанавливает
+pre-image. Unknown leftover lock не удаляется по возрасту: до manual reconciliation возвращается
+`recovery_required`. Retained legacy files не удаляются и не переписываются.
 Compatibility CLI может успешно вернуть non-runnable audit report: caller обязан проверять
 `runnable=true`, а не только process exit code. Projection scalars bounded и отвергают control
 characters; state files должны хранить только references/digests, но не credentials или payloads.
@@ -56,6 +61,10 @@ guard, а production access остаётся deny-by-default.
 - Backend DX validator проверяет declared contract и очевидные guards, но не
   выполняет project scripts и не доказывает runtime production isolation;
 - состояние repository может измениться другим процессом между отдельными filesystem/Git проверками.
+- portable Python stdlib на Windows не даёт полного `openat`/`O_NOFOLLOW` эквивалента против
+  враждебного same-user процесса, меняющего junction в узком окне между последней path-проверкой и
+  `os.replace`; repeated containment checks, handle/type checks и cooperative lock уменьшают, но не
+  устраняют этот residual TOCTOU risk.
 
 Эти риски приемлемы для локального read-only аудита; любые автоматические исправления остаются вне области этапа.
 

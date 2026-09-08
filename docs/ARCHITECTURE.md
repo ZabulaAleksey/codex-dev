@@ -14,14 +14,22 @@
       classify + strict facts + SHA-256
             |
             +--> canonical route
-            +--> immutable dry-run migration plan
+            +--> immutable digest-matched migration plan
             +--> conflict / migration_required
+                         |
+                         v explicit plan file + approved digest
+              StageCompatibilityMaterializer
+              lock -> revalidate -> stage/fsync -> atomic replace
+                    -> canonical parser/router read-back -> commit/rollback
 
 После explicit migration selected STAGES record может содержать один versioned
 stage-compatibility block. Он хранит normalized projection и digests retained legacy sources;
-совпадение selector/digests является условием canonical route. Adapter не исполняет Markdown,
-не пишет в product repository и доступен через compatibility mode существующего
-tools/master_execution.py CLI. Apply/materialization остаётся отдельным future slice.
+совпадение selector/digests является условием canonical route. Analysis adapter не исполняет
+Markdown и остаётся read-only compatibility mode существующего `tools/master_execution.py` CLI.
+Отдельный explicit materialization mode применяет только exact bytes из approved plan к
+allow-listed `prompts/STAGES.md`, не перерендеривает state и не удаляет legacy files. Каждый apply
+повторно сверяет все source/target digests, выполняет read-back через тот же parser/router и при
+ошибке восстанавливает pre-image; product rollout остаётся отдельным slice.
 
 ## Continuous Master Execution contour
 

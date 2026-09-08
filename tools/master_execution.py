@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from hooks.stage_selector import find_stage_record, parse_stage_id
-from tools.stage_compatibility import inspect_compatibility
+from tools.stage_compatibility import inspect_compatibility, materialize_plan
 
 
 MAX_STAGES_CHARS = 500_000
@@ -901,13 +901,32 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--worktree-root", type=Path)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--compatibility", action="store_true")
+    parser.add_argument(
+        "--materialize-compatibility", "--materialize-plan", "--plan-file",
+        dest="materialize_plan", type=Path,
+        metavar="PLAN",
+        help="apply one explicit digest-matched stage compatibility plan",
+    )
+    parser.add_argument("--expected-plan-digest", dest="expected_plan_digest")
     args = parser.parse_args(argv)
     try:
         if args.compatibility:
-            if args.request or args.context or args.recovery or args.worktree_root or args.apply:
+            if args.request or args.context or args.recovery or args.worktree_root or args.apply or args.materialize_plan or args.expected_plan_digest:
                 raise MasterExecutionError("--compatibility cannot be combined with execution options")
             print(json.dumps({"ok": True, "compatibility": inspect_compatibility(args.project)}, ensure_ascii=False, sort_keys=True))
             return 0
+        if args.materialize_plan is not None:
+            if args.request or args.context or args.recovery or args.worktree_root or args.apply:
+                raise MasterExecutionError("--materialize-plan cannot be combined with execution options")
+            result = materialize_plan(
+                args.project, args.materialize_plan,
+                expected_plan_digest=args.expected_plan_digest,
+            )
+            print(json.dumps({"ok": result["status"] in {"materialized", "already_materialized"},
+                              "materialization": result}, ensure_ascii=False, sort_keys=True))
+            return 0 if result["status"] in {"materialized", "already_materialized"} else 2
+        if args.expected_plan_digest:
+            raise MasterExecutionError("--expected-plan-digest requires --materialize-plan")
         stage_id, state = load_selected_state(args.project)
         output: dict[str, Any] = {"ok": True, "stage_id": stage_id,
                                   "master_id": state["master"]["id"], "state_revision": state["state_revision"]}

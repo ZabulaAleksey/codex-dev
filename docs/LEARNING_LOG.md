@@ -341,6 +341,30 @@ git diff --check
 4. Выполни project validator и релевантные unit/integration/component tests.
 5. Проверь Skill parity и `git diff --check` перед commit или merge.
 
+## 2026-09-08 — Windows `os.kill(pid, 0)` не является безопасным lock probe
+
+**Problem:** первая materialization lock-проверка читала PID из repository-controlled JSON и
+использовала POSIX-style `os.kill(pid, 0)` для определения живого owner.
+
+**Symptom:** на Windows Python не обещает signal-zero probe semantics; PID из недоверенного файла
+мог превратить read-only lock reconciliation в воздействие на чужой процесс.
+
+**Root cause:** переносимый POSIX pattern был применён без проверки platform semantics и trust
+boundary lock metadata.
+
+**Fix:** PID из lock больше не probe-ится и не сигналится. Только process-local registry может
+доказать `concurrent_materialization`; любой pre-existing external/unknown lock fail closed как
+`recovery_required` и не удаляется автоматически.
+
+**Verification:** regression mock гарантирует, что `os.kill` не вызывается; 46 targeted tests
+PASS с одним POSIX-only skip, independent security review — PASS.
+
+**Prevention:** не использовать signal API как liveness probe для недоверенных PID на Windows;
+external lock ownership без безопасного platform adapter считать неизвестным и требующим
+reconciliation.
+
+**Links:** `tools/stage_compatibility.py`, `tools/test_stage_compatibility.py`, `docs/SECURITY.md`.
+
 ## 2026-08-31 — profiler должен измерять только себя и проверять каждый writable descendant
 
 **Problem:** первый AI Policy Profiling consumer report завысил profiler overhead; отдельный

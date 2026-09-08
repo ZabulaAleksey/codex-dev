@@ -60,6 +60,7 @@ REQUIRED = {
     "schemas/ai-policy-profiling.schema.json",
     "schemas/master-execution.schema.json",
     "schemas/stage-compatibility.schema.json",
+    "schemas/stage-materialization-plan.schema.json",
     "skill-sources/backend-dx-audit/SKILL.md",
     "tools/validate_context.py",
     "tools/validate_global_codex.py",

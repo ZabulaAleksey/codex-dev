@@ -148,6 +148,7 @@ rules/word-pdf-academic.md
 schemas/master-execution.schema.json
 schemas/ai-policy-profiling.schema.json
 schemas/stage-compatibility.schema.json
+schemas/stage-materialization-plan.schema.json
 skill-sources/backend-dx-audit/SKILL.md
 skill-sources/bootstrap-project-framework/agents/openai.yaml
 skill-sources/bootstrap-project-framework/SKILL.md

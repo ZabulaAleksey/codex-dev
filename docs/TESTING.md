@@ -53,6 +53,18 @@ Slice A: 103 targeted CME/STAGES/compatibility regressions и 204 full tests PAS
 `NEXT` и blocker дают explicit issues и запрещают plan; Git status до и после clean. Это
 compatibility evidence, не product mutation и не migration completion.
 
+Slice B: `tools.test_stage_compatibility` содержит 47 detection/materialization tests: exact
+approved apply, source/target/mixed drift, digest/field tampering, malformed JSON/fence, apply-time
+path escape, first/mid-write failure, CAS rollback/read-back failure, durable recovery lock,
+idempotency, real thread contention, repository replay rejection, canonical regression и read-only
+analysis. На Windows 46 PASS + 1 ожидаемый skip POSIX-only case/backslash identity test; полный DEV
+suite — 227 PASS + тот же 1 skip, relevant CME/STAGES/overlay subset — 126 PASS + тот же 1 skip,
+context validator —
+243 files PASS, `git diff --check` — PASS. Independent correctness и security reviews — PASS.
+Все positive writes выполнялись только в temporary repositories. Два read-only `electro-tutor`
+report остались byte-identical с SHA-256 `f39c0ad916bdc4c8dcf595e761db2478eaff5dc2f41501fc48b52e2fa640eb0e`;
+repository до/после clean, plan отсутствует.
+
 Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real backend/
 concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует
 соответствующего real level; synthetic evidence не повышается автоматически.

@@ -2,22 +2,38 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import os
 import re
 import stat
+import tempfile
+import threading
 import unicodedata
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Literal, TypedDict
 
-from hooks.stage_selector import find_stage_record, parse_stage_id
+from hooks.stage_selector import (
+    find_stage_record,
+    heading_contains_stage_id,
+    markdown_headings,
+    parse_stage_id,
+)
 
 
 MAX_FILE_BYTES = 64_000
 MAX_STAGES_BYTES = 500_000
 MAX_FIELD_CHARS = 1_024
+MAX_PLAN_BYTES = 1_000_000
+MAX_PLAN_CONTENT_BYTES = 500_000
 LEGACY_FILES = ("docs/AI_PLAN.md", "docs/AI_STATUS.md")
+KNOWN_STATE_FILES = ("prompts/STAGES.md",) + LEGACY_FILES
+MATERIALIZATION_TARGET = "prompts/STAGES.md"
+MATERIALIZATION_LOCK = ".stage-compatibility.lock"
+MATERIALIZATION_GENERATOR = "DEV-BCSC-B/1"
 FENCE = re.compile(r"(?ms)^```stage-compatibility[ \t]*\r?\n(?P<body>.*?)^```[ \t]*$")
+FENCE_START = re.compile(r"(?m)^```stage-compatibility[ \t]*(?:\r?\n|$)")
 MASTER_FENCE = re.compile(r"(?ms)^```master-execution[ \t]*\r?\n(?P<body>.*?)^```[ \t]*$")
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -50,6 +66,35 @@ class CompatibilityError(ValueError):
     """A bounded state source cannot be interpreted safely."""
 
 
+MaterializationStatus = Literal[
+    "materialized", "already_materialized", "stale_plan", "concurrent_materialization",
+    "recovery_required", "invalid_plan", "readback_failed_rolled_back", "rollback_failed",
+    "write_failed_rolled_back",
+]
+
+
+class MaterializationResult(TypedDict):
+    plan_id: str
+    plan_digest: str
+    status: MaterializationStatus
+    writes: int
+    error: str | None
+    rollback: str
+    readback: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class _FaultHooks:
+    before_staging: Callable[[int], None] | None = None
+    before_publish: Callable[[int, str], None] | None = None
+    before_readback: Callable[[], None] | None = None
+    before_rollback: Callable[[int, str], None] | None = None
+
+
+_LIVE_LOCKS: set[str] = set()
+_LIVE_LOCKS_GUARD = threading.Lock()
+
+
 def _empty_projection(stage: str | None = None) -> dict[str, Any]:
     return {
         "current_stage": stage,
@@ -69,6 +114,10 @@ def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
             raise CompatibilityError(f"duplicate JSON key: {key}")
         result[key] = value
     return result
+
+
+def _reject_json_constant(value: str) -> None:
+    raise CompatibilityError(f"invalid JSON constant: {value}")
 
 
 def _read(root: Path, relative: str, limit: int) -> tuple[bytes | None, str | None]:
@@ -218,9 +267,12 @@ def _has_hard_legacy_issue(issues: list[str]) -> bool:
 
 def _manifest(record: str) -> tuple[dict[str, Any] | None, bool]:
     matches = list(FENCE.finditer(record))
+    starts = list(FENCE_START.finditer(record))
     if not matches:
+        if starts:
+            raise CompatibilityError("invalid stage-compatibility manifest")
         return None, False
-    if len(matches) != 1:
+    if len(matches) != 1 or len(starts) != 1:
         raise CompatibilityError("ambiguous stage-compatibility manifest")
     try:
         value = json.loads(matches[0].group("body"), object_pairs_hook=_unique)
@@ -366,6 +418,155 @@ def _validate_manifest(
     return sorted(set(issues))
 
 
+def _digest(raw: bytes) -> str:
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _repository_identity(root: Path) -> str:
+    """Bind a plan to the resolved local root without persisting its path."""
+    resolved = root.resolve(strict=False)
+    if os.name == "nt":
+        marker = str(resolved).replace("\\", "/").casefold().encode("utf-8")
+    else:
+        marker = os.fsencode(resolved)
+    return _digest(b"stage-materialization-root-v1\0" + os.name.encode("ascii") + b"\0" + marker)
+
+
+def _snapshot_known_state(root: Path) -> dict[str, dict[str, Any]]:
+    snapshot: dict[str, dict[str, Any]] = {}
+    for relative in KNOWN_STATE_FILES:
+        limit = MAX_STAGES_BYTES if relative == MATERIALIZATION_TARGET else MAX_FILE_BYTES
+        raw, digest = _read(root, relative, limit)
+        snapshot[relative] = {
+            "path": relative,
+            "exists": raw is not None,
+            "type": "regular" if raw is not None else "absent",
+            "sha256": digest,
+        }
+    return snapshot
+
+
+def _manifest_for_plan(
+    stage: str, source_fingerprints: list[dict[str, str]], projection: dict[str, Any]
+) -> dict[str, Any]:
+    seed = json.dumps(
+        {"stage": stage, "sources": source_fingerprints},
+        ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    return {
+        "schema_version": 1,
+        "migration_id": "MIG-" + _digest(seed)[:16],
+        "state_owner": "prompts/STAGES.md",
+        "legacy_sources": source_fingerprints,
+        "projection": projection,
+    }
+
+
+def _projection_lines(stage: str, projection: dict[str, Any]) -> str:
+    lines = [
+        f"- Status: {projection['status']}",
+        f"- NEXT: {projection['next_selector']}",
+    ]
+    if projection.get("master_id") is not None:
+        lines.append(f"- Master: {projection['master_id']}")
+    lines.append(f"- Checkpoint: {projection['checkpoint'] or 'none'}")
+    lines.append(f"- Blockers: {', '.join(projection['blockers']) if projection['blockers'] else 'none'}")
+    lines.append(f"- Evidence: {', '.join(projection['evidence']) if projection['evidence'] else 'none'}")
+    return "\n".join(lines)
+
+
+def _append_manifest_to_record(text: str, stage: str, manifest: dict[str, Any]) -> str:
+    """Add canonical facts and the manifest inside the selected same-file record."""
+    selector = parse_stage_id(text)
+    if selector.stage_id != stage:
+        text = f"- Stage ID: {stage}\n\n" + text.lstrip("\ufeff")
+    headings = markdown_headings(text)
+    matches = [
+        (index, heading) for index, heading in enumerate(headings)
+        if heading_contains_stage_id(heading[2], stage)
+    ]
+    if not matches:
+        text = text.rstrip() + f"\n\n# {stage}\n"
+        headings = markdown_headings(text)
+        matches = [(index, heading) for index, heading in enumerate(headings)
+                   if heading_contains_stage_id(heading[2], stage)]
+    if len(matches) != 1:
+        raise CompatibilityError("cannot locate unique materialization record")
+    selected_index, selected = matches[0]
+    start, level, _ = selected
+    end = len(text)
+    for heading in headings[selected_index + 1:]:
+        heading_start, heading_level, _ = heading
+        if heading_level <= level:
+            end = heading_start
+            break
+    manifest_text = json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    segment = text[start:end].rstrip()
+    if "```stage-compatibility" not in segment:
+        segment += "\n\n" + _projection_lines(stage, manifest["projection"])
+        segment += "\n\n```stage-compatibility\n" + manifest_text + "\n```"
+    return text[:start] + segment + text[end:]
+
+
+def _build_materialization_plan(
+    root: Path,
+    stages_raw: bytes | None,
+    stage: str,
+    source_fingerprints: list[dict[str, str]],
+    projection: dict[str, Any],
+    detected: dict[str, Any],
+) -> dict[str, Any]:
+    manifest = _manifest_for_plan(stage, source_fingerprints, projection)
+    current = stages_raw.decode("utf-8-sig") if stages_raw is not None else ""
+    target_text = _append_manifest_to_record(current, stage, manifest)
+    target_raw = target_text.encode("utf-8")
+    if len(target_raw) > MAX_PLAN_CONTENT_BYTES:
+        raise CompatibilityError("materialization target exceeds size limit")
+    snapshot = _snapshot_known_state(root)
+    observed_digests = {MATERIALIZATION_TARGET: _digest(stages_raw) if stages_raw is not None else None}
+    observed_digests.update({item["path"]: item["sha256"] for item in source_fingerprints})
+    if any(
+        snapshot[path]["sha256"] != observed_digests.get(path)
+        for path in KNOWN_STATE_FILES
+    ):
+        raise CompatibilityError("state changed during plan generation")
+    operations = [{
+        "op": "write",
+        "path": MATERIALIZATION_TARGET,
+        "before_sha256": snapshot[MATERIALIZATION_TARGET]["sha256"],
+        "after_sha256": _digest(target_raw),
+        "content": target_text,
+    }]
+    plan_without_id: dict[str, Any] = {
+        "schema_version": 1,
+        "generator_version": MATERIALIZATION_GENERATOR,
+        "repository": {
+            "root_marker": "resolved-project-root-v1",
+            "identity_sha256": _repository_identity(root),
+        },
+        "detected": detected,
+        "intended_state": {
+            "stage_selector": stage,
+            "projection": projection,
+            "manifest": manifest,
+        },
+        "preconditions": [snapshot[path] for path in KNOWN_STATE_FILES],
+        "operations": operations,
+        "lock_path": MATERIALIZATION_LOCK,
+        "reasons": ["same_file_selector", "retained_legacy_sources"],
+        "evidence": [
+            f"classification:{detected['classification']}",
+            f"route:{detected['route']}",
+            f"stage:{stage}",
+        ],
+        "destructive_removals": False,
+    }
+    plan_digest = _digest(json.dumps(
+        plan_without_id, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8"))
+    return dict(plan_without_id, plan_id="bsc-" + plan_digest[:16], plan_digest=plan_digest)
+
+
 def _conflict(issue: str) -> dict[str, Any]:
     return {
         "classification": "conflict",
@@ -499,19 +700,29 @@ def inspect_compatibility(project: str | Path) -> dict[str, Any]:
 
     plan = None
     if classification in {"legacy", "mixed"} and route == "migration_required" and not issues:
-        plan_body = {
-            "target": "prompts/STAGES.md",
-            "operation": "materialize_stage_compatibility_manifest",
-            "sources": source_fingerprints,
-            "preserve_sources": [item["path"] for item in source_fingerprints],
-            "projection": projection,
-            "destructive_removals": False,
-            "manual_review": [],
-        }
-        key = hashlib.sha256(
-            json.dumps(plan_body, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-        plan = dict(plan_body, idempotency_key=key)
+        stage_for_plan = canonical_stage or projection.get("current_stage")
+        if not isinstance(stage_for_plan, str) or not ID.fullmatch(stage_for_plan):
+            issues.append("missing_current_stage")
+        else:
+            try:
+                detected = {
+                    "classification": classification,
+                    "route": route,
+                    # Preserve the observed canonical fact. Pure legacy and
+                    # selector-missing brownfield inputs must remain visibly
+                    # selector-less in the executable plan; the projected
+                    # target lives in intended_state.stage_selector.
+                    "stage_selector": canonical_stage,
+                    "issues": [],
+                    "legacy_sources": source_fingerprints,
+                    "projection": projection,
+                }
+                plan = _build_materialization_plan(
+                    root, stages_raw, stage_for_plan, source_fingerprints, projection, detected
+                )
+            except CompatibilityError as exc:
+                issues.append(f"plan_generation_error:{exc}")
+    issues = sorted(set(issues))
 
     result = {
         "schema_version": 1,
@@ -527,6 +738,524 @@ def inspect_compatibility(project: str | Path) -> dict[str, Any]:
         "plan": plan,
     }
     return json.loads(json.dumps(result, ensure_ascii=False, sort_keys=True))
+
+
+def _result(
+    plan_id: str, plan_digest: str, status: MaterializationStatus, *, writes: int = 0,
+    error: str | None = None, rollback: str = "not_needed",
+    readback: dict[str, Any] | None = None,
+) -> MaterializationResult:
+    return {
+        "plan_id": plan_id,
+        "plan_digest": plan_digest,
+        "status": status,
+        "writes": writes,
+        "error": error,
+        "rollback": rollback,
+        "readback": readback or {},
+    }
+
+
+def _load_plan(plan_file: str | Path) -> tuple[dict[str, Any], str | None, str | None]:
+    path = Path(plan_file)
+    try:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_PLAN_BYTES:
+            raise CompatibilityError("invalid plan file")
+        with path.open("rb") as source:
+            raw = source.read(MAX_PLAN_BYTES + 1)
+        if len(raw) > MAX_PLAN_BYTES:
+            raise CompatibilityError("plan file exceeds size limit")
+        value = json.loads(
+            raw.decode("utf-8-sig"), object_pairs_hook=_unique,
+            parse_constant=_reject_json_constant,
+        )
+    except (OSError, UnicodeDecodeError, ValueError, RecursionError) as exc:
+        raise CompatibilityError(str(exc) or "invalid plan file") from exc
+    if type(value) is not dict:
+        raise CompatibilityError("invalid plan object")
+    plan_id = value.get("plan_id") if type(value.get("plan_id")) is str else None
+    plan_digest = value.get("plan_digest") if type(value.get("plan_digest")) is str else None
+    return value, plan_id, plan_digest
+
+
+def _validate_materialization_plan(plan: Any, root: Path) -> dict[str, Any]:
+    if type(plan) is not dict:
+        raise CompatibilityError("invalid plan object")
+    required = {
+        "schema_version", "generator_version", "repository", "detected", "intended_state",
+        "preconditions", "operations", "lock_path", "reasons", "evidence",
+        "destructive_removals", "plan_id", "plan_digest",
+    }
+    if set(plan) != required:
+        raise CompatibilityError("invalid plan fields")
+    if type(plan["schema_version"]) is not int or plan["schema_version"] != 1:
+        raise CompatibilityError("invalid plan schema_version")
+    if plan["generator_version"] != MATERIALIZATION_GENERATOR:
+        raise CompatibilityError("unsupported plan generator_version")
+    plan_id = plan["plan_id"]
+    plan_digest = plan["plan_digest"]
+    if type(plan_id) is not str or not re.fullmatch(r"bsc-[0-9a-f]{16}", plan_id):
+        raise CompatibilityError("invalid plan_id")
+    if type(plan_digest) is not str or not SHA256.fullmatch(plan_digest):
+        raise CompatibilityError("invalid plan_digest")
+    unsigned = dict(plan)
+    unsigned.pop("plan_id")
+    unsigned.pop("plan_digest")
+    expected_digest = _digest(json.dumps(
+        unsigned, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8"))
+    if not hmac.compare_digest(expected_digest, plan_digest):
+        raise CompatibilityError("plan digest mismatch")
+    if not hmac.compare_digest(plan_id, "bsc-" + plan_digest[:16]):
+        raise CompatibilityError("plan id mismatch")
+
+    repository = plan["repository"]
+    if type(repository) is not dict or set(repository) != {"root_marker", "identity_sha256"}:
+        raise CompatibilityError("invalid repository identity")
+    if (
+        repository["root_marker"] != "resolved-project-root-v1"
+        or type(repository["identity_sha256"]) is not str
+        or not SHA256.fullmatch(repository["identity_sha256"])
+    ):
+        raise CompatibilityError("invalid repository identity")
+    if repository["identity_sha256"] != _repository_identity(root):
+        raise CompatibilityError("repository identity mismatch")
+
+    detected = plan["detected"]
+    if type(detected) is not dict or set(detected) != {"classification", "route", "stage_selector", "issues", "legacy_sources", "projection"}:
+        raise CompatibilityError("invalid detected facts")
+    intended = plan["intended_state"]
+    if type(intended) is not dict or set(intended) != {"stage_selector", "projection", "manifest"}:
+        raise CompatibilityError("invalid intended state")
+    if type(detected["classification"]) is not str or detected["classification"] not in {"legacy", "mixed"}:
+        raise CompatibilityError("invalid detected classification")
+    if type(detected["route"]) is not str or detected["route"] != "migration_required":
+        raise CompatibilityError("invalid detected route")
+    if detected["stage_selector"] is not None and (
+        type(detected["stage_selector"]) is not str or not ID.fullmatch(detected["stage_selector"])
+    ):
+        raise CompatibilityError("invalid detected stage selector")
+    if detected["issues"] != []:
+        raise CompatibilityError("invalid detected issues")
+    if type(detected["legacy_sources"]) is not list:
+        raise CompatibilityError("invalid detected legacy sources")
+    if _projection_issues(detected["projection"]) or detected["projection"] != intended["projection"]:
+        raise CompatibilityError("invalid detected current projection")
+
+    stage = intended["stage_selector"]
+    if type(stage) is not str or not ID.fullmatch(stage):
+        raise CompatibilityError("invalid intended stage selector")
+    projection = intended["projection"]
+    projection_issues = _projection_issues(projection)
+    if projection_issues:
+        raise CompatibilityError("invalid intended projection")
+    if projection["current_stage"] != stage or not ID.fullmatch(projection["next_selector"]):
+        raise CompatibilityError("intended projection selector mismatch")
+    manifest = intended["manifest"]
+    if type(manifest) is not dict:
+        raise CompatibilityError("invalid intended manifest")
+    if manifest.get("projection") != projection or manifest.get("state_owner") != "prompts/STAGES.md":
+        raise CompatibilityError("intended manifest projection mismatch")
+    if _validate_manifest(manifest, {}, stage, projection, False):
+        # Source digests are checked against preconditions below; this call only
+        # validates the manifest's strict field vocabulary and projection.
+        issues = _validate_manifest(manifest, {}, stage, projection, False)
+        if issues != ["legacy_source_set_or_digest_drift"]:
+            raise CompatibilityError("invalid intended manifest")
+
+    preconditions = plan["preconditions"]
+    if type(preconditions) is not list or len(preconditions) != len(KNOWN_STATE_FILES):
+        raise CompatibilityError("invalid plan preconditions")
+    pre_by_path: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(preconditions):
+        if type(item) is not dict or set(item) != {"path", "exists", "type", "sha256"}:
+            raise CompatibilityError("invalid plan precondition")
+        if item["path"] != KNOWN_STATE_FILES[index] or item["path"] in pre_by_path:
+            raise CompatibilityError("invalid plan precondition path")
+        if type(item["exists"]) is not bool or item["type"] not in {"regular", "absent"}:
+            raise CompatibilityError("invalid plan precondition type")
+        if item["exists"] != (item["type"] == "regular"):
+            raise CompatibilityError("invalid plan precondition state")
+        if item["sha256"] is not None and (type(item["sha256"]) is not str or not SHA256.fullmatch(item["sha256"])):
+            raise CompatibilityError("invalid plan precondition digest")
+        if item["exists"] != (item["sha256"] is not None):
+            raise CompatibilityError("invalid plan precondition digest state")
+        pre_by_path[item["path"]] = item
+
+    operations = plan["operations"]
+    if type(operations) is not list or not operations or len(operations) > 1:
+        raise CompatibilityError("invalid plan operations")
+    for item in operations:
+        if type(item) is not dict or set(item) != {"op", "path", "before_sha256", "after_sha256", "content"}:
+            raise CompatibilityError("invalid plan operation")
+        if item["op"] != "write" or item["path"] != MATERIALIZATION_TARGET:
+            raise CompatibilityError("operation target is not allow-listed")
+        if item["before_sha256"] != pre_by_path[MATERIALIZATION_TARGET]["sha256"]:
+            raise CompatibilityError("operation precondition mismatch")
+        if type(item["after_sha256"]) is not str or not SHA256.fullmatch(item["after_sha256"]):
+            raise CompatibilityError("invalid operation after digest")
+        if type(item["content"]) is not str or len(item["content"].encode("utf-8")) > MAX_PLAN_CONTENT_BYTES:
+            raise CompatibilityError("invalid operation content")
+        if _digest(item["content"].encode("utf-8")) != item["after_sha256"]:
+            raise CompatibilityError("operation content digest mismatch")
+    if plan["lock_path"] != MATERIALIZATION_LOCK:
+        raise CompatibilityError("invalid lock path")
+    for name in ("reasons", "evidence"):
+        if (
+            type(plan[name]) is not list
+            or len(plan[name]) > 128
+            or any(not _safe_text(item) for item in plan[name])
+        ):
+            raise CompatibilityError("invalid plan evidence")
+    if plan["destructive_removals"] is not False:
+        raise CompatibilityError("destructive removals are forbidden")
+    expected_sources = [
+        {"path": path, "sha256": pre_by_path[path]["sha256"], "disposition": "retained"}
+        for path in LEGACY_FILES if pre_by_path[path]["exists"]
+    ]
+    if detected["legacy_sources"] != expected_sources:
+        raise CompatibilityError("detected source precondition mismatch")
+    if manifest.get("legacy_sources") != expected_sources:
+        raise CompatibilityError("intended manifest source precondition mismatch")
+    expected_stage = intended["stage_selector"]
+    if plan["reasons"] != ["same_file_selector", "retained_legacy_sources"]:
+        raise CompatibilityError("invalid plan reasons")
+    if plan["evidence"] != [
+        f"classification:{detected['classification']}",
+        "route:migration_required",
+        f"stage:{expected_stage}",
+    ]:
+        raise CompatibilityError("invalid plan evidence")
+    return plan
+
+
+def _safe_target(root: Path, relative: str, *, allow_absent: bool = True) -> Path:
+    if relative != MATERIALIZATION_TARGET or Path(relative).is_absolute() or ".." in Path(relative).parts:
+        raise CompatibilityError("operation target is not allow-listed")
+    path = root / relative
+    cursor = root
+    for part in Path(relative).parts[:-1]:
+        cursor /= part
+        if cursor.is_symlink() or getattr(cursor, "is_junction", lambda: False)() or not cursor.is_dir():
+            raise CompatibilityError("target parent is not contained")
+    if path.exists() and (path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file()):
+        raise CompatibilityError("target is not a regular file")
+    if not allow_absent and not path.exists():
+        raise CompatibilityError("target is absent")
+    try:
+        resolved = path.resolve(strict=False)
+        resolved.relative_to(root.resolve(strict=False))
+    except (OSError, ValueError) as exc:
+        raise CompatibilityError("target escapes project") from exc
+    return path
+
+
+def _safe_transaction_target(root: Path, relative: str) -> Path:
+    """Contained regular target for the private multi-file fault-test seam."""
+    candidate = Path(relative)
+    if candidate.is_absolute() or not relative or ".." in candidate.parts:
+        raise CompatibilityError("transaction target escapes project")
+    path = root / candidate
+    cursor = root
+    for part in candidate.parts[:-1]:
+        cursor /= part
+        if cursor.is_symlink() or getattr(cursor, "is_junction", lambda: False)() or not cursor.is_dir():
+            raise CompatibilityError("transaction target parent is not contained")
+    if path.exists() and (path.is_symlink() or getattr(path, "is_junction", lambda: False)() or not path.is_file()):
+        raise CompatibilityError("transaction target is not regular")
+    try:
+        path.resolve(strict=False).relative_to(root.resolve(strict=False))
+    except (OSError, ValueError) as exc:
+        raise CompatibilityError("transaction target escapes project") from exc
+    return path
+
+
+def _read_transaction_preimage(root: Path, relative: str) -> bytes | None:
+    """Read a private transaction pre-image with the same bounded/type guarantees."""
+    path = _safe_transaction_target(root, relative)
+    if not path.exists():
+        return None
+    try:
+        if path.stat().st_size > MAX_PLAN_CONTENT_BYTES:
+            raise CompatibilityError("transaction pre-image exceeds size limit")
+        with path.open("rb") as source:
+            if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+                raise CompatibilityError("transaction pre-image is not regular")
+            raw = source.read(MAX_PLAN_CONTENT_BYTES + 1)
+    except OSError as exc:
+        raise CompatibilityError("cannot read transaction pre-image") from exc
+    if len(raw) > MAX_PLAN_CONTENT_BYTES:
+        raise CompatibilityError("transaction pre-image exceeds size limit")
+    return raw
+
+
+def _write_sibling(root: Path, target: Path, content: bytes) -> Path:
+    parent = target.parent
+    for _ in range(10):
+        candidate = parent / f".{target.name}.materialize-{os.getpid()}-{next(tempfile._get_candidate_names())}.tmp"
+        try:
+            fd = os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            continue
+        try:
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            return candidate
+        except Exception:
+            try:
+                candidate.unlink()
+            except OSError:
+                pass
+            raise
+    raise CompatibilityError("cannot create staging file")
+
+
+def _fsync_parent(path: Path) -> None:
+    """Durably flush a directory where the platform exposes directory fsync."""
+    try:
+        fd = os.open(path.parent, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
+def _rollback_targets(
+    root: Path, preimages: list[tuple[Path, bytes | None, str]], hooks: _FaultHooks,
+    *, allow_any: bool = False,
+) -> None:
+    for index, (target, previous, published_digest) in reversed(list(enumerate(preimages))):
+        if hooks.before_rollback is not None:
+            hooks.before_rollback(index, target.as_posix())
+        relative = str(target.relative_to(root)).replace("\\", "/")
+        (_safe_transaction_target if allow_any else _safe_target)(root, relative)
+        if allow_any:
+            current = _read_transaction_preimage(root, relative)
+            current_digest = _digest(current) if current is not None else None
+        else:
+            _, current_digest = _read(root, relative, MAX_STAGES_BYTES)
+        if current_digest != published_digest:
+            raise CompatibilityError("rollback target changed after publish")
+        if previous is None:
+            try:
+                target.unlink()
+                _fsync_parent(target)
+            except FileNotFoundError:
+                pass
+        else:
+            temporary = _write_sibling(root, target, previous)
+            try:
+                os.replace(temporary, target)
+                _fsync_parent(target)
+            finally:
+                if temporary.exists():
+                    temporary.unlink()
+
+
+def _publish_transaction(
+    root: Path, operations: list[dict[str, Any]], *, _fault_hooks: _FaultHooks | None = None,
+) -> int:
+    """Private deterministic transaction primitive used by rollback tests.
+
+    The public plan validator intentionally allows only the single canonical
+    STAGES target. This primitive is kept generic so failure tests can prove
+    first/mid-publish recovery without introducing another persistent owner.
+    """
+    hooks = _fault_hooks or _FaultHooks()
+    staged: list[Path] = []
+    preimages: list[tuple[Path, bytes | None, str]] = []
+    published: list[tuple[Path, bytes | None, str]] = []
+    try:
+        for index, operation in enumerate(operations):
+            relative = operation["path"]
+            target = _safe_transaction_target(root, relative)
+            if hooks.before_staging is not None:
+                hooks.before_staging(index)
+            previous = _read_transaction_preimage(root, relative)
+            previous_digest = _digest(previous) if previous is not None else None
+            if operation.get("before_sha256") != previous_digest:
+                raise CompatibilityError("transaction pre-image digest mismatch")
+            staged.append(_write_sibling(root, target, operation["content"].encode("utf-8")))
+            preimages.append((target, previous, _digest(operation["content"].encode("utf-8"))))
+        for index, operation in enumerate(operations):
+            if hooks.before_publish is not None:
+                hooks.before_publish(index, operation["path"])
+            os.replace(staged[index], preimages[index][0])
+            _fsync_parent(preimages[index][0])
+            published.append(preimages[index])
+        staged.clear()
+        return len(operations)
+    except Exception as exc:
+        try:
+            _rollback_targets(root, published, hooks, allow_any=True)
+        except Exception as rollback_exc:
+            raise CompatibilityError(f"rollback_failed: {rollback_exc}") from exc
+        raise
+    finally:
+        for temporary in staged:
+            try:
+                temporary.unlink()
+            except OSError:
+                pass
+
+
+def _readback_matches(
+    root: Path, plan: dict[str, Any], report: dict[str, Any], expected_digest: str,
+) -> bool:
+    intended = plan["intended_state"]
+    raw, digest = _read(root, MATERIALIZATION_TARGET, MAX_STAGES_BYTES)
+    return (
+        report.get("classification") == "migrated"
+        and report.get("route") == "canonical"
+        and report.get("runnable") is True
+        and report.get("stage_selector") == intended["stage_selector"]
+        and report.get("projection") == intended["projection"]
+        and raw is not None
+        and digest == expected_digest
+    )
+
+
+def _release_owned_lock(lock: Path, token: str) -> None:
+    try:
+        if not lock.is_file() or lock.is_symlink() or lock.stat().st_size > 4_096:
+            return
+        metadata = json.loads(lock.read_text(encoding="utf-8"), object_pairs_hook=_unique)
+        if type(metadata) is not dict or metadata.get("owner") != token:
+            return
+        lock.unlink()
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, RecursionError):
+        return
+
+
+def materialize_plan(
+    project: str | Path, plan_file: str | Path, *, expected_plan_digest: str | None = None,
+    _fault_hooks: _FaultHooks | None = None,
+) -> MaterializationResult:
+    root = Path(project).resolve()
+    hooks = _fault_hooks or _FaultHooks()
+    advertised_id: str | None = None
+    advertised_digest: str | None = None
+    try:
+        raw_plan, advertised_id, advertised_digest = _load_plan(plan_file)
+        if type(expected_plan_digest) is not str or not SHA256.fullmatch(expected_plan_digest):
+            raise CompatibilityError("expected plan digest is required")
+        if advertised_digest is None or not hmac.compare_digest(advertised_digest, expected_plan_digest):
+            raise CompatibilityError("expected plan digest mismatch")
+        plan = _validate_materialization_plan(raw_plan, root)
+    except CompatibilityError as exc:
+        return _result(advertised_id or "", advertised_digest or "", "invalid_plan", error=str(exc))
+    plan_id = plan["plan_id"]
+    plan_digest = plan["plan_digest"]
+    lock = root / plan["lock_path"]
+    lock_key = str(lock)
+    lock_token = f"{os.getpid()}-{threading.get_ident()}-{plan_id}"
+    try:
+        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        with _LIVE_LOCKS_GUARD:
+            live = lock_key in _LIVE_LOCKS
+        status: MaterializationStatus = "concurrent_materialization" if live else "recovery_required"
+        message = "materialization lock is busy" if live else "existing lock requires reconciliation"
+        return _result(plan_id, plan_digest, status, error=message)
+    except OSError as exc:
+        return _result(plan_id, plan_digest, "invalid_plan", error=f"cannot acquire lock: {exc}")
+
+    with _LIVE_LOCKS_GUARD:
+        _LIVE_LOCKS.add(lock_key)
+    staged: list[Path] = []
+    published: list[tuple[Path, bytes | None, str]] = []
+    readback_started = False
+    stale_during_apply = False
+    retain_lock = False
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as lock_stream:
+            json.dump({"owner": lock_token, "pid": os.getpid(), "plan_id": plan_id},
+                      lock_stream, sort_keys=True, separators=(",", ":"))
+            lock_stream.flush()
+            os.fsync(lock_stream.fileno())
+        try:
+            snapshot = _snapshot_known_state(root)
+        except CompatibilityError as exc:
+            return _result(plan_id, plan_digest, "stale_plan", error=str(exc))
+        preconditions = {item["path"]: item for item in plan["preconditions"]}
+        operation = plan["operations"][0]
+        target = _safe_target(root, operation["path"])
+        non_target_drift = [
+            path for path in KNOWN_STATE_FILES
+            if path != MATERIALIZATION_TARGET and snapshot[path] != preconditions[path]
+        ]
+        target_digest = snapshot[MATERIALIZATION_TARGET]["sha256"]
+        if not non_target_drift and target_digest == operation["after_sha256"]:
+            readback = inspect_compatibility(root)
+            if not _readback_matches(root, plan, readback, operation["after_sha256"]):
+                return _result(plan_id, plan_digest, "readback_failed_rolled_back",
+                               error="already-materialized read-back mismatch", readback=readback)
+            return _result(plan_id, plan_digest, "already_materialized", readback=readback)
+        if non_target_drift or target_digest != operation["before_sha256"]:
+            return _result(plan_id, plan_digest, "stale_plan", error="state precondition drift")
+        if hooks.before_staging is not None:
+            hooks.before_staging(0)
+        previous, previous_digest = _read(root, MATERIALIZATION_TARGET, MAX_STAGES_BYTES)
+        if previous_digest != operation["before_sha256"]:
+            stale_during_apply = True
+            raise CompatibilityError("stale plan before pre-image capture")
+        staged_path = _write_sibling(root, target, operation["content"].encode("utf-8"))
+        staged.append(staged_path)
+        if hooks.before_publish is not None:
+            hooks.before_publish(0, operation["path"])
+        try:
+            latest = _snapshot_known_state(root)
+        except CompatibilityError as exc:
+            stale_during_apply = True
+            raise CompatibilityError(f"stale plan before publish: {exc}") from exc
+        if latest != preconditions:
+            stale_during_apply = True
+            raise CompatibilityError("stale plan before publish")
+        target = _safe_target(root, operation["path"])
+        os.replace(staged_path, target)
+        _fsync_parent(target)
+        staged.clear()
+        published.append((target, previous, operation["after_sha256"]))
+        readback_started = True
+        if hooks.before_readback is not None:
+            hooks.before_readback()
+        readback = inspect_compatibility(root)
+        if not _readback_matches(root, plan, readback, operation["after_sha256"]):
+            raise CompatibilityError("read-back projection mismatch")
+        return _result(plan_id, plan_digest, "materialized", writes=1, rollback="not_needed", readback=readback)
+    except Exception as exc:
+        if stale_during_apply and not published:
+            return _result(plan_id, plan_digest, "stale_plan", error=str(exc))
+        failure_status: MaterializationStatus = "write_failed_rolled_back"
+        if published:
+            try:
+                _rollback_targets(root, published, hooks)
+                failure_status = "readback_failed_rolled_back" if readback_started else "write_failed_rolled_back"
+                rollback = "succeeded"
+            except Exception as rollback_exc:
+                retain_lock = True
+                return _result(
+                    plan_id, plan_digest, "rollback_failed", writes=len(published),
+                    error=f"{exc}; rollback: {rollback_exc}", rollback="failed",
+                )
+            return _result(plan_id, plan_digest, failure_status, writes=0, error=str(exc), rollback=rollback)
+        return _result(plan_id, plan_digest, failure_status, writes=0, error=str(exc), rollback="not_needed")
+    finally:
+        for temporary in staged:
+            try:
+                temporary.unlink()
+            except OSError:
+                pass
+        with _LIVE_LOCKS_GUARD:
+            _LIVE_LOCKS.discard(lock_key)
+        if not retain_lock:
+            _release_owned_lock(lock, lock_token)
 
 
 detect_compatibility = inspect_compatibility
