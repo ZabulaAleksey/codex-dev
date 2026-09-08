@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.dev/schemas/master-execution.schema.json",
+  "title": "Continuous Master Execution state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "state_revision", "master", "tracks", "slices", "blockers",
+    "decisions", "context_budget", "next_action", "integration"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "state_revision": {"type": "integer", "minimum": 1},
+    "master": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "source"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "status": {"enum": ["running", "partial", "blocked", "needs_continuation", "completed"]},
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["backend", "queue_id", "item_id", "revision", "prompt_type", "retention"],
+          "properties": {
+            "backend": {"type": "string"}, "queue_id": {"type": "string"},
+            "item_id": {"type": "string"}, "revision": {"type": "string"},
+            "prompt_type": {"type": "string"}, "retention": {"type": "string"}
+          }
+        }
+      }
+    },
+    "tracks": {"type": "array", "items": {"$ref": "#/$defs/track"}, "maxItems": 64},
+    "slices": {"type": "array", "items": {"$ref": "#/$defs/slice"}, "maxItems": 128},
+    "blockers": {"type": "array", "items": {"$ref": "#/$defs/blocker"}, "maxItems": 128},
+    "decisions": {"type": "array", "items": {"type": "string"}, "maxItems": 128},
+    "context_budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_chars", "max_items", "max_contours", "max_decisions", "max_evidence_threads"],
+      "properties": {
+        "max_chars": {"type": "integer", "minimum": 1}, "max_items": {"type": "integer", "minimum": 1},
+        "max_contours": {"type": "integer", "minimum": 1}, "max_decisions": {"type": "integer", "minimum": 1},
+        "max_evidence_threads": {"type": "integer", "minimum": 1}
+      }
+    },
+    "next_action": {"type": "string"},
+    "integration": {
+      "type": "object", "additionalProperties": false, "required": ["required", "reason"],
+      "properties": {"required": {"type": "boolean"}, "reason": {"type": "string"}}
+    }
+  },
+  "$defs": {
+    "track": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "repository", "worktree", "branch", "checkpoint", "ownership", "status"],
+      "properties": {
+        "id": {"type": "string"}, "repository": {"type": "string"}, "worktree": {"type": "string"},
+        "branch": {"type": "string"}, "checkpoint": {"type": "string"},
+        "ownership": {"type": "array", "items": {"type": "string"}},
+        "status": {"enum": ["active", "integration_required", "integrated", "closed"]}
+      }
+    },
+    "slice": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "master_id", "title", "status", "predecessors", "dependencies",
+        "worktree_track", "checkpoint_before", "checkpoint_after", "required_evidence", "evidence",
+        "context_scope", "model_class", "reasoning_effort", "stop_after"],
+      "properties": {
+        "id": {"type": "string"}, "master_id": {"type": "string"}, "title": {"type": "string"},
+        "status": {"enum": ["queued", "ready", "running", "implemented_unverified", "verified", "blocked", "completed"]},
+        "predecessors": {"type": "array", "items": {"type": "string"}},
+        "dependencies": {"type": "array", "items": {"type": "string"}},
+        "worktree_track": {"type": "string"}, "checkpoint_before": {"type": "string"},
+        "checkpoint_after": {"type": "string"},
+        "required_evidence": {"type": "array", "items": {"enum": ["L1", "L2", "L3", "L4", "L5", "L6"]}},
+        "evidence": {"type": "array", "items": {"enum": ["L1", "L2", "L3", "L4", "L5", "L6"]}},
+        "context_scope": {"type": "array", "items": {"type": "string"}},
+        "model_class": {"enum": ["LOW", "MEDIUM", "HIGH", "FRONTIER"]},
+        "reasoning_effort": {"enum": ["low", "medium", "high", "xhigh", "max"]},
+        "stop_after": {"type": "boolean"}
+      }
+    },
+    "blocker": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "class", "status", "owner", "evidence"],
+      "properties": {
+        "id": {"type": "string"},
+        "class": {"enum": ["regression", "pre_existing", "unrelated_debt", "environment_unavailable"]},
+        "status": {"enum": ["active", "resolved"]}, "owner": {"type": "string"},
+        "evidence": {"type": "string"}
+      }
+    }
+  }
+}

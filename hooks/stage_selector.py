@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 
 
-MAX_STAGE_RECORD_CHARS = 3500
+MAX_STAGE_RECORD_CHARS = 6000
 
 STAGE_ID_PREFIX = re.compile(r"^\s*-\s*Stage ID\s*:", re.IGNORECASE)
 STAGE_ID_LINE = re.compile(

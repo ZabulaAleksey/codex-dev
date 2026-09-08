@@ -16,6 +16,7 @@ if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
 from hooks.stage_selector import find_stage_record, parse_stage_id
+from tools.master_execution import MasterExecutionError, extract_master_state
 
 REQUIRED_FILES = (
     "AGENTS.md",
@@ -617,6 +618,15 @@ def _stage_selector_issues(project: Path) -> list[Issue]:
                 record.message or "invalid Stage heading selector",
             )
         ]
+    if record.record and "```master-execution" in record.record:
+        try:
+            extract_master_state(record.record)
+        except MasterExecutionError as exc:
+            return [Issue(
+                "invalid-master-execution-state",
+                "prompts/STAGES.md",
+                str(exc),
+            )]
     return []
 
 

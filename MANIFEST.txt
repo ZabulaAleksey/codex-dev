@@ -145,6 +145,7 @@ rules/stacks/wasm.md
 rules/stacks/web-audio.md
 rules/stacks/yjs.md
 rules/word-pdf-academic.md
+schemas/master-execution.schema.json
 schemas/ai-policy-profiling.schema.json
 skill-sources/backend-dx-audit/SKILL.md
 skill-sources/bootstrap-project-framework/agents/openai.yaml
@@ -210,6 +211,7 @@ templates/SPEC_TEMPLATE.md
 templates/SPECS_README_TEMPLATE.md
 templates/STAGES_TEMPLATE.md
 tools/ai_policy_profiler.py
+tools/master_execution.py
 tools/normalize_user_codex.py
 tools/reconcile_project_framework.py
 tools/sync_global_skills.py
@@ -218,6 +220,7 @@ tools/test_backend_dx_policy.py
 tools/test_documentation_sync_policy.py
 tools/test_global_framework_hardening.py
 tools/test_i18n_l10n_policy.py
+tools/test_master_execution.py
 tools/test_reconcile_project_framework.py
 tools/test_stage_completion_policy.py
 tools/test_sync_global_skills.py

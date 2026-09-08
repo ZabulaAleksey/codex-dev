@@ -174,6 +174,15 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         result = validate_project(project, self.workspace)
         self.assertTrue(result.ok, result.issues)
 
+    def test_declared_master_execution_state_must_be_valid(self) -> None:
+        project = self.make_project()
+        (project / "prompts/STAGES.md").write_text(
+            "- Stage ID: `MASTER-001`\n\n## MASTER-001\n\n"
+            "```master-execution\n{\"schema_version\":1}\n```\n",
+            encoding="utf-8",
+        )
+        self.assertIn("invalid-master-execution-state", self.issue_codes(project))
+
     def test_local_automation_rejects_heading_only_compatibility_audit(self) -> None:
         project = self.make_project()
         capability = project / ".codex/rules/project.rules"
