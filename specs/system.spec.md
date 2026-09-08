@@ -1,7 +1,7 @@
 # Системная спецификация AI Dev Team Codex
 
 Статус: Действует
-Версия: 1.6
+Версия: 1.7
 
 ## 1. Назначение
 
@@ -147,6 +147,17 @@ dependency, user decision, external input, destructive/integration write, canoni
 hard blocker и context budget overflow являются fail-visible stop conditions. Handoff восстанавливает
 новую сессию из Git/repository evidence; merge/push/release и cleanup остаются approval-gated.
 
+### FR-013 Brownfield canonical stage compatibility
+
+Continuous Master Execution должен иметь один bounded read-only adapter для repositories, где
+canonical `prompts/STAGES.md` ещё сосуществует с legacy `docs/AI_PLAN.md` и
+`docs/AI_STATUS.md` либо same-file selector отсутствует. Adapter детерминированно классифицирует
+state, выдаёт dry-run migration plan и не запускает work при неоднозначности.
+
+Завершённая migration подтверждается versioned compatibility block внутри selected STAGES record
+с canonical projection и digests retained legacy sources. Product files не переписываются и не
+удаляются автоматически; conflicting или drifted state требует explicit migration.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -183,6 +194,9 @@ hard blocker и context budget overflow являются fail-visible stop condi
 - AC-015 Continuous master controller выбирает готовые slices по dependency/evidence contract,
   маршрутизирует continuation/parallel tracks, создаёт bounded handoff при context overflow и
   сохраняет partial master, не выполняя merge/push/worktree cleanup автоматически.
+- AC-016 Brownfield compatibility adapter различает canonical/legacy/mixed/conflict/migrated/none,
+  возвращает idempotent non-destructive migration plan, fail closed при конфликте и сохраняет
+  прежнее поведение canonical repositories.
 
 ## 4. История изменений
 
@@ -196,3 +210,4 @@ hard blocker и context budget overflow являются fail-visible stop condi
   `prompts/STAGES.md`; отдельные AI plan/status sources выведены из canonical workflow.
 - 2026-09-08 — добавлен portable Continuous Master Execution contract с deterministic graph,
   worktree routing, low-context handoff и verification/integration gates.
+- 2026-09-08 — добавлен контракт brownfield stage compatibility и retained-legacy manifest.

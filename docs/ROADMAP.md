@@ -1,5 +1,13 @@
 # Roadmap AI Dev Team
 
+## Текущий master — Brownfield Canonical Stage Compatibility
+
+`DEV-BCSC-001` расширяет integrated CME generic compatibility adapter-ом. Первый runnable slice
+`DEV-BCSC-A` создаёт deterministic classification, same-file retained-legacy manifest contract и
+read-only dry-run migration plan. Product repositories не изменяются; electro-tutor используется
+только как первый real evidence. После checkpoint selector переходит на `DEV-BCSC-B`, где
+explicit materialization потребует отдельного bounded contract.
+
 ## Текущий internal delta — Continuous Master Execution
 
 Approved master выполняется поверх checkpoint `72197b2` в том же isolated track. Phase A фиксирует

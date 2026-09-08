@@ -115,16 +115,23 @@ recommendation существующему runtime router и не подменя�
 
 ### Brownfield migration к canonical STAGES
 
-1. Запусти read-only reconciliation и собери существующие `STAGES.md`, plan/status/progress/snapshot
-   files и все ссылки на них; до разрешения `CONFLICT` mutation запрещена.
+1. Запусти read-only reconciliation и `tools/master_execution.py <project> --compatibility`.
+   Compatibility adapter читает только bounded known paths `prompts/STAGES.md`,
+   `docs/AI_PLAN.md`, `docs/AI_STATUS.md` и детерминированно классифицирует состояние как
+   `canonical | legacy | mixed | conflict | migrated | none`. До разрешения `conflict` mutation
+   и запуск product stage запрещены.
 2. Семантически объедини в `prompts/STAGES.md` актуальные stages, selector, current/next work,
    lifecycle/evidence, blockers, acceptance/DoD и `NEXT`. При расхождении приоритет имеют
-   проверяемое evidence и более свежий подтверждённый факт; неоднозначность остаётся blocker.
-3. Обнови router, Skills, hooks, prompts, templates, scripts и documentation, которые читали или
+   проверяемое evidence и более свежий подтверждённый факт; adapter не выбирает один из
+   конфликтующих legacy facts эвристически, неоднозначность остаётся blocker.
+3. До любой записи получи dry-run plan, привязанный к SHA-256 всех retained legacy sources.
+   Завершённая migration хранит versioned `stage-compatibility` manifest в том же selected
+   `prompts/STAGES.md` record; manifest projection и same-file selector обязаны совпадать.
+4. Обнови router, Skills, hooks, prompts, templates, scripts и documentation, которые читали или
    создавали legacy source. Исторический журнал не превращай в current state.
-4. Запусти project validator, relevant tests, reference scan и semantic content audit. Legacy file
+5. Запусти project validator, relevant tests, reference scan и semantic content audit. Legacy file
    удаляется только после подтверждения отсутствия unique current content и stale links.
-5. Reconciliation/validator лишь классифицируют `MERGE`/conflict и fail visibly; они не удаляют и
+6. Reconciliation/validator лишь классифицируют `MERGE`/conflict и fail visibly; они не удаляют и
    не перезаписывают project-owned files автоматически.
 
 ## Stage contract

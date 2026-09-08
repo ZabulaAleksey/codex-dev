@@ -1,5 +1,8 @@
 # Индекс спецификаций AI Dev Team
 
+- [`features/brownfield-stage-compatibility.spec.md`](features/brownfield-stage-compatibility.spec.md) —
+  deterministic legacy AI_PLAN/AI_STATUS adapter, same-file compatibility manifest и safe dry-run
+  migration planning для brownfield repositories.
 - [`features/continuous-master-execution.spec.md`](features/continuous-master-execution.spec.md) —
   continuous master graph, deterministic worktree routing, low-context handoff, evidence/
   integration gates и hierarchical prompt lifecycle.

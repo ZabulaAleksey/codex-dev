@@ -1,5 +1,28 @@
 # Архитектура AI Dev Team
 
+## Brownfield stage compatibility adapter
+
+Новый adapter расширяет existing Continuous Master Execution, не заменяя selector/controller:
+
+    known bounded files
+      prompts/STAGES.md
+      docs/AI_PLAN.md
+      docs/AI_STATUS.md
+            |
+            v
+    StageCompatibilityInspector
+      classify + strict facts + SHA-256
+            |
+            +--> canonical route
+            +--> immutable dry-run migration plan
+            +--> conflict / migration_required
+
+После explicit migration selected STAGES record может содержать один versioned
+stage-compatibility block. Он хранит normalized projection и digests retained legacy sources;
+совпадение selector/digests является условием canonical route. Adapter не исполняет Markdown,
+не пишет в product repository и доступен через compatibility mode существующего
+tools/master_execution.py CLI. Apply/materialization остаётся отдельным future slice.
+
 ## Continuous Master Execution contour
 
 Continuous execution расширяет существующий Stage contour и не вводит второй task manager:

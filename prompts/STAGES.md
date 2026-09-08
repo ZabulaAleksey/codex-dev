@@ -1,11 +1,65 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-CME-F`
-- Sequence: `DEV-CANONICAL-STAGES-001 → DEV-CME-A → DEV-CME-B → DEV-CME-C → DEV-CME-D → DEV-CME-E → DEV-CME-F`
-- NEXT: master complete and integrated; await an explicitly selected DEV prompt.
+- Stage ID: `DEV-BCSC-A`
+- Sequence: `DEV-CME-001 → DEV-BCSC-A → DEV-BCSC-B → DEV-BCSC-C`
+- NEXT: implement the read-only detection and dry-run compatibility slice DEV-BCSC-A.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
+
+## DEV-BCSC-A — Detection + Dry-Run Compatibility Plan
+
+- Status: `planned`; Lifecycle: `in_progress`; Evidence level: `implemented locally`.
+- Master: `DEV-BCSC-001`; master status: `partial`; track: `brownfield-stage-compatibility`.
+- Worktree/branch: `~/codex-workspace/.worktrees/dev-brownfield-stage-compatibility` /
+  `feature/brownfield-stage-compatibility`; checkpoint before: `da86991`.
+- Source: explicit user master request 2026-09-08; prompt type `master_prompt`, retention `keep`.
+- Requirements: `BSC-001..010`, `NFR-BSC-001..004`; acceptance `AC-BSC-001..007`.
+
+```master-execution
+{"schema_version":1,"state_revision":1,"master":{"id":"DEV-BCSC-001","status":"partial","source":{"backend":"chat","queue_id":"none","item_id":"direct-user-request-2026-09-08","revision":"2026-09-08","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"brownfield-stage-compatibility","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-brownfield-stage-compatibility","branch":"feature/brownfield-stage-compatibility","checkpoint":"da869913af008b26c64903106773140823f63518","ownership":["canonical-stage-compatibility","tools/master_execution.py"],"status":"active"}],"slices":[{"id":"DEV-BCSC-A","master_id":"DEV-BCSC-001","title":"Detection and dry-run plan","status":"running","predecessors":[],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"da869913af008b26c64903106773140823f63518","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["BSC SPEC","stage selector","CME CLI","compatibility tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true},{"id":"DEV-BCSC-B","master_id":"DEV-BCSC-001","title":"Explicit materialization contract","status":"queued","predecessors":["DEV-BCSC-A"],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["BSC SPEC","migration plan","validator"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-BCSC-C","master_id":"DEV-BCSC-001","title":"Validator and controlled rollout","status":"queued","predecessors":["DEV-BCSC-B"],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["BSC SPEC","hook","overlay tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["same-file-manifest","dry-run-first","no-product-mutation"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"implement DEV-BCSC-A and checkpoint","integration":{"required":false,"reason":""}}
+```
+
+### Dependencies and entry evidence
+
+Prerequisite `DEV-CME-001` is completed and integrated in local `main` at `da86991`.
+Baseline: 92 relevant CME/STAGES/reconciliation tests PASS; context validator 238 files PASS.
+`electro-tutor` is Git-clean and read-only validation reports legacy AI_PLAN/AI_STATUS plus
+missing same-file selector.
+
+### Runnable slice and concrete consumer scenario
+
+`py -3 -B tools/master_execution.py <project> --compatibility` reads only bounded known state
+files and returns deterministic classification, normalized projection and optional dry-run plan.
+Temporary fixtures exercise canonical, legacy, mixed, conflict, migrated and none. The same CLI
+inspects `electro-tutor` twice with identical output and unchanged Git status.
+
+### Scope, safety, fallback and PASS
+
+Add the versioned manifest schema, pure adapter and an existing-CME CLI mode. No product writes,
+apply mode, legacy removal, hook mutation or prose guessing. Invalid/ambiguous/drifted state returns
+explicit conflict/migration_required. PASS requires fixture matrix, idempotency, canonical
+regressions, bounded-input tests, read-only real fixture evidence, global context and diff checks.
+
+Allowed temporary implementation: complete read-only inspection/dry-run path. Explicit plan
+materialization and cleanup remain future slices and cannot be inferred from A.
+
+After PASS: checkpoint A, select `DEV-BCSC-B`, then stop because the user explicitly limited this
+run to one implementation slice.
+
+## DEV-BCSC-B — Explicit Migration Materialization Contract
+
+- Status: `planned`; Lifecycle: `planned`.
+- Master: `DEV-BCSC-001`; predecessor `DEV-BCSC-A` must be verified.
+- Goal: apply only an explicitly approved, digest-matched plan with rollback and read-back; retain
+  legacy files. Product rollout remains separately authorized.
+
+## DEV-BCSC-C — Validator/Hook Adoption + Controlled Evidence
+
+- Status: `planned`; Lifecycle: `planned`.
+- Master: `DEV-BCSC-001`; predecessor `DEV-BCSC-B` must be verified.
+- Goal: integrate manifest validation into existing selector/overlay boundaries and gather
+  controlled migration evidence without mass product mutation.
 
 ## DEV-CME-A — Audit + Canonical Contract
 

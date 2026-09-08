@@ -1,5 +1,19 @@
 # Аудит совместимости контекста
 
+## Brownfield stage compatibility delta — 2026-09-08
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
+|---|---|---|---|---|
+| Canonical route | same-file selector уже strict | сохранить поведение без legacy scan | `INHERITED` | stage_selector + selected STAGES record |
+| Legacy detection | reconciler перечисляет files, validator только отклоняет | bounded semantic classification и dry-run plan | `EXTEND` | CME compatibility adapter |
+| Migrated proof | legacy может быть retained без machine proof | same-file manifest + content digests | `EXTEND` | selected STAGES record + schema |
+| Conflict behavior | missing/competing state fail visibly | explicit migration_required, без guessing | `INHERITED → EXTEND` | fallback/governance + adapter |
+| Product writes | repositories независимы | первый slice только read-only evidence | `FORBIDDEN_TO_OVERWRITE` | unchanged product roots |
+| Runtime/hooks/services | existing controller/selector достаточны | не создавать второй framework | `INHERITED` | tools/master_execution.py |
+
+Первый real fixture — electro-tutor read-only. Его legacy files, product code, Git state и active
+runtime не изменяются. Apply/materialization и mass rollout отсутствуют.
+
 ## Canonical STAGES delta — 2026-09-08
 
 | Возможность | До изменения | Delta | Статус |

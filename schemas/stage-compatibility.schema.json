@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.dev/schemas/stage-compatibility.schema.json",
+  "title": "Brownfield canonical stage compatibility manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "migration_id", "state_owner", "legacy_sources", "projection"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "migration_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+    "state_owner": {"const": "prompts/STAGES.md"},
+    "legacy_sources": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "disposition"],
+        "properties": {
+          "path": {"enum": ["docs/AI_PLAN.md", "docs/AI_STATUS.md"]},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "disposition": {"const": "retained"}
+        }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_stage", "master_id", "status", "next_selector",
+        "blockers", "checkpoint", "evidence"
+      ],
+      "properties": {
+        "current_stage": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "master_id": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "status": {
+          "enum": [
+            "planned", "queued", "ready", "running", "in_progress", "blocked", "scaffolded",
+            "implemented", "partial", "implemented_unverified", "completed", "verified",
+            "unavailable", "unknown"
+          ]
+        },
+        "next_selector": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "blockers": {"type": "array", "items": {"type": "string"}, "maxItems": 128},
+        "checkpoint": {"type": ["string", "null"]},
+        "evidence": {"type": "array", "items": {"type": "string"}, "maxItems": 128}
+      }
+    }
+  }
+}

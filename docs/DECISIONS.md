@@ -1,5 +1,26 @@
 # Существенные решения
 
+## 2026-09-08 — Brownfield state adapter остаётся внутри CME
+
+**Контекст:** canonical STAGES policy намеренно отклоняет competing AI_PLAN/AI_STATUS, однако
+brownfield repositories не могут безопасно перейти к same-file selector без предварительного
+сопоставления current stage/status/blockers/evidence. Повторное эвристическое чтение нескольких
+файлов на каждом запуске создало бы nondeterministic shadow router.
+
+**Решение:** добавить bounded read-only compatibility adapter и dry-run plan как mode existing
+master_execution CLI. До migration legacy route всегда migration_required. Завершённая migration
+фиксируется stage-compatibility block внутри selected STAGES record с normalized projection и
+digests retained legacy sources; digest/selector drift fail closed. Первый slice не имеет apply
+mode и не изменяет product repositories.
+
+**Альтернативы:** разрешить hook угадывать legacy state отклонено; автоматически удалить legacy
+files отклонено из-за риска потери unique content; отдельный registry/service отклонён как второй
+orchestration framework.
+
+**Последствия:** pure canonical route остаётся прежним. Legacy/mixed state получает reproducible
+plan и explicit review boundary; materialization, validator/hook adoption и cleanup разнесены по
+следующим dependency-safe slices.
+
 ## 2026-09-08 — Continuous master расширяет Stage contract, а не создаёт scheduler
 
 **Контекст:** один явно запущенный master должен проходить однозначные slices без ручной диспетчеризации,
