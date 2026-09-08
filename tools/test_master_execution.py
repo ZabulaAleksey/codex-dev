@@ -87,6 +87,12 @@ class StateContractTests(unittest.TestCase):
         raw = "## MASTER\n\n```master-execution\n" + json.dumps(state()) + "\n```\n"
         self.assertEqual(extract_master_state(raw)["master"]["id"], "MASTER-1")
 
+    def test_embedded_state_parses_with_crlf(self) -> None:
+        raw = ("## MASTER\n\n```master-execution\n" + json.dumps(state()) + "\n```\n").replace(
+            "\n", "\r\n"
+        )
+        self.assertEqual(extract_master_state(raw)["master"]["id"], "MASTER-1")
+
     def test_duplicate_json_key_fails_closed(self) -> None:
         raw = '```master-execution\n{"schema_version":1,"schema_version":1}\n```'
         with self.assertRaisesRegex(MasterExecutionError, "duplicate JSON key"):

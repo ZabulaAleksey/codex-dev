@@ -32,7 +32,7 @@ MAX_ITEMS = 128
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 BRANCH = re.compile(r"^(?![./])(?!.*(?:\.\.|//|@\{|\\|\s))[A-Za-z0-9._/-]{1,160}(?<![./])$")
 STATE_FENCE = re.compile(
-    r"(?ms)^```master-execution[ \t]*\r?\n(?P<body>.*?)^```[ \t]*$"
+    r"(?ms)^```master-execution[ \t]*\r?\n(?P<body>.*?)^```[ \t]*\r?$"
 )
 
 TOP_KEYS = {
