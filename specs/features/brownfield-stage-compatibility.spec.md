@@ -52,7 +52,13 @@ prompts/STAGES.md. Block хранит canonical projection и SHA-256 каждо
 
 Результат содержит current_stage, master_id, status, next_selector, blockers, checkpoint и
 evidence. Неизвестные legacy facts представлены пустым значением и explicit issue, а не догадкой.
-current_stage и next_selector обязаны быть valid stable IDs.
+current_stage и next_selector обязаны быть valid stable IDs. Если отдельный legacy `NEXT`
+отсутствует, adapter возвращает explicit incomplete issue и не создаёт runnable migration plan;
+он не подменяет отсутствующий факт текущим stage.
+Nullable master_id/checkpoint означает, что legacy project не объявляет master/checkpoint;
+пустые blockers/evidence означают отсутствие exact structured facts, а не разбор prose.
+Только canonical/migrated state с valid current_stage, status и next_selector получает
+`runnable=true`; остальные classification всегда non-runnable независимо от CLI exit code.
 
 ### BSC-005 Conflict semantics
 
@@ -67,9 +73,10 @@ migration_required и classification conflict. Controller не запускае�
 
 ### BSC-006 Dry-run migration plan
 
-Legacy и mixed state возвращают immutable plan: target prompts/STAGES.md, source fingerprints,
+Полный и непротиворечивый legacy/mixed state возвращает immutable plan: target prompts/STAGES.md, source fingerprints,
 normalized projection, preserve list, manual-review issues, destructive_removals=false и stable
 idempotency_key. Повторный запуск на тех же bytes возвращает идентичный report/plan.
+Incomplete state остаётся non-runnable `migration_required` с explicit issues и без plan.
 
 ### BSC-007 No automatic mutation
 
@@ -93,7 +100,8 @@ missing same-file selector должны давать migration_required без �
 
 ## 4. Non-functional and security requirements
 
-- NFR-BSC-001: stdlib-only, deterministic JSON, sorted sources/issues and bounded reads.
+- NFR-BSC-001: stdlib-only, deterministic JSON, sorted sources/issues, bounded reads и bounded
+  scalar projection fields без control characters.
 - NFR-BSC-002: unknown/conflicting state fails closed; no silent fallback or prose inference.
 - NFR-BSC-003: portable project-relative paths; no machine-specific path in persisted manifest.
 - NFR-BSC-004: canonical repositories and existing CME/STAGES tests retain behavior.

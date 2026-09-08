@@ -101,11 +101,16 @@ evidence — `blocked`, `partial` или `implemented_unverified`, но не `DO
 
 ```powershell
 py -3 -B .\tools\master_execution.py <project-root>
+py -3 -B .\tools\master_execution.py <project-root> --compatibility
 py -3 -B -m unittest tools.test_master_execution
 ```
 
 Подробный lifecycle и stop conditions принадлежат `rules/governance.md`; schema —
 `schemas/master-execution.schema.json`. Project без master block продолжает обычный Stage workflow.
+Compatibility mode классифицирует bounded canonical/legacy state и формирует только dry-run plan;
+при mixed/conflicting state controller не запускает product stage и не переписывает repository.
+Consumer обязан разрешать исполнение только при `runnable=true`; successful inspection process
+не означает, что detected state можно запускать.
 
 ## AI Policy Profiling / Agent Economics
 

@@ -19,7 +19,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler tools.test_master_execution tools.test_continuous_master_execution_policy
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler tools.test_master_execution tools.test_continuous_master_execution_policy tools.test_stage_compatibility
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
@@ -32,11 +32,26 @@ continuation/parallel routing, real temporary Git worktree create/read-back, aut
 L1–L6, context budget/handoff, hierarchical prompt eligibility и recovery matrix.
 `tools.test_continuous_master_execution_policy` проверяет, что router/governance/Skills/templates и
 SPEC используют один state/cleanup owner и не требуют merge question после каждого slice.
-Текущий global evidence: 181 tests PASS, context manifest 238 files PASS. Controlled read-only
+Текущий global evidence: 204 tests PASS, context manifest 242 files PASS. Controlled read-only
 `electro-tutor` check вернул pre-existing migration gaps и не является regression/global test
 failure; temporary real Git integration остаётся positive portable adapter evidence.
 После fast-forward merge в local `main`: context validator 238 files PASS, 80 deterministic
 master/STAGES/overlay tests PASS, `git diff --check` и `master_already_completed` smoke PASS.
+
+## Brownfield stage compatibility contract
+
+`tools.test_stage_compatibility` проверяет pure canonical, pure legacy, partial/mixed,
+conflicting legacy, canonical/legacy mismatch, already migrated, digest drift, absent state,
+bounded paths и повторный deterministic routing. CLI остаётся частью
+`tools/master_execution.py`; real `electro-tutor` используется только как read-only evidence,
+а не как product-specific fixture внутри test suite.
+
+Slice A: 103 targeted CME/STAGES/compatibility regressions и 204 full tests PASS. Два read-only
+запуска на `electro-tutor` дали одинаковый report SHA-256
+`f39c0ad916bdc4c8dcf595e761db2478eaff5dc2f41501fc48b52e2fa640eb0e`:
+`mixed`, `migration_required`, non-runnable stage `ET-09.3`, status `blocked`. Отсутствующие exact
+`NEXT` и blocker дают explicit issues и запрещают plan; Git status до и после clean. Это
+compatibility evidence, не product mutation и не migration completion.
 
 Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real backend/
 concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует

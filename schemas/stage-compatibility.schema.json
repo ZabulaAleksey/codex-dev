@@ -40,10 +40,10 @@
             "unavailable", "unknown"
           ]
         },
-        "next_selector": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
-        "blockers": {"type": "array", "items": {"type": "string"}, "maxItems": 128},
-        "checkpoint": {"type": ["string", "null"]},
-        "evidence": {"type": "array", "items": {"type": "string"}, "maxItems": 128}
+        "next_selector": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "blockers": {"type": "array", "items": {"type": "string", "maxLength": 1024}, "maxItems": 128},
+        "checkpoint": {"type": ["string", "null"], "maxLength": 1024},
+        "evidence": {"type": "array", "items": {"type": "string", "maxLength": 1024}, "maxItems": 128}
       }
     }
   }

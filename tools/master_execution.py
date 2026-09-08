@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from hooks.stage_selector import find_stage_record, parse_stage_id
+from tools.stage_compatibility import inspect_compatibility
 
 
 MAX_STAGES_CHARS = 500_000
@@ -899,8 +900,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--recovery", type=Path)
     parser.add_argument("--worktree-root", type=Path)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--compatibility", action="store_true")
     args = parser.parse_args(argv)
     try:
+        if args.compatibility:
+            if args.request or args.context or args.recovery or args.worktree_root or args.apply:
+                raise MasterExecutionError("--compatibility cannot be combined with execution options")
+            print(json.dumps({"ok": True, "compatibility": inspect_compatibility(args.project)}, ensure_ascii=False, sort_keys=True))
+            return 0
         stage_id, state = load_selected_state(args.project)
         output: dict[str, Any] = {"ok": True, "stage_id": stage_id,
                                   "master_id": state["master"]["id"], "state_revision": state["state_revision"]}

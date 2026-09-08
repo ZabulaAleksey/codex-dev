@@ -24,6 +24,15 @@ Project-overlay validator читает путь локального repository,
 Brownfield reconciler соблюдает те же границы: он только читает repository и test output.
 `FORBIDDEN_TO_OVERWRITE` и unresolved `CONFLICT` не могут быть автоматически обойдены refresh-процессом.
 
+Stage compatibility adapter читает только три known project-relative state path с отдельными
+size limits, запрещает symlink/non-file sources и декодирует только UTF-8. Legacy fields
+извлекаются по exact labels; duplicate/conflicting facts, malformed same-file manifest и source
+digest drift дают `conflict` / `migration_required`. Dry-run plan не исполняет Markdown, не
+запускает product code и не имеет write/apply path; retained legacy files не удаляются.
+Compatibility CLI может успешно вернуть non-runnable audit report: caller обязан проверять
+`runnable=true`, а не только process exit code. Projection scalars bounded и отвергают control
+characters; state files должны хранить только references/digests, но не credentials или payloads.
+
 Для явно объявленного Backend DX project validator читает `docs/project-context.md`
 и Git-visible `.env.example`. Он сообщает только имя подозрительного config key,
 но не его значение; private-key blocks и high-confidence credential-like values
