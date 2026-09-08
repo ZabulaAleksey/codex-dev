@@ -5,8 +5,10 @@
 `DEV-BCSC-001` расширяет integrated CME generic compatibility adapter-ом. Runnable slice
 `DEV-BCSC-A` verified at `2e442a9`: deterministic classification, same-file retained-legacy
 manifest contract и read-only dry-run migration plan реализованы без product mutations.
-Selector автоматически перешёл на dependency-ready `DEV-BCSC-B`; explicit digest-matched
-materialization остаётся следующим bounded slice, а controlled rollout — отдельным `DEV-BCSC-C`.
+`DEV-BCSC-B` verified at `1083478`: externally approved digest, full byte preconditions, atomic
+STAGES materialization, canonical read-back, CAS rollback/recovery и idempotency реализованы и
+проверены только на temporary repositories. Selector автоматически перешёл на dependency-ready
+`DEV-BCSC-C`; validator/hook adoption и controlled product evidence ещё не начаты.
 
 ## Текущий internal delta — Continuous Master Execution
 
