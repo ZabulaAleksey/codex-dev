@@ -1,5 +1,14 @@
 # Безопасность
 
+## Continuous master execution
+
+Embedded `master-execution` state считается недоверенным структурированным вводом: bounded size,
+exact fields, duplicate-key/ID rejection, cycle/path/branch validation и fail-closed unknown facts.
+State/prompt никогда не является command source. Git adapter имеет только inventory и explicit
+create-only worktree operation внутри разрешённого root; occupied target/branch и unknown outcome
+требуют read-back/reconciliation. Merge, push, release, worktree deletion и prompt cleanup не
+выполняются controller-ом. Launcher сверяется по state revision + Git checkpoint.
+
 ## Prompt queue cleanup boundary
 
 Threat/control contract принадлежит `rules/prompt-queue-lifecycle.md` и PQ SPEC.

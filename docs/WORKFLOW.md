@@ -116,6 +116,20 @@ structural consumer path, который подтверждает действи
 выполни documentation synchronization gate и покажи evidence.
 ```
 
+### Выполнить master prompt непрерывно
+
+```text
+Выполни <master prompt> из назначенной очереди. Fetch полного source обязателен. Восстанови
+selected STAGES record, embedded master-execution state и Git/worktree facts; классифицируй source
+как master_prompt и сохрани его retention. Выбери единственный dependency-ready backward-complete
+slice, выполни tests/evidence/checkpoint, обнови overall master state и автоматически продолжай
+следующий ready slice без нового пользовательского prompt. Continuation переиспользует track;
+независимый writer получает отдельную worktree/branch. Остановись только по canonical stop
+condition. При context overflow создай compact durable handoff. Не merge/push/delete worktree и не
+очищай partial master. Не спрашивай о merge после внутренних slices; запрос нужен только на
+integration/finalization boundary.
+```
+
 ### Завершить stage
 
 ```text

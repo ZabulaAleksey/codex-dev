@@ -28,6 +28,7 @@ opt-in profiler и session hooks. Prompt retention/cleanup guard и queue metada
 | PQ-09 | Generic project наследует без копии; additive project checks не могут ослабить global checks |
 | PQ-10 | Strict bounded JSON, duplicate keys/malformed/unknown fields fail closed; no command execution or credential access |
 | PQ-11 | Current project inherits canonical routing; master partial сохранён; self-test удаляет лишь запущенный one_shot после DoD либо фиксирует cleanup_blocked |
+| PQ-12 | Completed auto child/launcher проходит exact-item guard независимо от partial parent; parent master сохраняет собственные status/retention/overall DoD gates |
 
 ## Архитектура и безопасность
 
@@ -43,7 +44,7 @@ Receipt связывается с exact record fingerprint, source и before/aft
 
 ## Verification и rollout
 
-Новые unit/CLI/adapter-receipt tests реализуют PQ-01..10; current project structural test и реальная
+Новые unit/CLI/adapter-receipt tests реализуют PQ-01..10 и hierarchical eligibility PQ-12; current project structural test и реальная
 Notion операция/read-back — PQ-11. Tests с fixtures не объявляются real Notion evidence.
 Global context/unittest + project validator и targeted project tests обязательны.
 Full overlay validator используется как read-only baseline comparison: существующие unrelated

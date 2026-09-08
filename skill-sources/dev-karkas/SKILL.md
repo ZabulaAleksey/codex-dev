@@ -28,6 +28,11 @@ description: Bootstrap, audit, maintain, and evolve software projects using the 
 - **prompt-build** — превратить выбранную идею, feature или архитектурное решение в исполнимый PROMPT;
 - **execute** — реализовать явно одобренный prompt/этап, провести проверки и синхронизировать подтверждённый статус.
 
+Для explicitly launched `master_prompt` режим `execute` остаётся активным между однозначными
+backward-complete slices. Используй embedded `master-execution` state и global controller; commit
+не завершает master. Остановись только по canonical stop condition, а при budget overflow создай
+durable low-context handoff. Merge/push/worktree cleanup остаются finalization boundaries.
+
 Если режим однозначно следует из задачи, не проси пользователя выбирать его.
 
 ## Обязательные references
@@ -126,6 +131,10 @@ Stage contract из `~/.codex/rules/governance.md`; references ниже не п�
 - какие проверки не удалось выполнить;
 - какие state-bearing документы обновлены или проверены без изменений;
 - какой следующий шаг является первым ещё не выполненным.
+
+Для partial master report дополнительно содержит master/track/worktree/branch/checkpoint, current
+slice, overall status, evidence, ready/blocked slices, next automatic action и cleanup semantics.
+Не задавай repetitive merge question: автоматически продолжай либо назови реальную stop condition.
 
 ## Notion
 

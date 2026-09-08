@@ -8,6 +8,11 @@
 Требования принадлежат SPEC, долгосрочный порядок — `docs/ROADMAP.md`, история — Git/CHANGELOG/
 DEV_LOG при наличии. Перед validator замени placeholder selector реальным stable ASCII ID.
 
+Если пользователь явно запускает `master_prompt`, current record может содержать один versioned
+bounded `master-execution` JSON block по `schemas/master-execution.schema.json`. Не добавляй block
+для обычного stage и не создавай отдельный master status/track registry/handoff file. Controller
+читает только selected record и сохраняет Prompt Queue Lifecycle/merge approval boundaries.
+
 ## <stable-id> — <название самостоятельного slice>
 
 - Status: `planned | implemented | verified | partial | blocked | unavailable`

@@ -44,6 +44,18 @@ slice или E2E зависит от future stage, допускаются тол
 `implemented_unverified` или `partial`. Requirements принадлежат SPEC/ADR; accepted tests являются
 executable contract/evidence, но не первичным source of requirements.
 
+## Continuous master state
+
+Явно запущенный `master_prompt` хранит один versioned `master-execution` block внутри selected
+STAGES record. Он содержит graph, active track/worktree/branch, source revision/retention,
+checkpoints, required evidence, blockers/decisions, context budget и next action. Отдельный master
+status/registry/handoff owner запрещён. После каждого slice синхронизируй result и overall master
+status; если следующий slice единственный и ready, продолжай без нового user prompt.
+
+Budget overflow, новая сессия или compaction используют compact launcher из canonical state.
+Stale revision/checkpoint требует fresh read/reconciliation. Partial master сохраняется в prompt
+queue; completed child cleanup не меняет parent status.
+
 ## Обновление текущего состояния
 
 После изменения фактического состояния до handoff обнови только соответствующий stage record:

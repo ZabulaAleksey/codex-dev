@@ -63,6 +63,18 @@ Fallback подчиняется `rules/fallback-policy.md`:
 Если fallback не обеспечивает требуемые точность, reasoning depth, context capacity,
 security guarantees или tool capability, заверши операцию fail closed либо эскалируй.
 
+## Continuous master slices
+
+`master-execution` state фиксирует для каждого slice `model_class` (`LOW | MEDIUM | HIGH |
+FRONTIER`) и `reasoning_effort` как recommendation runtime adapter. Механический slice принятого
+контракта обычно использует LOW/MEDIUM; архитектурная развилка, conflicting SPEC/ADR, сложная
+schema/parser/concurrency/security/payment semantics — HIGH. FRONTIER требует фактической
+эскалации capability, а не размера prompt.
+
+Metadata не меняет выбранную пользователем модель главного агента. Существенная смена capability
+предпочитает checkpoint + durable low-context handoff + новую session; один длинный active slice
+не переключает model молча.
+
 ## Проверки
 
 Более лёгкая модель и меньший reasoning не отменяют SPEC, Definition of Done,

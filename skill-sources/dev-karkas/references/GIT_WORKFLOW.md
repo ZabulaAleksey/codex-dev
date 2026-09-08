@@ -14,6 +14,12 @@
 
 Не затирай unrelated work.
 
+Для Continuous Master Execution continuation того же track переиспользует существующий worktree.
+Независимый parallel writer получает отдельную branch/worktree через deterministic route;
+read-only task isolation не создаёт. Occupied path/branch, dirty unknown state или ownership
+overlap дают fail-closed/integration checkpoint. Worktree живёт до coherent integration или
+finalization boundary и не удаляется после каждого slice.
+
 ## Commit
 
 Commit должен быть атомарным и соответствовать выполненному scope. Не включай случайные unrelated files.
@@ -29,6 +35,10 @@ Commit должен быть атомарным и соответствоват�
 - branch deletion.
 
 Одно не означает другое.
+
+Checkpoint commits внутренних master slices не являются запросом на merge. Integration checkpoint
+нужен на coherent boundary, cross-track dependency/divergence, release gate или master completion;
+сам checkpoint не разрешает merge/push/delete.
 
 Если пользователь просит простой merge без PR и repository policy это допускает, используй обычный git merge workflow; не создавай искусственный PR только ради процесса.
 

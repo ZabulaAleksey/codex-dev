@@ -261,7 +261,8 @@ def load_selected_state(project: Path) -> tuple[str, dict[str, Any]]:
         stages_path.relative_to(root)
     except ValueError as exc:
         raise MasterExecutionError("STAGES path escapes project") from exc
-    raw = stages_path.read_text(encoding="utf-8")
+    with stages_path.open("r", encoding="utf-8") as stream:
+        raw = stream.read(MAX_STAGES_CHARS + 1)
     if len(raw) > MAX_STAGES_CHARS:
         raise MasterExecutionError("STAGES exceeds scan limit")
     selector = parse_stage_id(raw)
@@ -358,6 +359,28 @@ class IntegrationSignals:
     master_complete: bool = False
 
 
+@dataclass(frozen=True)
+class CleanupEligibility:
+    action: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class RecoveryFacts:
+    git_head: str
+    worktree_exists: bool
+    branch_exists: bool
+    dirty: bool
+    source_revision: str
+    queue_item_present: bool
+    launcher_state_revision: int
+    launcher_checkpoint: str
+    checkpoint_reachable: bool = True
+    state_revision_at_head: bool = True
+    overlapping_contract_merged: bool = False
+    context_compacted: bool = False
+
+
 def _evidence_satisfies(item: dict[str, Any]) -> bool:
     available = set(item["evidence"])
     return set(item["required_evidence"]).issubset(available)
@@ -408,6 +431,67 @@ def integration_decision(signals: IntegrationSignals) -> ExecutionDecision:
     if not reasons:
         return ExecutionDecision("defer_integration", "no_integration_boundary")
     return ExecutionDecision("integration_checkpoint", "+".join(reasons))
+
+
+def cleanup_eligibility(prompt_type: str, item_status: str, retention: str, *,
+                        parent_master_status: str = "", overall_dod: bool = False) -> CleanupEligibility:
+    """Classify hierarchy before delegating any eligible exact item to prompt_queue.py."""
+    if prompt_type not in {"one_shot", "one_shot_launcher", "child_prompt", "master_prompt"}:
+        return CleanupEligibility("retain", "unknown_prompt_type")
+    if item_status != "completed":
+        return CleanupEligibility("retain", "item_incomplete")
+    if prompt_type == "master_prompt":
+        if retention != "auto":
+            return CleanupEligibility("retain", "master_retention_protected")
+        if not overall_dod:
+            return CleanupEligibility("retain", "master_overall_dod_missing")
+        return CleanupEligibility("existing_guard", "completed_auto_master_requires_exact_item_guard")
+    if retention != "auto":
+        return CleanupEligibility("retain", "item_retention_protected")
+    reason = "completed_child_independent_of_partial_parent"
+    if parent_master_status and parent_master_status not in MASTER_STATUS:
+        return CleanupEligibility("retain", "unknown_parent_master_status")
+    return CleanupEligibility("existing_guard", reason)
+
+
+def recover_execution(state: dict[str, Any], facts: RecoveryFacts) -> ExecutionDecision:
+    """Reconcile durable state with bounded Git/prompt/session observations."""
+    validate_state(state)
+    track = next((item for item in state["tracks"] if item["status"] in {"active", "integration_required"}), None)
+    if track is None:
+        return ExecutionDecision("blocked", "active_track_missing")
+    if facts.source_revision != state["master"]["source"]["revision"]:
+        return ExecutionDecision("blocked", "master_source_revision_changed")
+    if not facts.queue_item_present:
+        return ExecutionDecision("blocked", "queue_item_missing_requires_receipt_reconciliation")
+    if facts.worktree_exists and not facts.branch_exists:
+        return ExecutionDecision("blocked", "worktree_exists_but_branch_missing")
+    if facts.branch_exists and not facts.worktree_exists:
+        return ExecutionDecision("route_worktree", "branch_exists_but_worktree_missing")
+    if not facts.branch_exists and not facts.worktree_exists:
+        return ExecutionDecision("blocked", "track_branch_and_worktree_missing")
+    if facts.dirty:
+        return ExecutionDecision("blocked", "user_or_unknown_dirty_changes_between_slices")
+    if facts.overlapping_contract_merged:
+        return ExecutionDecision("integration_checkpoint", "parallel_track_merged_overlapping_contract")
+    if (facts.launcher_state_revision != state["state_revision"]
+            or facts.launcher_checkpoint != track["checkpoint"]):
+        return ExecutionDecision("handoff", "stale_launcher_requires_fresh_state")
+    running = [item for item in state["slices"] if item["status"] == "running"]
+    if facts.git_head != track["checkpoint"]:
+        if not facts.checkpoint_reachable:
+            return ExecutionDecision("blocked", "status_checkpoint_not_present_in_git")
+        if facts.state_revision_at_head:
+            pass
+        elif running and not running[0]["checkpoint_after"]:
+            return ExecutionDecision("reconcile_status", "commit_created_before_status_update", running[0]["id"])
+        else:
+            return ExecutionDecision("blocked", "durable_state_not_present_at_git_head")
+    if facts.context_compacted:
+        target = running[0]["id"] if running else ""
+        return ExecutionDecision("handoff", "context_compacted_resume_from_durable_state", target)
+    return ExecutionDecision("resume", "git_state_prompt_and_launcher_consistent",
+                             running[0]["id"] if running else "")
 
 
 def next_execution_decision(state: dict[str, Any], signals: StopSignals | None = None) -> ExecutionDecision:
@@ -639,6 +723,9 @@ def route_worktree(state: dict[str, Any], request: RouteRequest,
         _string(value, label)
     if len(set(request.ownership)) != len(request.ownership):
         raise MasterExecutionError("duplicate route ownership")
+    repositories = {track["repository"] for track in state["tracks"]}
+    if request.repository not in repositories:
+        raise MasterExecutionError("route repository is outside the registered master")
 
     tracks = {track["id"]: track for track in state["tracks"]}
     existing = tracks.get(request.track_id)
@@ -719,6 +806,8 @@ class GitWorktreeAdapter:
         return tuple(facts)
 
     def ensure(self, decision: RouteDecision) -> WorktreeFact:
+        if _path_key(decision.repository) != _path_key(self.repository):
+            raise MasterExecutionError("route decision repository mismatch")
         if decision.action in {"reuse", "read_only"}:
             fact = next((item for item in self.snapshot()
                          if _path_key(item.path) == _path_key(decision.worktree)), None)
@@ -734,6 +823,7 @@ class GitWorktreeAdapter:
             raise MasterExecutionError("worktree target escapes allowed root") from exc
         if target == self.worktree_root or target.exists():
             raise MasterExecutionError("worktree target is occupied")
+        self._git("check-ref-format", "--branch", decision.branch)
         before = self.snapshot()
         if any(item.branch.casefold() == decision.branch.casefold() for item in before):
             raise MasterExecutionError("branch is already checked out")
@@ -762,7 +852,10 @@ def _request_from_json(raw: Any) -> RouteRequest:
 
 
 def _read_json(path: Path) -> Any:
-    raw = path.read_bytes()
+    if str(path).startswith(("\\\\", "//")):
+        raise MasterExecutionError("network JSON paths are forbidden")
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_STATE_CHARS + 1)
     if len(raw) > MAX_STATE_CHARS:
         raise MasterExecutionError("JSON input exceeds size limit")
     return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
@@ -778,11 +871,32 @@ def _context_from_json(raw: Any) -> tuple[ContextItem, ...]:
     return tuple(result)
 
 
+def _recovery_from_json(raw: Any) -> RecoveryFacts:
+    keys = {
+        "git_head", "worktree_exists", "branch_exists", "dirty", "source_revision",
+        "queue_item_present", "launcher_state_revision", "launcher_checkpoint",
+        "checkpoint_reachable", "state_revision_at_head", "overlapping_contract_merged",
+        "context_compacted",
+    }
+    data = _exact(raw, keys, "recovery facts")
+    for key in ("git_head", "source_revision", "launcher_checkpoint"):
+        _string(data[key], f"recovery {key}")
+    for key in ("worktree_exists", "branch_exists", "dirty", "queue_item_present",
+                "checkpoint_reachable", "state_revision_at_head", "overlapping_contract_merged",
+                "context_compacted"):
+        if type(data[key]) is not bool:
+            raise MasterExecutionError(f"invalid recovery {key}")
+    if type(data["launcher_state_revision"]) is not int or data["launcher_state_revision"] < 1:
+        raise MasterExecutionError("invalid recovery launcher_state_revision")
+    return RecoveryFacts(**data)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", type=Path)
     parser.add_argument("--request", type=Path)
     parser.add_argument("--context", type=Path)
+    parser.add_argument("--recovery", type=Path)
     parser.add_argument("--worktree-root", type=Path)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args(argv)
@@ -791,6 +905,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         output: dict[str, Any] = {"ok": True, "stage_id": stage_id,
                                   "master_id": state["master"]["id"], "state_revision": state["state_revision"]}
         output["decision"] = asdict(next_execution_decision(state))
+        if args.recovery:
+            output["recovery"] = asdict(recover_execution(state, _recovery_from_json(
+                _read_json(args.recovery))))
         if args.context:
             decision = next_execution_decision(state)
             target = decision.slice_id or next((item["id"] for item in state["slices"]

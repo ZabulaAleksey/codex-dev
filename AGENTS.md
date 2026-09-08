@@ -54,6 +54,12 @@ status, blockers/evidence и NEXT находятся в выбранном STAGE
 выбранный record. Invalid/missing/ambiguous selector даёт visible `DEGRADED`; прочитай полный record
 вручную и не используй completion claim, пока контракт не проверен.
 
+Если selected record объявляет fenced `master-execution` state, используй Continuous Master
+Execution из `rules/governance.md` и deterministic `tools/master_execution.py`. После одного явно
+запущенного `master_prompt` автоматически переходи между единственными dependency-ready
+backward-complete slices. Останавливайся только по canonical stop condition; checkpoint commit сам
+по себе не stop. Invalid/stale graph, launcher или adapter facts дают visible fail-closed outcome.
+
 ## 3. Обязательные cross-cutting routes
 
 - Structure, lifecycle, source ownership, stages, documentation/evidence, tool boundaries:
@@ -86,8 +92,9 @@ production actions deny-by-default.
 2. прочитай project `docs/git-flow.md`, если он существует;
 3. не изменяй напрямую `main`, `master` или `dev`; используй `feature/<task>` / `fix/<task>` либо
    project convention;
-4. один write-capable процесс работает в обычной ветке; два и более параллельных writers — только
-   в отдельных branches/worktrees с непересекающимися файлами;
+4. continuation того же master/track переиспользует его worktree; независимый parallel writer
+   автоматически получает отдельную branch/worktree, а ownership overlap требует integration
+   checkpoint; read-only task не создаёт worktree механически;
 5. не выполняй merge, worktree deletion, PR, push, force push, history rewrite или production
    deployment без явного разрешения.
 
@@ -219,15 +226,19 @@ machine keys не переводи. Другой основной язык — �
 Не повышай evidence выше факта: `implemented locally → validated locally → committed → pushed →
 PR opened → merged → released/deployed`.
 
-Если использовалась обычная ветка, заверши вопросом:
+Для standalone task либо master integration/finalization boundary в обычной ветке заверши вопросом:
 
 «Фича реализована. Проверяем работу, или я могу выполнить слияние (merge) с главной веткой?»
 
-Если использовался отдельный worktree:
+Для master/track integration/finalization boundary в отдельном worktree:
 
 «Изолированная работа завершена. Могу ли я слить ветку в main и удалить временный worktree?»
 
 Merge разрешён только после явного ответа: `Да, сливай`.
+
+Не задавай этот вопрос после каждого внутреннего master slice. Пока master/track `partial`, создай
+checkpoint, синхронизируй overall master state/NEXT и автоматически продолжай готовый slice либо
+остановись с конкретной stop condition. Worktree сохраняется на весь coherent track.
 
 ## 11. Notion и идеи
 

@@ -19,11 +19,23 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler
+py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler tools.test_master_execution tools.test_continuous_master_execution_policy
 py -3 -B tools\sync_global_skills.py
 py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
 git diff --check
 ```
+
+## Continuous Master Execution contract
+
+`tools.test_master_execution` проверяет embedded state/schema, cycle/ambiguity/evidence gates,
+continuation/parallel routing, real temporary Git worktree create/read-back, auto-advance,
+L1–L6, context budget/handoff, hierarchical prompt eligibility и recovery matrix.
+`tools.test_continuous_master_execution_policy` проверяет, что router/governance/Skills/templates и
+SPEC используют один state/cleanup owner и не требуют merge question после каждого slice.
+
+Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real backend/
+concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует
+соответствующего real level; synthetic evidence не повышается автоматически.
 
 `install-global.ps1` выполняет Skill sync и основные проверки installed layer, но
 не заменяет целевой unit suite во время разработки.

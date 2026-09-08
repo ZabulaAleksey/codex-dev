@@ -9,8 +9,10 @@ from pathlib import Path
 from tools.master_execution import (
     GitWorktreeAdapter,
     ContextItem,
+    CleanupEligibility,
     FailureObservation,
     IntegrationSignals,
+    RecoveryFacts,
     MasterExecutionError,
     RouteRequest,
     StopSignals,
@@ -18,12 +20,14 @@ from tools.master_execution import (
     apply_slice_result,
     build_handoff,
     classify_failure,
+    cleanup_eligibility,
     evidence_decision,
     extract_master_state,
     next_execution_decision,
     integration_decision,
     required_evidence_for,
     render_launcher,
+    recover_execution,
     resolve_context,
     route_worktree,
     validate_handoff,
@@ -217,6 +221,86 @@ class EvidenceAndIntegrationTests(unittest.TestCase):
         self.assertNotIn("merge", decision.action)
 
 
+class HierarchicalLifecycleTests(unittest.TestCase):
+    def test_completed_child_can_reach_existing_guard_while_master_partial(self) -> None:
+        decision = cleanup_eligibility("child_prompt", "completed", "auto",
+                                       parent_master_status="partial")
+        self.assertEqual(decision.action, "existing_guard")
+
+    def test_partial_or_retained_master_is_never_cleanup_eligible(self) -> None:
+        self.assertEqual(cleanup_eligibility("master_prompt", "partial", "auto").action, "retain")
+        self.assertEqual(cleanup_eligibility(
+            "master_prompt", "completed", "keep", overall_dod=True).action, "retain")
+        self.assertEqual(cleanup_eligibility(
+            "master_prompt", "completed", "auto", overall_dod=False).action, "retain")
+
+    def test_completed_auto_master_with_dod_delegates_to_existing_guard(self) -> None:
+        decision = cleanup_eligibility("master_prompt", "completed", "auto", overall_dod=True)
+        self.assertEqual(decision, CleanupEligibility(
+            "existing_guard", "completed_auto_master_requires_exact_item_guard"))
+
+
+class RecoveryTests(unittest.TestCase):
+    def current(self) -> dict:
+        value = state()
+        value["slices"][0]["status"] = "running"
+        value["slices"][0]["checkpoint_after"] = ""
+        return value
+
+    def facts(self, **overrides) -> RecoveryFacts:
+        values = dict(git_head="abc123", worktree_exists=True, branch_exists=True, dirty=False,
+                      source_revision="rev-1", queue_item_present=True, launcher_state_revision=1,
+                      launcher_checkpoint="abc123", checkpoint_reachable=True,
+                      state_revision_at_head=True, overlapping_contract_merged=False,
+                      context_compacted=False)
+        values.update(overrides)
+        return RecoveryFacts(**values)
+
+    def test_clean_state_resumes(self) -> None:
+        self.assertEqual(recover_execution(self.current(), self.facts()).action, "resume")
+
+    def test_crash_after_commit_before_status_update_reconciles(self) -> None:
+        decision = recover_execution(self.current(), self.facts(
+            git_head="new-commit", state_revision_at_head=False))
+        self.assertEqual(decision.action, "reconcile_status")
+
+    def test_status_updated_before_failed_commit_blocks(self) -> None:
+        value = self.current()
+        value["slices"][0]["status"] = "completed"
+        value["slices"][0]["checkpoint_after"] = "state-only"
+        value["tracks"][0]["checkpoint"] = "state-only"
+        decision = recover_execution(value, self.facts(
+            git_head="abc123", launcher_checkpoint="state-only", checkpoint_reachable=False,
+            state_revision_at_head=False))
+        self.assertEqual(decision.reason, "status_checkpoint_not_present_in_git")
+
+    def test_status_sync_commit_after_checkpoint_resumes(self) -> None:
+        decision = recover_execution(self.current(), self.facts(git_head="status-sync"))
+        self.assertEqual(decision.action, "resume")
+
+    def test_missing_branch_or_worktree_routes_safely(self) -> None:
+        self.assertEqual(recover_execution(
+            self.current(), self.facts(branch_exists=False)).action, "blocked")
+        self.assertEqual(recover_execution(
+            self.current(), self.facts(worktree_exists=False)).action, "route_worktree")
+
+    def test_stale_launcher_or_changed_master_blocks_progression(self) -> None:
+        self.assertEqual(recover_execution(
+            self.current(), self.facts(launcher_state_revision=0)).action, "handoff")
+        self.assertEqual(recover_execution(
+            self.current(), self.facts(source_revision="rev-2")).action, "blocked")
+
+    def test_dirty_overlap_missing_queue_and_compaction_are_distinct(self) -> None:
+        self.assertIn("dirty", recover_execution(self.current(), self.facts(dirty=True)).reason)
+        self.assertEqual(recover_execution(
+            self.current(), self.facts(overlapping_contract_merged=True)).action,
+            "integration_checkpoint")
+        self.assertIn("queue_item_missing", recover_execution(
+            self.current(), self.facts(queue_item_present=False)).reason)
+        self.assertEqual(recover_execution(
+            self.current(), self.facts(context_compacted=True)).action, "handoff")
+
+
 class WorktreeRoutingTests(unittest.TestCase):
     def request(self, **overrides) -> RouteRequest:
         values = dict(master_id="MASTER-1", track_id="track-a", task_kind="continuation",
@@ -254,6 +338,10 @@ class WorktreeRoutingTests(unittest.TestCase):
                 task_kind="parallel", track_id="track-b", branch="feature/b", worktree="/worktrees/b",
                 ownership=("tools/new.py",)), [WorktreeFact("/worktrees/b", "abc", "other")])
 
+    def test_cross_repository_route_fails_closed(self) -> None:
+        with self.assertRaisesRegex(MasterExecutionError, "outside the registered master"):
+            route_worktree(state(), self.request(repository="/other"))
+
 
 class RealGitWorktreeTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -278,7 +366,9 @@ class RealGitWorktreeTests(unittest.TestCase):
         head = subprocess.run(["git", "-C", str(self.repo), "rev-parse", "HEAD"], check=True,
                               capture_output=True, text=True).stdout.strip()
         adapter = GitWorktreeAdapter(self.repo, worktrees)
-        decision = route_worktree(state(), RouteRequest(
+        value = state()
+        value["tracks"][0]["repository"] = str(self.repo)
+        decision = route_worktree(value, RouteRequest(
             master_id="MASTER-1", track_id="track-b", task_kind="parallel",
             repository=str(self.repo), branch="feature/track-b", worktree=str(target),
             checkpoint=head, ownership=("tools/new.py",)), adapter.snapshot())

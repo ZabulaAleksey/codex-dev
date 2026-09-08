@@ -64,6 +64,7 @@ REQUIRED = {
     "tools/validate_project_overlay.py",
     "tools/test_validate_project_overlay.py",
     "tools/test_backend_dx_policy.py",
+    "tools/test_continuous_master_execution_policy.py",
     "tools/test_documentation_sync_policy.py",
     "tools/test_i18n_l10n_policy.py",
     "tools/test_global_framework_hardening.py",

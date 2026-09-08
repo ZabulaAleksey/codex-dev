@@ -2,6 +2,15 @@
 
 Этот документ задаёт общую для `~/codex-workspace/*` терминологию. Он описывает инженерный процесс, а не структуру конкретного продукта.
 
+## Continuous Master Execution
+
+Крупный approved master не превращается ни в giant diff, ни в ручную очередь микропромптов.
+Selected `prompts/STAGES.md` record хранит versioned graph/track/checkpoint state; controller
+выбирает единственный dependency-ready backward-complete slice, проверяет evidence/stop/context,
+создаёт checkpoint и продолжает автоматически. Continuation reuse-ит worktree, independent writer
+получает isolated branch/worktree. Low-context launcher восстанавливается из repository facts;
+merge/push/cleanup остаются finalization operations с отдельным разрешением.
+
 ## Определения
 
 **КАРКАС проекта** — минимально достаточный living contract, который переводит идею или SPEC в состояние, пригодное для безопасной поэтапной разработки. Он связывает требования, архитектурные границы, решения, план этапов, проверки и текущее состояние.

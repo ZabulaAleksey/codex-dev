@@ -12,6 +12,12 @@ Queue metadata хранится вместе с task evidence, а lifecycle пр
 `reference`, `unknown`; retention: `auto` или `keep`. Неоднозначность означает `unknown`.
 Master/template/reference и `keep` сохраняются независимо от completion.
 
+Hierarchical execution не меняет cleanup owner: completed `one_shot` launcher/child с `auto`
+retention может отдельно пройти обычный exact-item guard, даже если parent master остаётся
+`partial`. Parent master не наследует cleanup outcome ребёнка; partial/blocked/needs-continuation
+master сохраняется. Completed master допускается к guard только при overall DoD, `auto` retention
+и остальных глобальных gates; `keep` остаётся protected.
+
 Переходы: `queued → running → completed | partial | blocked | needs_continuation`;
 возобновление partial/blocked/needs_continuation идёт через running. Lifecycle выполнения
 отделён от cleanup outcome: `retain`, `allowed`, `cleanup_blocked`, `cleaned`, `noop`.

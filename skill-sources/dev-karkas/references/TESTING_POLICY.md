@@ -32,6 +32,11 @@ SPEC/ADR являются источником требований. Accepted te
 - security;
 - performance/load.
 
+Continuous Master Execution нормализует evidence как `L1 static/type/lint`, `L2 unit`,
+`L3 component/integration`, `L4 real backend/concurrency`, `L5 browser/UI/runtime`, `L6 external/
+manual acceptance`. Required level зависит от риска slice; наличие L1/L2 не заменяет обязательный
+L4/L5/L6 gate. Downstream не продолжает critical chain при missing mandatory evidence.
+
 ## E2E
 
 Для пользовательского продукта E2E должен покрывать ключевые сценарии, а не каждую кнопку. Каждый

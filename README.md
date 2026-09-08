@@ -28,7 +28,9 @@ Project наследует правило через global router и добав
 
 1. **Глобальное ядро команды** хранится в `~/.codex/agents/`.
 2. **Глобальные Skills** версионируются в `~/.codex/skill-sources/` и устанавливаются в `~/.agents/skills/`.
-3. Каждый репозиторий имеет тонкий `AGENTS.md`, SPEC и `docs/AI_*.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при подтверждённом проектном пробеле.
+3. Каждый full staged repository имеет тонкий `AGENTS.md`, SPEC и единственный execution-state
+   owner `prompts/STAGES.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при
+   подтверждённом project gap.
 4. Глобальные hooks защищают от опасных команд и подмешивают краткий статус проекта в контекст.
 5. Rules задают детерминированную политику для опасных shell-команд.
 6. MCP подключаются по принципу минимально необходимого набора инструментов.
@@ -89,6 +91,21 @@ Project-specific инструкции, архитектура, Skills и agents 
 расширить или заменить работающий slice, но не впервые сделать предыдущий stage исполнимым либо
 проверяемым. Mock/stub/interface-only результат остаётся `scaffolded`, а отсутствие живого PASS
 evidence — `blocked`, `partial` или `implemented_unverified`, но не `DONE`.
+
+## Continuous Master Execution
+
+Явно запущенный `master_prompt` хранит versioned graph/track/checkpoint внутри selected
+`prompts/STAGES.md` record. Controller выбирает dependency-ready slice, маршрутизирует continuation
+или isolated parallel worktree, применяет evidence/stop/context gates и строит low-context handoff;
+он не исполняет task commands и не делает merge/push/cleanup.
+
+```powershell
+py -3 -B .\tools\master_execution.py <project-root>
+py -3 -B -m unittest tools.test_master_execution
+```
+
+Подробный lifecycle и stop conditions принадлежат `rules/governance.md`; schema —
+`schemas/master-execution.schema.json`. Project без master block продолжает обычный Stage workflow.
 
 ## AI Policy Profiling / Agent Economics
 

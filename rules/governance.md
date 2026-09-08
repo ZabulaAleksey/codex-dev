@@ -5,6 +5,31 @@
 Для execution/cleanup внешнего queue item применяй `rules/prompt-queue-lifecycle.md`.
 Queue receipt дополняет существующее task evidence и не заменяет Stage/Completion Gate.
 
+## Continuous Master Execution
+
+После explicit запуска `master_prompt` selected STAGES record может содержать ровно один bounded
+versioned `master-execution` JSON block. Это projection существующего Stage contract, а не второй
+task/status owner. `tools/master_execution.py` детерминированно валидирует graph/track/checkpoint,
+выбирает единственный ready slice, проверяет evidence/stop/context gates и строит low-context
+handoff; implementation commands остаются у агента/runtime adapter и не берутся из state.
+
+Цикл: `restore → ready slice → implement → evidence → checkpoint → master state sync → next ready`.
+Checkpoint не останавливает continuous execution. Stop обязателен при ambiguous ready set,
+canonical conflict, user/product decision, secret/external environment, hard blocker, destructive
+или integration write, context overflow, explicit stop либо master completion. Critical dependency
+без required real evidence получает узкий VerificationGate и не пропускает downstream.
+
+Continuation того же master/track переиспользует registered worktree. Независимый parallel writer
+получает отдельную branch/worktree через guarded create-only Git adapter; occupied path/branch,
+dirty/unknown state и overlapping ownership fail closed либо требуют IntegrationCheckpoint.
+Read-only task не создаёт isolation. Worktree не удаляется после slice; merge/push/release/cleanup
+не выполняются controller-ом и остаются approval-gated finalization operations.
+
+Context scope содержит только required router, current master summary, immediate evidence,
+relevant SPEC/ADR, touched subsystem/tests и blockers. Budget overflow означает checkpoint +
+durable state + compact launcher/handoff, а не silent truncation. Model/reasoning metadata является
+recommendation существующему runtime router и не подменяет выбранную пользователем модель.
+
 
 Этот документ — канонический общий контракт для структуры контекста, project lifecycle и evidence. Project `AGENTS.md` хранит только подтверждённую delta.
 

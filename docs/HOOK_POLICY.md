@@ -27,6 +27,10 @@ Markdown heading вне fenced code block с этим ID как отдельны
 ставит bounded record первым в дополнительном контексте; весь catalog не загружается. Это context
 projection, а не semantic validation DAG, prerequisites или evidence.
 
+Selected Continuous Master record может включать bounded `master-execution` block; record limit
+равен 6000 chars внутри общего 9000-char hook budget. Hook только проецирует block, а schema,
+graph/evidence/recovery semantics валидируют project validator и `tools/master_execution.py`.
+
 Fallback-цепочка детерминирована: repository без `prompts/STAGES.md` получает обычный bounded
 project snapshot; существующий STAGES без valid unique selector либо oversized catalog выдаёт
 `Stage context — DEGRADED` и не подставляет другую запись. Retry отсутствует. Агент обязан открыть

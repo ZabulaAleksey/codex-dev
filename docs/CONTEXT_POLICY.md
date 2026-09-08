@@ -37,6 +37,13 @@ overlay validator классифицирует его как `missing-stage-id`.
 он требует ровно одну unfenced selector-строку, валидный ASCII ID и ровно один unfenced heading.
 Это structural validation ссылки, не semantic proof dependency DAG, runnable slice или evidence.
 
+Для Continuous Master Execution selected record дополнительно содержит один bounded fenced
+`master-execution` JSON block. ContextScope Resolver загружает только refs текущего slice; весь
+master/catalog не перечитывается. Block хранит durable master/track/worktree/branch/checkpoint,
+verified chain, blockers и NEXT. Budget overflow создаёт compact launcher/handoff из этих facts;
+отдельный status/handoff owner не создаётся. Новая сессия сверяет state revision и Git checkpoint,
+а stale launcher даёт fail-visible handoff/reconciliation.
+
 ## Восстановление новой сессии
 
 Восстанавливай project в следующем порядке:

@@ -1,8 +1,8 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-CME-E`
+- Stage ID: `DEV-CME-F`
 - Sequence: `DEV-CANONICAL-STAGES-001 → DEV-CME-A → DEV-CME-B → DEV-CME-C → DEV-CME-D → DEV-CME-E → DEV-CME-F`
-- NEXT: реализовать evidence levels, blocker classification и integration checkpoint slice `DEV-CME-E`.
+- NEXT: завершить hierarchical lifecycle/recovery, controlled project verification и final gates `DEV-CME-F`.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -99,14 +99,10 @@ and `git diff --check` PASS. Checkpoint: `53138d5`.
 
 ## DEV-CME-E — Evidence + Integration Gates
 
-- Status: `implemented`; Lifecycle: `in_progress`; Evidence level: `implemented locally`.
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `validated locally`.
 - Master: `DEV-CME-001`; master status: `partial`; predecessor `DEV-CME-D` verified.
 - Same continuation track; checkpoint before `53138d5`.
 - Requirements: `CME-006`; acceptance `AC-CME-005`.
-
-```master-execution
-{"schema_version":1,"state_revision":5,"master":{"id":"DEV-CME-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3d461ed8-f246-812d-b41c-da2510a70dd3","revision":"2026-09-07T18:46:55.040Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"canonical-stages-policy","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-canonical-stages-policy","branch":"feature/canonical-stages-policy","checkpoint":"53138d5379458a1adaaf8c7c4e353ade045f9081","ownership":["global-orchestration-contract"],"status":"active"}],"slices":[{"id":"DEV-CME-A","master_id":"DEV-CME-001","title":"Audit and canonical contract","status":"completed","predecessors":[],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"72197b268e5e0525d19cbee712535d68346062f4","checkpoint_after":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","required_evidence":["L1"],"evidence":["L1"],"context_scope":["SPEC","ADR","gap-map"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-B","master_id":"DEV-CME-001","title":"Track registry and worktree router","status":"completed","predecessors":["DEV-CME-A"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","checkpoint_after":"5401b65a925bce28af7c2d2b619781e2a4d0f392","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SPEC:CME-002..003","ADR","tools/master_execution.py","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-C","master_id":"DEV-CME-001","title":"Execution graph and auto-continue","status":"completed","predecessors":["DEV-CME-B"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"5401b65a925bce28af7c2d2b619781e2a4d0f392","checkpoint_after":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SPEC:CME-001,004","controller","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-D","master_id":"DEV-CME-001","title":"Low-context handoff","status":"completed","predecessors":["DEV-CME-C"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","checkpoint_after":"53138d5379458a1adaaf8c7c4e353ade045f9081","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SPEC:CME-005","context-policy","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-E","master_id":"DEV-CME-001","title":"Evidence and integration gates","status":"running","predecessors":["DEV-CME-D"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"53138d5379458a1adaaf8c7c4e353ade045f9081","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SPEC:CME-006","governance","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-F","master_id":"DEV-CME-001","title":"Lifecycle recovery and final validation","status":"queued","predecessors":["DEV-CME-E"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SPEC:CME-007..008","queue-policy","recovery-tests","docs"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["keep-parent-master","no-integration-write"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"implement DEV-CME-E","integration":{"required":false,"reason":""}}
-```
 
 ### Runnable slice / PASS / boundaries
 
@@ -116,6 +112,32 @@ Critical downstream remains blocked until required real evidence is present. Uni
 classification and no evidence inflation.
 
 NEXT after PASS: checkpoint and select `DEV-CME-F` automatically. Blockers: none.
+
+Evidence: 24 master tests and 24 governance/documentation tests PASS; risk levels L1-L6,
+verification gate, four failure classes and checkpoint-only integration verified. CLI/context/
+diff PASS. Checkpoint: `252e935`.
+
+## DEV-CME-F — Hierarchical Lifecycle + Recovery + Final Gates
+
+- Status: `implemented`; Lifecycle: `in_progress`; Evidence level: `implemented locally`.
+- Master: `DEV-CME-001`; master status: `partial`; predecessor `DEV-CME-E` verified.
+- Same continuation track; checkpoint before `252e935`.
+- Requirements: `CME-007..008`, `NFR-CME-002..003`; acceptance `AC-CME-006..009`.
+
+```master-execution
+{"schema_version":1,"state_revision":6,"master":{"id":"DEV-CME-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3d461ed8-f246-812d-b41c-da2510a70dd3","revision":"2026-09-07T18:46:55.040Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"canonical-stages-policy","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-canonical-stages-policy","branch":"feature/canonical-stages-policy","checkpoint":"252e935d75fca284edc07bf48cb8ec8439c9b115","ownership":["global-orchestration-contract"],"status":"active"}],"slices":[{"id":"DEV-CME-A","master_id":"DEV-CME-001","title":"Audit and canonical contract","status":"completed","predecessors":[],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"72197b268e5e0525d19cbee712535d68346062f4","checkpoint_after":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","required_evidence":["L1"],"evidence":["L1"],"context_scope":["SPEC","ADR","gap-map"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-B","master_id":"DEV-CME-001","title":"Track registry and worktree router","status":"completed","predecessors":["DEV-CME-A"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","checkpoint_after":"5401b65a925bce28af7c2d2b619781e2a4d0f392","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SPEC:CME-002..003","ADR","tools/master_execution.py","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-C","master_id":"DEV-CME-001","title":"Execution graph and auto-continue","status":"completed","predecessors":["DEV-CME-B"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"5401b65a925bce28af7c2d2b619781e2a4d0f392","checkpoint_after":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SPEC:CME-001,004","controller","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-D","master_id":"DEV-CME-001","title":"Low-context handoff","status":"completed","predecessors":["DEV-CME-C"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","checkpoint_after":"53138d5379458a1adaaf8c7c4e353ade045f9081","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SPEC:CME-005","context-policy","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-E","master_id":"DEV-CME-001","title":"Evidence and integration gates","status":"completed","predecessors":["DEV-CME-D"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"53138d5379458a1adaaf8c7c4e353ade045f9081","checkpoint_after":"252e935d75fca284edc07bf48cb8ec8439c9b115","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SPEC:CME-006","governance","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-F","master_id":"DEV-CME-001","title":"Lifecycle recovery and final validation","status":"running","predecessors":["DEV-CME-E"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"252e935d75fca284edc07bf48cb8ec8439c9b115","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SPEC:CME-007..008","queue-policy","recovery-tests","docs"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["keep-parent-master","no-integration-write"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"implement DEV-CME-F and run final gates","integration":{"required":false,"reason":""}}
+```
+
+### Runnable slice / PASS / boundaries
+
+Add hierarchical cleanup eligibility before the existing guard, fail-safe Git/state/prompt/context
+recovery decisions, and synchronize router/rules/Skills/templates/docs. Full suite, global context,
+selected-record hook, real temporary Git scenario and one read-only real-project compatibility
+check must pass. Parent master remains retained until overall DoD and current explicit retention
+allow cleanup; merge/push/worktree cleanup remain outside this slice.
+
+NEXT after PASS: master finalization checkpoint; stop because master complete and integration write
+requires separate approval. Blockers: none.
 
 ## DEV-CANONICAL-STAGES-001 — Canonical STAGES.md Policy
 

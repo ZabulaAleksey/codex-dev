@@ -32,6 +32,10 @@ Repository вне полного overlay сначала явно классиф�
 6. Не создавай произвольный новый `.md` в корне repository или непосредственно в `docs/`: сначала переиспользуй канонический документ, иначе используй `docs/notes/<topic>.md`.
 7. Не перемещай существующую документацию автоматически; сначала выполни semantic/link audit и сохрани уникальное содержание.
 
+Для explicit `master_prompt` versioned `master-execution` graph/track/checkpoint block живёт только
+в selected record `prompts/STAGES.md`. Не создавай отдельные `MASTER_STATUS`, `TRACK_REGISTRY` или
+handoff files; compact launcher является transient queue/session projection canonical state.
+
 ## Stage prompts
 
 Рекомендуемая форма:
