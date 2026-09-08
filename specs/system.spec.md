@@ -134,6 +134,19 @@ Active full staged overlay хранит selector, current plan, lifecycle/eviden
 сначала семантически объединяет актуальное содержание и проверяет ссылки/evidence, затем удаляет
 legacy files; global tooling не выполняет такую cleanup mutation автоматически.
 
+### FR-012 Continuous Master Execution
+
+После одного явного запуска `master_prompt` global DEV должен уметь детерминированно продолжать
+последовательность dependency-ready backward-complete slices без нового пользовательского prompt
+между безопасными однозначными шагами. Durable graph/track/checkpoint/evidence/NEXT сохраняются в
+selected record канонического `prompts/STAGES.md`; отдельный task/status owner не создаётся.
+
+Continuation переиспользует текущий track/worktree, независимый write-track изолируется отдельной
+branch/worktree, а read-only задача не создаёт isolation механически. Critical unverified
+dependency, user decision, external input, destructive/integration write, canonical conflict,
+hard blocker и context budget overflow являются fail-visible stop conditions. Handoff восстанавливает
+новую сессию из Git/repository evidence; merge/push/release и cleanup остаются approval-gated.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -167,6 +180,9 @@ legacy files; global tooling не выполняет такую cleanup mutation
 - AC-014 `prompts/STAGES.md` является единственным execution-state owner; hook и validator читают
   selector из этого же файла, greenfield templates не создают AI plan/status pair, а read-only
   reconciliation даёт deterministic migration path существующим проектам.
+- AC-015 Continuous master controller выбирает готовые slices по dependency/evidence contract,
+  маршрутизирует continuation/parallel tracks, создаёт bounded handoff при context overflow и
+  сохраняет partial master, не выполняя merge/push/worktree cleanup автоматически.
 
 ## 4. История изменений
 
@@ -178,3 +194,5 @@ legacy files; global tooling не выполняет такую cleanup mutation
 - 2026-08-27 — добавлен межпроектный i18n/l10n contract для всех пользовательских продуктов.
 - 2026-09-08 — execution state, selector, blockers/evidence и NEXT консолидированы в единственном
   `prompts/STAGES.md`; отдельные AI plan/status sources выведены из canonical workflow.
+- 2026-09-08 — добавлен portable Continuous Master Execution contract с deterministic graph,
+  worktree routing, low-context handoff и verification/integration gates.

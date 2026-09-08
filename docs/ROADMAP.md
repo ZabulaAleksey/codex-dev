@@ -1,11 +1,18 @@
 # Roadmap AI Dev Team
 
-## Текущий internal delta — Canonical STAGES.md Policy
+## Текущий internal delta — Continuous Master Execution
+
+Approved master выполняется поверх checkpoint `72197b2` в том же isolated track. Phase A фиксирует
+SPEC/ADR/gap map; следующие backward-complete slices добавляют deterministic worktree routing,
+execution graph/auto-continue, low-context handoff, evidence/integration gates и hierarchical
+prompt lifecycle. Master сохраняется в Notion до overall DoD; merge/push не выполняются.
+
+## Предыдущий internal delta — Canonical STAGES.md Policy
 
 Единый `prompts/STAGES.md` теперь владеет selector, current plan, lifecycle/evidence, blockers и
 `NEXT`. Global governance/hooks/validators/Skills/templates мигрированы; legacy AI plan/status
 sources удалены после semantic/link audit. Full suite 140 PASS, context validator 233 files PASS,
-`git diff --cached --check` PASS. Commit/merge/push не выполнялись по contract source prompt.
+`git diff --cached --check` PASS. Implementation committed as `72197b2`; merge/push не выполнялись.
 
 ## Предыдущий internal delta — Prompt Queue Lifecycle
 

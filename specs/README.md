@@ -1,5 +1,8 @@
 # Индекс спецификаций AI Dev Team
 
+- [`features/continuous-master-execution.spec.md`](features/continuous-master-execution.spec.md) —
+  continuous master graph, deterministic worktree routing, low-context handoff, evidence/
+  integration gates и hierarchical prompt lifecycle.
 - [`features/canonical-stages-policy.spec.md`](features/canonical-stages-policy.spec.md) — единый
   `prompts/STAGES.md` для selector, execution state, blockers/evidence и NEXT; безопасная
   brownfield migration без конкурирующих AI plan/status файлов.

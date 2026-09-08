@@ -1,5 +1,27 @@
 # Существенные решения
 
+## 2026-09-08 — Continuous master расширяет Stage contract, а не создаёт scheduler
+
+**Контекст:** один явно запущенный master должен проходить однозначные slices без ручной диспетчеризации,
+при этом `prompts/STAGES.md` уже владеет execution state, governance — Stage/evidence contract,
+`prompt_queue.py` — cleanup guard, а Git worktree является существующим isolation primitive.
+
+**Решение:** versioned `master-execution` block живёт внутри selected STAGES record. Один stdlib-only
+controller валидирует graph, readiness/stop/evidence/context transitions и вызывает отдельный
+guarded Git adapter только для explicit worktree ensure operation. Prompt store, model runtime и
+evidence остаются adapter facts; произвольные commands из prompt/state не исполняются. Existing
+Prompt Queue Lifecycle остаётся единственным cleanup owner. Integration checkpoint выдаёт решение,
+но не выполняет merge/push/release.
+
+**Альтернативы:** отдельные `MASTER_STATUS.json`/track registry отклонены как competing state;
+background daemon/scheduler — как непереносимый и избыточный; instruction-only workflow — потому
+что не проверяет dependency/evidence/recovery deterministically; новый worktree на каждый slice —
+потому что ломает continuation и создаёт cleanup churn.
+
+**Последствия:** ordinary non-master stage не меняется. Master получает bounded schema и executable
+consumer path. Context hook по-прежнему проецирует только selected record; overflow создаёт durable
+handoff/launcher, а не silent truncation. Product rollout остаётся отдельным controlled stage.
+
 ## 2026-09-08 — Один STAGES.md владеет execution state
 
 **Статус:** принято пользователем; реализовано и validated locally в

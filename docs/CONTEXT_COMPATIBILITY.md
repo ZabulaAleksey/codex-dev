@@ -84,6 +84,23 @@ policy расширяет global rule layer, не меняет runtime projectio
 brownfield projects. Project-specific реализации остаются источниками факта текущего поведения,
 но не конкурирующими владельцами межпроектного стандарта.
 
+## Решение 2026-09-08 — Continuous Master Execution gap map
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
+|---|---|---|---|---|
+| Current state | `prompts/STAGES.md` уже владеет selector/lifecycle/evidence/NEXT | durable master/track/graph без второго registry | `EXTEND` | selected STAGES record + versioned embedded block |
+| Stage readiness | governance задаёт DAG и completion gates, semantic parser отсутствует | deterministic ready/stop transition | `EXTEND` | portable controller + SPEC/governance |
+| Worktree isolation | Git policy требует isolation, но route выбирается вручную | continuation reuse и parallel ensure без чужого branch switch | `EXTEND` | guarded Git adapter; Git остаётся source of facts |
+| Context | exact selected record уже bounded hook-ом | targeted scope, budget и durable launcher/handoff | `EXTEND` | controller projection внутри current record |
+| Evidence | Stage contract и levels существуют prose-only | machine-checked required level/blocker/integration gates | `EXTEND` | controller; governance остаётся policy owner |
+| Prompt cleanup | `prompt_queue.py` уже exact-item fail-closed guard | child/master hierarchical eligibility | `INHERITED + EXTEND` | existing queue policy/guard, без второго delete path |
+| Model routing | `rules/model-routing.md` уже задаёт capability classes | per-slice metadata без runtime substitution | `INHERITED` | external runtime adapter + existing policy |
+| Runtime/config | active config, sessions, credentials вне Git | никаких новых bindings для core contract | `FORBIDDEN_TO_OVERWRITE` | unchanged runtime boundary |
+
+Отдельный scheduler, database, dependency, hook и live global track inventory не требуются.
+Controlled evidence использует temporary Git repositories; product repositories этой фазой не
+мутируются.
+
 ## Решение 2026-08-27 — единый project workflow без второго global layer
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический источник |

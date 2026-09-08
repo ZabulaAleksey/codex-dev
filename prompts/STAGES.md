@@ -1,18 +1,64 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-CANONICAL-STAGES-001`
-- Sequence: `DEV-GLOBAL-HARDENING-001 → DEV-AI-PROFILING-001 → DEV-PROMPT-QUEUE-001 → DEV-CANONICAL-STAGES-001`
-- NEXT: дождаться явного выбора следующего DEV prompt; до этого selector остаётся на последнем
-  verified record `DEV-CANONICAL-STAGES-001`.
+- Stage ID: `DEV-CME-B`
+- Sequence: `DEV-CANONICAL-STAGES-001 → DEV-CME-A → DEV-CME-B → DEV-CME-C → DEV-CME-D → DEV-CME-E → DEV-CME-F`
+- NEXT: реализовать deterministic track registry/worktree routing slice `DEV-CME-B`.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
+
+## DEV-CME-A — Audit + Canonical Contract
+
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `validated locally`.
+- Master: `DEV-CME-001`; master status: `partial`; track: `canonical-stages-policy`.
+- Worktree/branch: `~/codex-workspace/.worktrees/dev-canonical-stages-policy` /
+  `feature/canonical-stages-policy`; checkpoint before: `72197b2`.
+- Source: Notion master `3d461ed8-f246-812d-b41c-da2510a70dd3`, revision
+  `2026-09-07T18:46:55.040Z`, type `master_prompt`, retention `keep`; explicit execution 2026-09-08.
+- Requirements: `CME-001..008`, `NFR-CME-001..003`, `AC-CME-001..009`.
+
+### Dependencies / runnable slice / PASS
+
+Prerequisite `DEV-CANONICAL-STAGES-001` is completed and committed as `72197b2`. This docs/policy
+slice maps existing owners and establishes approved SPEC + ADR before executable implementation.
+PASS: feature/system SPEC, gap map, architecture decision, roadmap/current record and repository
+state agree; targeted policy checks and `git diff --check` pass.
+
+### Execution graph / scope / stop conditions
+
+Ready chain: `A(contract) → B(track router) → C(graph/auto-continue) → D(context/handoff) →
+E(evidence/integration) → F(lifecycle/recovery/final validation)`. Each successor requires verified
+predecessor evidence. No external input, destructive action or integration write is needed through
+F. Merge/push/worktree cleanup are finalization boundaries and remain prohibited without approval.
+
+Scope: global DEV/KARKAS only; no product rollout, runtime config, external mutation or new
+scheduler. Fallback: invalid/ambiguous state or missing evidence stops fail closed. Rollback:
+revert/discard isolated checkpoint. Evidence: 44 targeted policy/validator tests PASS, context
+validator PASS (234 files), SessionStart selected only `DEV-CME-A`, `git diff --check` PASS.
+NEXT: `DEV-CME-B` selected automatically.
+
+## DEV-CME-B — Track Registry + Worktree Router
+
+- Status: `planned`; Lifecycle: `planned`; Evidence level: `implemented locally` pending.
+- Master: `DEV-CME-001`; master status: `partial`; predecessor: `DEV-CME-A` verified.
+- Track/worktree/branch: continuation of `canonical-stages-policy` in current isolated worktree;
+  checkpoint before will be the Phase A commit.
+- Requirements: `CME-002`, `CME-003`, `NFR-CME-001..003`; acceptance `AC-CME-001`, `AC-CME-003`.
+
+### Runnable slice / PASS / boundaries
+
+Add one versioned embedded state contract and stdlib Git adapter that classifies read-only,
+same-track continuation and independent parallel write. Real temporary Git integration proves
+continuation reuse and collision-safe isolated creation; no branch switch in an occupied worktree,
+merge/push/delete or product mutation. Invalid paths/duplicate registry entries fail closed.
+
+NEXT after PASS: checkpoint and select `DEV-CME-C` automatically. Blockers: none.
 
 ## DEV-CANONICAL-STAGES-001 — Canonical STAGES.md Policy
 
 - Status: `verified`.
 - Lifecycle: `completed`.
-- Evidence level: `validated locally`; commit, merge и push не выполнялись.
+- Evidence level: `committed` at `72197b2`; merge и push не выполнялись.
 - Source: Notion prompt `DEV — Astra prompt — Canonical STAGES.md Policy — 2026-09-07`;
   `https://app.notion.com/p/3d461ed8f24681059594f00e38ab3c82?pvs=204`;
   approved execution request 2026-09-08.

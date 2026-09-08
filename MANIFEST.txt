@@ -175,6 +175,7 @@ skill-sources/review-change/SKILL.md
 specs/features/ai-policy-profiling.spec.md
 specs/features/backend-dx-policy.spec.md
 specs/features/canonical-stages-policy.spec.md
+specs/features/continuous-master-execution.spec.md
 specs/features/codex-home-consolidation.spec.md
 specs/features/dependency-manager-policy.spec.md
 specs/features/full-workspace-governance.spec.md

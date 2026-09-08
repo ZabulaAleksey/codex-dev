@@ -55,6 +55,7 @@ REQUIRED = {
     "specs/features/global-framework-hardening.spec.md",
     "specs/features/ai-policy-profiling.spec.md",
     "specs/features/canonical-stages-policy.spec.md",
+    "specs/features/continuous-master-execution.spec.md",
     "schemas/ai-policy-profiling.schema.json",
     "skill-sources/backend-dx-audit/SKILL.md",
     "tools/validate_context.py",

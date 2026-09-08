@@ -1,5 +1,28 @@
 # Архитектура AI Dev Team
 
+## Continuous Master Execution contour
+
+Continuous execution расширяет существующий Stage contour и не вводит второй task manager:
+
+```text
+selected prompts/STAGES.md record + versioned master-execution block
+        ↓ parse / validate / reconcile with bounded Git facts
+MasterExecutionController: ready slice → evidence/stop/context decision
+        ↓                         ↓
+GitWorktreeAdapter          low-context launcher / handoff
+        ↓                         ↓
+isolated continuation/track  next session restores from repository evidence
+```
+
+Core controller является portable pure lifecycle layer. Git/worktree, prompt store, runtime model и
+evidence подключаются как bounded adapters. Controller не исполняет implementation commands из
+prompt/state и не делает merge/push/release/cleanup. Existing `prompt_queue.py` остаётся cleanup
+guard; hierarchical master/child semantics лишь определяют eligibility перед этим guard.
+
+Canonical durable owner остаётся `prompts/STAGES.md`. `master-execution` JSON block находится внутри
+selected record, поэтому SessionStart получает master/track/checkpoint/next action без чтения всего
+catalog или отдельного handoff owner. Project без блока сохраняет обычный Stage lifecycle.
+
 ## Prompt queue boundary
 
 `rules/prompt-queue-lifecycle.md` → existing task evidence → stdlib-only read-only
