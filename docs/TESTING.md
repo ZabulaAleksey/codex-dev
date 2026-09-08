@@ -65,6 +65,22 @@ context validator —
 report остались byte-identical с SHA-256 `f39c0ad916bdc4c8dcf595e761db2478eaff5dc2f41501fc48b52e2fa640eb0e`;
 repository до/после clean, plan отсутствует.
 
+Slice C regression matrix дополнительно проверяет normal router adoption, ordinary/canonical CME
+continuation, `master_already_completed`, legacy/mixed/conflict/no-state/migrated outcomes,
+same-file required `Status`/`NEXT`, отсутствие legacy fallback, validator exit semantics и
+deterministic SessionStart без implicit materialization. Safe plan handoff проверяется как fixed
+argv data с exact digest и `plan_persisted=false`; no-plan выдаёт exact missing facts без команды.
+Real `electro-tutor` остаётся read-only acceptance evidence, а не writable fixture.
+
+Current Slice C evidence: targeted router/adapter/validator/hook/global regression set — 162 PASS
++ 1 expected POSIX-only skip; full `tools/test_*.py` suite — 251 PASS + тот же skip; context
+validator — 243 files PASS; `git diff --check` — PASS. Default `electro-tutor` router/validator
+return exit `1` with `mixed / migration_plan_unsafe`, while SessionStart returns deterministic
+bounded advisory context at exit `0`; expected two missing-fact issues, no command/lock/write, Git
+clean before and after. Independent correctness/security conclusions are recorded in the stage
+evidence: both final read-only reviews PASS with no blockers; lexical normalization leaves
+symlink-alias identity reconciliation to the explicit worktree adapter.
+
 Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real backend/
 concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует
 соответствующего real level; synthetic evidence не повышается автоматически.
@@ -102,17 +118,17 @@ Completion Documentation Synchronization Gate, а не эвристически�
 владельца полного Stage contract, обязательные planning/status fields, routes Skills/templates,
 разделение lifecycle/evidence, SPEC authority и отсутствие конкурирующего local backlog path.
 Subprocess-тесты дополнительно проходят внутренний путь
-`STAGES Stage ID → session_context.py → exact selected STAGES record` и проверяют no-selector,
-missing и ambiguous degraded-сценарии.
+`stage-state detection → session_context.py → exact selected STAGES record либо typed stop` и
+проверяют canonical, legacy, conflict, no-selector, missing/ambiguous, bounded и repeated scenarios.
 
 Policy-часть остаётся structural contract test глобальной автоматизации, а hook-часть — internal
 E2E context-projection path. Она не валидирует семантику произвольного project
 `prompts/STAGES.md`, не исполняет product path и не превращает mocks/stubs в E2E evidence.
 
-`tools.test_validate_project_overlay` дополнительно проверяет тот же shared selector contract как
-read-only preflight: valid, missing, multiple, empty/invalid, missing/ambiguous heading, token
-boundary и fenced examples. Selector PASS доказывает только однозначную ссылку, не архитектурную
-завершённость stage.
+`tools.test_validate_project_overlay` дополнительно проверяет shared selector/compatibility
+contract: canonical PASS, migration-required non-PASS, conflict/no-state, invalid-canonical
+no-fallback, valid/missing/multiple selector, heading/token/fence cases. JSON отдельно сообщает
+inspection, canonical validity и execution permission.
 
 ## Global framework hardening contract
 

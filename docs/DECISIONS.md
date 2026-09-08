@@ -18,8 +18,12 @@ files отклонено из-за риска потери unique content; от�
 orchestration framework.
 
 **Последствия:** pure canonical route остаётся прежним. Legacy/mixed state получает reproducible
-plan и explicit review boundary; materialization, validator/hook adoption и cleanup разнесены по
-следующим dependency-safe slices.
+plan и explicit review boundary. После Slice C default router, validator и SessionStart используют
+один inspector: только canonical validation разрешает execution; migration/conflict/no-state
+остаются typed non-ready outcomes. Hook остаётся exit-0 advisory, но не загружает guessed stage.
+Safe handoff содержит fixed data-only argv template; apply требует separately persisted reviewed
+plan и independently approved digest. Product rollout и legacy retirement остаются отдельно
+разрешаемыми работами.
 
 ## 2026-09-08 — Materialization требует externally approved digest и read-back transaction
 

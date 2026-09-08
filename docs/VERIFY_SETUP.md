@@ -59,15 +59,17 @@ codex execpolicy check --pretty --rules "$HOME\.codex\rules\ai-dev-team.rules" -
 '{"cwd":"~/codex-workspace/<project>","hook_event_name":"SessionStart","source":"startup"}' | py -3 "$HOME\.codex\hooks\session_context.py"
 ```
 
-Для репозитория с canonical `prompts/STAGES.md` ожидается JSON, содержащий `additionalContext`.
-До hook запусти `validate_project_overlay.py`: full overlay обязан иметь ровно один валидный
+Для canonical/migrated repository ожидается selected record без compatibility noise. Для
+legacy/mixed ожидается bounded `migration_required`, plan availability и
+`execution_allowed=false`; conflict/no-state также fail closed. Hook не запускает materialization.
+`validate_project_overlay.py`: full overlay обязан иметь ровно один валидный
 unfenced selector и ровно один unfenced heading с ID как отдельным token. Если selector отсутствует,
 validator возвращает `missing-stage-id`; multiple/invalid selector и missing/ambiguous heading
 имеют отдельные issue codes.
 
-Hook без selector сохраняет compact snapshot и не загружает catalog (это совместимость с
-незаполненным template). Если явный selector invalid/ambiguous, выбранный heading отсутствует или
-неоднозначен, hook возвращает `Stage context — DEGRADED`, а не другую stage-запись.
+Validator exit `0` означает canonical-ready; successful brownfield inspection с migration required
+возвращает typed JSON и exit `1`. Argparse usage остаётся exit `2`. Hook при этих состояниях
+возвращает advisory JSON/exit `0`, но не загружает guessed stage или общие docs.
 
 ## Проект
 

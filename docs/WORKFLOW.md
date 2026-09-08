@@ -58,6 +58,10 @@ record в этом же файле. Full overlay сначала проходит
 `tools/validate_project_overlay.py`: missing/multiple/invalid selector и missing/ambiguous heading
 являются fail-visible issues. Degraded hook context требует ручной проверки полного record.
 
+Normal router/validator сами выполняют brownfield stage classification. Migration-required
+inspection не равна canonical PASS; materialization выполняется только explicit plan-file + digest
+командой после review. Product repository не переписывается при resume/SessionStart.
+
 Если задача вводит или оценивает дорогую AI-policy, agent/retrieval/reuse contour, automation,
 manual handoff либо baseline/variant experiment, подключи `rules/ai-policy-profiling.md`. Начни с
 Observe и не меняй thresholds автоматически. Existing project без `.metrics/` не обязан включать

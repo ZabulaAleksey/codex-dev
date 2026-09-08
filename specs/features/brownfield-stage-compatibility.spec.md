@@ -172,6 +172,69 @@ primitive с synthetic targets внутри temporary repository и не соз�
 проверяется только analysis mode и остаётся non-runnable/unchanged; mass rollout и product hook/
 validator adoption принадлежат `DEV-BCSC-C`.
 
+### BSC-021 Normal route adoption
+
+Обычные `master_execution`, project validator и SessionStart/SubagentStart используют один
+read-only compatibility inspector автоматически. Explicit `--compatibility` остаётся diagnostic
+mode, но больше не является обязательным предварительным знанием для обнаружения brownfield state.
+
+### BSC-022 Typed stage-routing projection
+
+Один compact result различает `pass_canonical`, `migration_plan_available`,
+`migration_plan_unsafe`, `conflicting_stage_state` и `no_stage_state` и всегда содержит отдельные
+`inspection_ok`, `canonical_valid`, `execution_allowed`, classification/route, normalized current
+projection, exact issues и bounded migration handoff. Low-level Slice A classifications остаются
+`canonical | migrated | legacy | mixed | conflict | none`.
+
+### BSC-023 Canonical same-file enforcement
+
+Canonical/migrated execution разрешён только когда current stage/master, status, NEXT, blockers и
+required checkpoint/evidence однозначно разрешаются из selected `prompts/STAGES.md` record либо
+его digest-verified same-file manifest. Невалидный canonical file с внешне согласованным legacy
+state остаётся `conflicting_stage_state`; silent fallback на legacy запрещён.
+Authorization и передаваемый consumer-у selected record принадлежат одному bounded read snapshot;
+повторное чтение STAGES между route decision и execution/context injection запрещено.
+
+### BSC-024 Validator semantics
+
+`validate_project_overlay` включает typed stage-routing projection в Python/JSON result. Canonical
+PASS имеет exit `0`; safe/unsafe migration и no-state discovery имеют отдельный non-zero advisory
+exit; conflicting/canonical-invalid state и другие overlay violations остаются blocking non-zero.
+Retained `AI_PLAN`/`AI_STATUS` не дублируются generic competing-file errors: ими владеет typed
+compatibility result. Inspection success не означает canonical validation или execution approval.
+
+### BSC-025 Hook semantics
+
+SessionStart/SubagentStart выводят existing selected canonical record без compatibility noise для
+valid canonical/migrated repositories. Для legacy/mixed/conflict/none hook возвращает bounded
+structured stage-routing context с `execution_allowed=false`, exact issues и plan availability,
+но сам остаётся read-only advisory hook и не запускает materialization/product commands.
+
+### BSC-026 Explicit migration handoff
+
+Safe plan projection содержит plan id/digest, `plan_persisted=false`, exact allow-listed targets,
+retained legacy paths и shell-free fixed argv template с placeholders для project root и отдельно
+сохранённого approved plan file. Repository content не может добавить executable arguments.
+Отсутствующий plan возвращает exact issues и не формирует materialization action.
+
+### BSC-027 Completed master and ordinary canonical compatibility
+
+Canonical CME repositories сохраняют прежние `continue`/blocked/`master_already_completed`
+decisions. Canonical repositories без `master-execution` остаются ordinary canonical stage route,
+а не ошибкой compatibility. Migrated repository не получает повторный migration prompt.
+
+### BSC-028 Controlled rollout lifecycle
+
+Reusable repo-by-repo lifecycle равен `discover → classify → report → safe plan if possible →
+explicit approval/materialization → canonical validation → separately approved legacy retirement`.
+Slice C не выполняет product materialization, массовый rollout или legacy deletion.
+
+### BSC-029 Real brownfield acceptance
+
+Normal router, validator и hook читают `electro-tutor` только read-only и согласованно возвращают
+`mixed / migration_required / runnable=false`, stage `ET-09.3`, status `blocked`, missing NEXT и
+blocker issues, без plan/command. Git state до/после остаётся clean.
+
 ## 4. Non-functional and security requirements
 
 - NFR-BSC-001: stdlib-only, deterministic JSON, sorted sources/issues, bounded reads и bounded
@@ -185,6 +248,14 @@ validator adoption принадлежат `DEV-BCSC-C`.
   evidence без raw secret-bearing content.
 - NFR-BSC-007: lock/temp artifacts удаляются best-effort после terminal outcome; неизвестная
   partial side effect не retry-ится автоматически.
+- NFR-BSC-008: automatic discovery не создаёт и не изменяет plan/product files; materialization
+  API не импортируется hook/validator как callable side effect.
+- NFR-BSC-009: handoff command является data-only argv template с fixed option vocabulary,
+  bounded validated digest и placeholders; shell rendering repository paths запрещён.
+- NFR-BSC-010: canonical hot path выполняет только bounded known-file inspection и сохраняет
+  deterministic selector/CME decision semantics.
+- NFR-BSC-011: диагностические issue/error values являются allow-listed data-only codes и не могут
+  закрыть Markdown boundary, внести Unicode format controls или стать executable command content.
 
 ## 5. Compatibility state contract
 
@@ -245,6 +316,20 @@ reconciliation; materializer сам не retry-ит mutation. Publish failure tr
   materialization tests use temporary repositories, and `electro-tutor` remains Git-clean.
 - AC-BSC-013: existing CME/STAGES/full DEV suites, context validator, independent reviewer and
   security reviewer pass after Slice B.
+- AC-BSC-014: default router emits typed stage state automatically; canonical CME decisions and
+  ordinary canonical routing remain unchanged.
+- AC-BSC-015: validator returns canonical PASS only for execution-allowed canonical/migrated state;
+  migration/no-state and conflicting state have documented distinct non-zero outcomes.
+- AC-BSC-016: SessionStart is byte-deterministic, silent for canonical compatibility, explicit for
+  brownfield/conflict/no-state, and never calls materialization.
+- AC-BSC-017: safe plan handoff exposes exact id/digest/targets/retained paths and fixed shell-free
+  argv; unsafe/no-plan state exposes issues without a fictitious command.
+- AC-BSC-018: invalid canonical state never falls back to legacy projection; migrated state uses
+  canonical normal path without repeated migration.
+- AC-BSC-019: real read-only electro-tutor router/validator/hook evidence matches expected state and
+  Git status remains clean; other canonical repositories retain prior behavior.
+- AC-BSC-020: full Slice A+B+C, CME/STAGES/overlay and DEV suites plus context/diff and independent
+  correctness/security reviews pass before completed master claim.
 
 ## 8. Materialization plan v1
 
@@ -272,4 +357,5 @@ generator/schema versions provide provenance.
 - DEV-BCSC-B: explicit migration materialization/validation contract with rollback evidence.
 - DEV-BCSC-C: project validator/hook adoption and controlled rollout evidence.
 
-Future slices may apply an approved plan, but are not required for the runnable read-only path of A.
+After verified C the BCSC master has no invented Slice D. Product migrations/legacy retirement are
+separately approved repo work and do not keep this global compatibility master partial.

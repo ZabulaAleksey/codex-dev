@@ -154,10 +154,10 @@ class StageCompletionPolicyTests(unittest.TestCase):
         self.assert_markers(
             "hooks/session_context.py",
             (
-                "stage_id_from_stages",
-                "select_stage_record",
+                "stage_routing_snapshot",
+                "execution_allowed",
                 "Stage context — DEGRADED",
-                "selected_stage_chunk",
+                "routing snapshot missing selected record",
             ),
         )
         self.assert_markers(
@@ -188,6 +188,14 @@ class StageCompletionPolicyTests(unittest.TestCase):
 
     def write_stages(self, root: Path, body: str, stage_id: str | None = "STAGE-002") -> None:
         selector = f"- Stage ID: `{stage_id}`\n\n" if stage_id is not None else ""
+        if (stage_id is not None and f"## {stage_id}" in body
+                and "- Status:" not in body and "- NEXT:" not in body):
+            marker = f"## {stage_id}"
+            start = body.rfind(marker)
+            end = body.find("\n", start)
+            end = len(body) if end < 0 else end
+            body = (body[:end] + f"\n\n- Status: planned\n- NEXT: {stage_id}"
+                    + body[end:])
         (root / "prompts/STAGES.md").write_text(
             "# Stages\n\n" + selector + body,
             encoding="utf-8",
@@ -217,7 +225,8 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.write_stages(repo, "CATALOG-MUST-STAY-OUT\n", stage_id=None)
             context = self.run_session_hook(repo)
             self.assertNotIn("CATALOG-MUST-STAY-OUT", context)
-            self.assertIn("Stage context — DEGRADED", context)
+            self.assertIn("Stage routing — DEGRADED", context)
+            self.assertIn("missing-stage-id", context)
 
     def test_session_hook_marks_missing_selected_stage_as_degraded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -225,9 +234,9 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.create_stage_repo(repo)
             self.write_stages(repo, "## STAGE-001\n\nOnly stage\n")
             context = self.run_session_hook(repo)
-            self.assertIn("Stage context — DEGRADED", context)
+            self.assertIn("Stage routing — DEGRADED", context)
             self.assertIn("STAGE-002", context)
-            self.assertIn("не найден", context)
+            self.assertIn("missing-stage-heading", context)
 
     def test_session_hook_rejects_ambiguous_selected_stage(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -239,8 +248,8 @@ class StageCompletionPolicyTests(unittest.TestCase):
                 "## STAGE-002 — duplicate B\n\nB\n",
             )
             context = self.run_session_hook(repo)
-            self.assertIn("Stage context — DEGRADED", context)
-            self.assertIn("неоднозначен", context)
+            self.assertIn("Stage routing — DEGRADED", context)
+            self.assertIn("ambiguous-stage-heading", context)
 
     def test_session_hook_ignores_heading_inside_fenced_example(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -254,7 +263,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
             context = self.run_session_hook(repo)
             self.assertIn("REAL-BODY", context)
             self.assertNotIn("FAKE-BODY", context)
-            self.assertNotIn("Stage context — DEGRADED", context)
+            self.assertNotIn("Stage routing — DEGRADED", context)
 
     def test_session_hook_rejects_multiple_stages_selectors(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -265,8 +274,8 @@ class StageCompletionPolicyTests(unittest.TestCase):
                 "## STAGE-002\n\nA\n\n## STAGE-003\n\nB\n", encoding="utf-8"
             )
             context = self.run_session_hook(repo)
-            self.assertIn("Stage context — DEGRADED", context)
-            self.assertIn("selector", context)
+            self.assertIn("Stage routing — DEGRADED", context)
+            self.assertIn("ambiguous-stage-id", context)
             self.assertNotIn("## prompts/STAGES.md — selected", context)
 
     def test_session_hook_finds_selector_after_old_prefix_limit(self) -> None:
@@ -275,12 +284,13 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.create_stage_repo(repo)
             (repo / "prompts/STAGES.md").write_text(
                 "# Stages\n\n" + ("x" * 9000) +
-                "\n\n- Stage ID: `STAGE-002`\n\n## STAGE-002 — selected\n\nLATE-SELECTOR-BODY\n",
+                "\n\n- Stage ID: `STAGE-002`\n\n## STAGE-002 — selected\n\n"
+                "- Status: planned\n- NEXT: STAGE-002\n\nLATE-SELECTOR-BODY\n",
                 encoding="utf-8",
             )
             context = self.run_session_hook(repo)
             self.assertIn("LATE-SELECTOR-BODY", context)
-            self.assertNotIn("Stage context — DEGRADED", context)
+            self.assertNotIn("Stage routing — DEGRADED", context)
 
     def test_session_hook_marks_oversized_stages_as_degraded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -292,10 +302,60 @@ class StageCompletionPolicyTests(unittest.TestCase):
                 encoding="utf-8",
             )
             context = self.run_session_hook(repo)
-            self.assertIn("Stage context — DEGRADED", context)
-            self.assertIn("prompts/STAGES.md", context)
-            self.assertIn("scan-limit", context)
+            self.assertIn("Stage routing — DEGRADED", context)
+            self.assertIn("state_read_error", context)
             self.assertNotIn("MUST-NOT-BE-SELECTED", context)
+
+    def test_session_hook_reports_brownfield_without_materializing(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary)
+            self.create_stage_repo(repo)
+            (repo / "docs/AI_PLAN.md").write_text(
+                "# Plan\n- Stage ID: LEGACY-A\n- Master: MASTER-1\n- Status: partial\n"
+                "- NEXT: LEGACY-B\n- Checkpoint: abc123\n- Evidence: L1\n",
+                encoding="utf-8",
+            )
+            (repo / "docs/AI_STATUS.md").write_text(
+                "# Status\n- Current stage: LEGACY-A\n- Status: partial\n", encoding="utf-8"
+            )
+            first = self.run_session_hook(repo)
+            second = self.run_session_hook(repo)
+            self.assertEqual(first, second)
+            self.assertIn('"routing_status":"migration_plan_available"', first)
+            self.assertIn('"execution_allowed":false', first)
+            self.assertNotIn("## prompts/STAGES.md — selected", first)
+            self.assertFalse((repo / "prompts/STAGES.md").exists())
+            self.assertFalse((repo / ".stage-compatibility.lock").exists())
+
+    def test_session_hook_conflict_is_fail_closed_and_advisory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary)
+            self.create_stage_repo(repo)
+            self.write_stages(
+                repo, "## STAGE-002\n\n- Status: planned\n- NEXT: STAGE-002\n"
+            )
+            (repo / "docs/AI_PLAN.md").write_text(
+                "# Plan\n- Stage ID: OTHER\n- Status: partial\n- NEXT: OTHER\n",
+                encoding="utf-8",
+            )
+            (repo / "docs/AI_STATUS.md").write_text(
+                "# Status\n- Current stage: OTHER\n- Status: partial\n", encoding="utf-8"
+            )
+            context = self.run_session_hook(repo)
+            self.assertIn('"routing_status":"conflicting_stage_state"', context)
+            self.assertIn('"execution_allowed":false', context)
+            self.assertNotIn("## prompts/STAGES.md — selected", context)
+
+    def test_session_hook_no_state_is_typed_and_deterministic(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary)
+            self.create_stage_repo(repo)
+            first = self.run_session_hook(repo)
+            second = self.run_session_hook(repo)
+            self.assertEqual(first, second)
+            self.assertIn('"routing_status":"no_stage_state"', first)
+            self.assertIn('"execution_allowed":false', first)
+            self.assertNotIn("## prompts/STAGES.md — selected", first)
 
     def test_prompt_and_stages_template_collect_operational_fields(self) -> None:
         self.assert_markers(

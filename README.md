@@ -108,10 +108,12 @@ py -3 -B -m unittest tools.test_master_execution
 
 Подробный lifecycle и stop conditions принадлежат `rules/governance.md`; schema —
 `schemas/master-execution.schema.json`. Project без master block продолжает обычный Stage workflow.
-Compatibility mode классифицирует bounded canonical/legacy state и формирует только dry-run plan;
-при mixed/conflicting state controller не запускает product stage и не переписывает repository.
-Consumer обязан разрешать исполнение только при `runnable=true`; successful inspection process
-не означает, что detected state можно запускать.
+Обычный вызов сначала классифицирует bounded canonical/legacy state. Canonical/migrated repository
+получает прежнее CME/Stage decision без compatibility noise; legacy/mixed возвращает typed
+`migration_required`, conflict fail-closed, отсутствие state — `no_stage_state`. Диагностический
+`--compatibility` остаётся доступным, но не обязателен для discovery. Раздельные
+`inspection_ok`, `canonical_valid` и `execution_allowed` не позволяют принять successful
+inspection за разрешение запуска.
 
 Materialization является отдельным explicit two-phase действием: caller сохраняет byte-exact plan
 и его independently approved digest, затем передаёт оба CLI. Перед первым publish повторно
@@ -189,7 +191,8 @@ py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project>
 py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project> --json
 ```
 
-Для brownfield repository сначала выполни read-only reconciliation gate:
+Для brownfield repository default router/validator уже выполняет stage-state discovery; общий
+framework reconciliation остаётся отдельным pre-refresh gate:
 
 ```powershell
 py -3 .\tools\reconcile_project_framework.py ~\codex-workspace\<project>

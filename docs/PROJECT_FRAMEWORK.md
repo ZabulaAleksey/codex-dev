@@ -143,6 +143,12 @@ py -3 ~/.codex/tools/reconcile_project_framework.py ~/codex-workspace/<project>
 
 Для машинного чтения доступен `--json`; отдельный registry при этом не создаётся.
 
+Default `master_execution.py <project>` и validator автоматически возвращают typed
+canonical/legacy/mixed/conflict/no-state projection. Для rollout используй один повторяемый цикл:
+discover → classify → report → safe plan if possible → explicit approval/materialization →
+canonical validation → separately approved legacy retirement. Mass rollout и automatic legacy
+deletion отсутствуют.
+
 ## Автоматизация контекста
 
 Базовая формула:

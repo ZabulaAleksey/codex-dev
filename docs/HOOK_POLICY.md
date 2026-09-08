@@ -6,8 +6,9 @@ Codex загружает все подходящие hooks из активных
 
 В этом наборе локальные проектные hooks **намеренно не создаются по умолчанию**. Вместо этого:
 
-- глобальный `SessionStart` читает exact selected record из `prompts/STAGES.md` и
-  относящиеся `specs/*`/`docs/ARCHITECTURE.md` текущего репозитория;
+- глобальный `SessionStart` сначала классифицирует stage state; для canonical/migrated он читает
+  exact selected record и относящиеся `specs/*`/`docs/ARCHITECTURE.md`, для brownfield/conflict/none
+  выдаёт только compact fail-closed routing result;
 - глобальный `SubagentStart` передаёт тот же компактный контекст проекта субагенту;
 - глобальный `PreToolUse` блокирует небольшой набор необратимых команд;
 - специфичная для проекта политика хранится в `AGENTS.md`, `AGENTS.override.md` и `.codex/rules/project.rules`.
@@ -31,11 +32,11 @@ Selected Continuous Master record может включать bounded `master-ex
 равен 6000 chars внутри общего 9000-char hook budget. Hook только проецирует block, а schema,
 graph/evidence/recovery semantics валидируют project validator и `tools/master_execution.py`.
 
-Fallback-цепочка детерминирована: repository без `prompts/STAGES.md` получает обычный bounded
-project snapshot; существующий STAGES без valid unique selector либо oversized catalog выдаёт
-`Stage context — DEGRADED` и не подставляет другую запись. Retry отсутствует. Агент обязан открыть
-и проверить полный record вручную, если hook
-пометил запись как усечённую или degraded; такой context не разрешает completion claim.
+Fallback-цепочка детерминирована: legacy/mixed получает `migration_required`, отсутствие всех
+stage owners — `no_stage_state`, invalid/conflicting/oversized state — `Stage routing — DEGRADED`.
+Ни один из них не подставляет другую запись и имеет `execution_allowed=false`. Hook остаётся
+advisory exit `0` для стабильности host, не materialize-ит state и не исполняет suggested argv.
+Такой degraded context не разрешает completion claim до явного canonical validation.
 
 Поскольку Git-root ДЕВ совмещён с runtime-каталогом `~/.codex`, hook блокирует все формы принудительного `git clean`, включая раздельные flags `git clean -d -f -x`. Dry-run без `-f` / `--force` разрешён. Не запускай принудительный `git clean` в `~/.codex` вручную: игнорируемые runtime-файлы не восстанавливаются из Git.
 

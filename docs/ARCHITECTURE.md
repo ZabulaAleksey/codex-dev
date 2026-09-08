@@ -31,6 +31,25 @@ allow-listed `prompts/STAGES.md`, не перерендеривает state и �
 повторно сверяет все source/target digests, выполняет read-back через тот же parser/router и при
 ошибке восстанавливает pre-image; product rollout остаётся отдельным slice.
 
+Normal entrypoints используют pure `stage_routing()` projection поверх того же inspector:
+
+```text
+default router / validator / SessionStart
+              ↓
+bounded stage-state detection
+  canonical|migrated → existing selected-record/CME path
+  legacy|mixed       → migration_required + safe plan availability
+  conflict           → fail closed; no legacy fallback
+  none               → typed no_stage_state
+```
+
+Projection отдельно сообщает inspection, canonical validity и execution permission. Safe plan в
+discovery остаётся in-memory (`plan_persisted=false`, `plan_path=null`) и выдаёт только fixed argv
+template с placeholders; materializer по-прежнему требует отдельно сохранённый exact plan file и
+approved digest. Validator/hook не получают write operation как lifecycle side effect.
+Router и hook потребляют already-validated selected record из того же bounded snapshot, поэтому
+между authorization и context/execution parsing нет второго filesystem read.
+
 ## Continuous Master Execution contour
 
 Continuous execution расширяет существующий Stage contour и не вводит второй task manager:
@@ -87,7 +106,12 @@ read-only validator
 детерминированный human/JSON результат
 ```
 
-`tools/validate_project_overlay.py` принимает ровно один target repository. Он проверяет независимый Git-root, канонические документы, exact Stage selector/heading reference, альтернативные status-файлы, точные копии глобальной automation, compatibility audit и определимый dependency drift (manager/lockfile, tracked generated directories, dependency source of truth и clean restore). Для явно объявленного `Backend DX Delta` он дополнительно проверяет applicability, project command/config/service contract, policy route, safe `.env.example`, guarded reset и generated-contract drift; проекты без delta не классифицируются эвристически. Dependency discovery охватывает Git-visible manifests в корне и вложенных `apps/*`/`web/*`, включая multi-ecosystem repositories, но исключает ignored/generated и вложенные upstream assets. Инструмент не пишет в target и не меняет Git-конфигурацию: `safe.directory` передаётся только конкретному процессу Git через `-c`.
+`tools/validate_project_overlay.py` принимает ровно один target repository. Он сначала возвращает
+typed stage state, затем проверяет независимый Git-root, canonical docs/same-file selector,
+automation и dependency contracts. Retained `AI_PLAN`/`AI_STATUS` принадлежат compatibility
+classification и не дублируются generic competing-file issue. Exit `0` означает одновременно
+canonical validation и execution-ready overlay; migration/conflict/no-state — inspectable, но
+non-zero. Инструмент не пишет target и не меняет Git config.
 
 `tools/reconcile_project_framework.py` является отдельным read-only gate перед bootstrap/refresh.
 Он классифицирует target как `GREENFIELD` или `BROWNFIELD`, строит deterministic compatibility

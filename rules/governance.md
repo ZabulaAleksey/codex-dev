@@ -115,7 +115,9 @@ recommendation существующему runtime router и не подменя�
 
 ### Brownfield migration к canonical STAGES
 
-1. Запусти read-only reconciliation и `tools/master_execution.py <project> --compatibility`.
+1. Запусти read-only reconciliation и normal `tools/master_execution.py <project>`; он сам
+   классифицирует canonical/legacy/mixed/conflict/none. `--compatibility` оставь для expanded
+   diagnostic report, а не как обязательный скрытый pre-step.
    Compatibility adapter читает только bounded known paths `prompts/STAGES.md`,
    `docs/AI_PLAN.md`, `docs/AI_STATUS.md` и детерминированно классифицирует состояние как
    `canonical | legacy | mixed | conflict | migrated | none`. До разрешения `conflict` mutation
@@ -139,6 +141,13 @@ recommendation существующему runtime router и не подменя�
 6. Reconciliation/validator лишь классифицируют `MERGE`/conflict и fail visibly; они не удаляют и
    не перезаписывают project-owned files автоматически.
 
+Normal router, project validator и SessionStart используют один read-only stage routing result.
+Только `pass_canonical` даёт `canonical_valid=true` и `execution_allowed=true`. Migration plan
+availability не является canonical PASS; conflict/invalid canonical никогда не fallback-ится на
+legacy. Hook остаётся exit-0 advisory host integration, но передаёт `execution_allowed=false` и не
+загружает guessed record. Validator/default router возвращают non-zero для migration, conflict и
+no-state; argparse/invalid invocation остаётся отдельной usage/error категорией.
+
 ## Stage contract
 
 `prompts/STAGES.md` — единственный detailed stage и execution-state source полного project overlay.
@@ -146,6 +155,10 @@ recommendation существующему runtime router и не подменя�
 включает status/evidence, goal, context, scope, out-of-scope, invariants, tasks, contracts,
 documentation/security/performance/fallback/migration impact, DoD и handoff, а также
 обязательный контракт архитектурной завершённости ниже.
+
+Для ordinary canonical record `Status` и `NEXT` указываются явно. Blockers обязательны для
+`blocked`, checkpoint/evidence — для terminal status. Невалидный canonical owner не исправляется
+fallback-ом на retained legacy state.
 
 Компактный `Status` использует vocabulary `planned | implemented | verified | partial | blocked |
 unavailable` и является projection двух точных осей: `implemented` = production implementation

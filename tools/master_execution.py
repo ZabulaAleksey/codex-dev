@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from hooks.stage_selector import find_stage_record, parse_stage_id
-from tools.stage_compatibility import inspect_compatibility, materialize_plan
+from tools.stage_compatibility import inspect_compatibility, materialize_plan, stage_routing_snapshot
 
 
 MAX_STAGES_CHARS = 500_000
@@ -117,6 +117,16 @@ def _path_key(path: str | Path) -> str:
     return os.path.normcase(str(_expand_portable(str(path))))
 
 
+def _lexical_path_key(path: str | Path) -> str:
+    """Normalize untrusted state paths without filesystem or network resolution."""
+    value = _string(str(path), "path")
+    if value == "~":
+        value = str(Path.home())
+    elif value.startswith("~/") or value.startswith("~\\"):
+        value = os.path.join(str(Path.home()), value[2:])
+    return os.path.normcase(os.path.normpath(value))
+
+
 def validate_state(state: Any) -> dict[str, Any]:
     state = _exact(state, TOP_KEYS, "state")
     if type(state["schema_version"]) is not int or state["schema_version"] != 1:
@@ -149,7 +159,7 @@ def validate_state(state: Any) -> dict[str, Any]:
         branch = _string(track["branch"], "track branch")
         if not BRANCH.fullmatch(branch):
             raise MasterExecutionError("invalid track branch")
-        worktree_key = _path_key(worktree)
+        worktree_key = _lexical_path_key(worktree)
         if worktree_key in worktrees or branch.casefold() in branches:
             raise MasterExecutionError("duplicate track worktree or branch")
         worktrees.add(worktree_key)
@@ -927,9 +937,36 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 0 if result["status"] in {"materialized", "already_materialized"} else 2
         if args.expected_plan_digest:
             raise MasterExecutionError("--expected-plan-digest requires --materialize-plan")
-        stage_id, state = load_selected_state(args.project)
+        routing, selected_record = stage_routing_snapshot(args.project)
+        if routing["execution_allowed"] is not True:
+            print(json.dumps({
+                "ok": False,
+                "inspection_ok": routing["inspection_ok"],
+                "canonical_valid": False,
+                "execution_allowed": False,
+                "stage_state": routing,
+            }, ensure_ascii=False, sort_keys=True))
+            return 1
+        try:
+            if selected_record is None or type(routing.get("stage_selector")) is not str:
+                raise MasterExecutionError("canonical routing snapshot is incomplete")
+            stage_id = routing["stage_selector"]
+            state = extract_master_state(selected_record)
+        except MasterExecutionError as exc:
+            if str(exc) != "selected record must contain exactly one master-execution block":
+                raise
+            if args.request or args.context or args.recovery or args.worktree_root or args.apply:
+                raise MasterExecutionError("ordinary canonical stage does not support CME execution options") from exc
+            print(json.dumps({
+                "ok": True,
+                "stage_id": routing["stage_selector"],
+                "stage_state": routing,
+                "decision": {"action": "canonical_stage", "reason": "no_master_execution_state"},
+            }, ensure_ascii=False, sort_keys=True))
+            return 0
         output: dict[str, Any] = {"ok": True, "stage_id": stage_id,
-                                  "master_id": state["master"]["id"], "state_revision": state["state_revision"]}
+                                  "master_id": state["master"]["id"], "state_revision": state["state_revision"],
+                                  "stage_state": routing}
         output["decision"] = asdict(next_execution_decision(state))
         if args.recovery:
             output["recovery"] = asdict(recover_execution(state, _recovery_from_json(

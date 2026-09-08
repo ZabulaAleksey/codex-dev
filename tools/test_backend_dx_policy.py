@@ -25,7 +25,7 @@ REQUIRED_CONTENT = {
     ),
     "prompts/STAGES.md": (
         "# Stages\n\n- Stage ID: `STAGE-001`\n\n"
-        "## STAGE-001 — backend slice\n\n- Lifecycle: `planned`\n"
+        "## STAGE-001 — backend slice\n\n- Lifecycle: `planned`\n- NEXT: `STAGE-001`\n"
     ),
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",

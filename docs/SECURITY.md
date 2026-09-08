@@ -38,6 +38,16 @@ Compatibility CLI может успешно вернуть non-runnable audit re
 `runnable=true`, а не только process exit code. Projection scalars bounded и отвергают control
 characters; state files должны хранить только references/digests, но не credentials или payloads.
 
+Normal router/validator/hook используют только pure inspection projection. Suggested migration
+action — список fixed argv tokens; repository-controlled paths/content не интерполируются в shell
+string и не исполняются. Hook не имеет implicit write/materialization capability, не публикует
+exact plan content или raw legacy payload и обрезает structured context. Invalid canonical state
+не может заставить router довериться legacy projection. Plan digest можно показывать как integrity
+reference, но `plan_path=null` остаётся честным, пока caller отдельно не сохранил reviewed plan.
+Structural CME validation нормализует repository-controlled worktree paths лексически и не
+выполняет `resolve()`/UNC network probe; filesystem resolution остаётся только в explicit
+worktree adapter operation после отдельного route request.
+
 Для явно объявленного Backend DX project validator читает `docs/project-context.md`
 и Git-visible `.env.example`. Он сообщает только имя подозрительного config key,
 но не его значение; private-key blocks и high-confidence credential-like values

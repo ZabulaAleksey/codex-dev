@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import json
+import io
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
+
+from tools.stage_compatibility import stage_routing_snapshot
 
 from tools.master_execution import (
     GitWorktreeAdapter,
@@ -25,6 +30,7 @@ from tools.master_execution import (
     extract_master_state,
     next_execution_decision,
     integration_decision,
+    main as master_main,
     required_evidence_for,
     render_launcher,
     recover_execution,
@@ -33,6 +39,20 @@ from tools.master_execution import (
     validate_handoff,
     validate_state,
 )
+
+
+LEGACY_PLAN = """# Plan
+- Stage ID: LEGACY-A
+- Master: LEGACY-MASTER
+- Status: partial
+- NEXT: LEGACY-B
+- Checkpoint: abc123
+- Evidence: L1
+"""
+LEGACY_STATUS = """# Status
+- Current stage: LEGACY-A
+- Status: partial
+"""
 
 
 def state() -> dict:
@@ -91,6 +111,14 @@ class StateContractTests(unittest.TestCase):
         with self.assertRaisesRegex(MasterExecutionError, "cyclic"):
             validate_state(cyclic)
 
+    def test_structural_validation_never_resolves_untrusted_unc_worktree(self) -> None:
+        value = state()
+        value["tracks"][0]["worktree"] = r"\\attacker.invalid\share\track"
+        with patch("tools.master_execution._expand_portable",
+                   side_effect=AssertionError("filesystem resolver reached")):
+            validated = validate_state(value)
+        self.assertEqual(validated["tracks"][0]["worktree"], r"\\attacker.invalid\share\track")
+
 
 class ExecutionControllerTests(unittest.TestCase):
     def chain(self) -> dict:
@@ -141,6 +169,92 @@ class ExecutionControllerTests(unittest.TestCase):
         value["slices"][1]["required_evidence"] = ["L1", "L2"]
         updated = apply_slice_result(value, "SLICE-B", "completed", "def456", ["L1"])
         self.assertEqual(updated["slices"][1]["status"], "implemented_unverified")
+
+
+class NormalRouterCompatibilityTests(unittest.TestCase):
+    def run_main(self, root: Path) -> tuple[int, dict]:
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = master_main([str(root)])
+        return code, json.loads(output.getvalue())
+
+    def make(self) -> Path:
+        root = Path(tempfile.mkdtemp())
+        (root / "prompts").mkdir()
+        (root / "docs").mkdir()
+        return root
+
+    def test_ordinary_canonical_uses_normal_path_without_cme_error(self) -> None:
+        root = self.make()
+        (root / "prompts/STAGES.md").write_text(
+            "- Stage ID: STAGE-A\n\n## STAGE-A\n\n- Status: planned\n- NEXT: STAGE-A\n",
+            encoding="utf-8",
+        )
+        code, result = self.run_main(root)
+        self.assertEqual(code, 0)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["decision"], {
+            "action": "canonical_stage", "reason": "no_master_execution_state"
+        })
+        self.assertEqual(result["stage_state"]["status"], "pass_canonical")
+
+    def test_completed_cme_master_decision_is_unchanged(self) -> None:
+        root = self.make()
+        value = state()
+        value["master"]["status"] = "completed"
+        stages = ("- Stage ID: SLICE-A\n\n## SLICE-A\n\n```master-execution\n"
+                  + json.dumps(value) + "\n```\n")
+        (root / "prompts/STAGES.md").write_text(stages, encoding="utf-8")
+        code, result = self.run_main(root)
+        self.assertEqual(code, 0)
+        self.assertEqual(result["decision"]["reason"], "master_already_completed")
+        self.assertEqual(result["stage_state"]["status"], "pass_canonical")
+
+    def test_legacy_and_no_state_are_typed_noncanonical_not_generic_errors(self) -> None:
+        legacy = self.make()
+        (legacy / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
+        (legacy / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
+        code, result = self.run_main(legacy)
+        self.assertEqual(code, 1)
+        self.assertEqual(result["stage_state"]["status"], "migration_plan_available")
+        self.assertFalse(result["execution_allowed"])
+        self.assertNotIn("error", result)
+
+        empty = self.make()
+        code, result = self.run_main(empty)
+        self.assertEqual(code, 1)
+        self.assertEqual(result["stage_state"]["status"], "no_stage_state")
+
+    def test_invalid_canonical_does_not_fallback_to_valid_legacy(self) -> None:
+        root = self.make()
+        (root / "prompts/STAGES.md").write_text(
+            "- Stage ID: STAGE-A\n- Stage ID: STAGE-B\n", encoding="utf-8"
+        )
+        (root / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
+        (root / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
+        code, result = self.run_main(root)
+        self.assertEqual(code, 1)
+        self.assertEqual(result["stage_state"]["status"], "conflicting_stage_state")
+        self.assertFalse(result["execution_allowed"])
+
+    def test_router_consumes_the_authorized_record_snapshot(self) -> None:
+        root = self.make()
+        value = state()
+        value["master"]["status"] = "completed"
+        original = ("- Stage ID: SLICE-A\n\n## SLICE-A\n\nORIGINAL\n\n```master-execution\n"
+                    + json.dumps(value) + "\n```\n")
+        stages_path = root / "prompts/STAGES.md"
+        stages_path.write_text(original, encoding="utf-8")
+        routing, record = stage_routing_snapshot(root)
+
+        def drift(_project):
+            stages_path.write_text("- Stage ID: OTHER\n\n## OTHER\n\nMUTATED\n", encoding="utf-8")
+            return routing, record
+
+        with patch("tools.master_execution.stage_routing_snapshot", side_effect=drift):
+            code, result = self.run_main(root)
+        self.assertEqual(code, 0)
+        self.assertEqual(result["decision"]["reason"], "master_already_completed")
 
 
 class LowContextTests(unittest.TestCase):

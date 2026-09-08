@@ -1,16 +1,33 @@
 from __future__ import annotations
 
+import io
+import json
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
-from tools.validate_project_overlay import validate_project
+from tools.validate_project_overlay import main as validator_main, validate_project
+
+
+LEGACY_PLAN = """# Plan
+- Stage ID: STAGE-001
+- Master: MASTER-001
+- Status: partial
+- NEXT: STAGE-002
+- Checkpoint: abc123
+- Evidence: L1
+"""
+LEGACY_STATUS = """# Status
+- Current stage: STAGE-001
+- Status: partial
+"""
 
 
 REQUIRED_CONTENT = {
     "AGENTS.md": "# Project router\n",
-    "prompts/STAGES.md": "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-001 — first slice\n\n- Lifecycle: `planned`\n",
+    "prompts/STAGES.md": "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-001 — first slice\n\n- Lifecycle: `planned`\n- NEXT: `STAGE-001`\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",
     "docs/LEARNING_LOG.md": "# Learning log\n",
@@ -59,16 +76,97 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
     def test_complete_overlay_passes(self) -> None:
         result = validate_project(self.make_project(), self.workspace)
         self.assertTrue(result.ok)
+        self.assertTrue(result.inspection_ok)
+        self.assertTrue(result.canonical_valid)
+        self.assertTrue(result.execution_allowed)
+        self.assertEqual(result.stage_state["status"], "pass_canonical")
         self.assertEqual((), result.issues)
 
-    def test_incomplete_overlay_reports_missing_stages_and_competing_state(self) -> None:
+    def test_incomplete_overlay_reports_typed_legacy_migration(self) -> None:
         project = self.make_project()
         (project / "prompts/STAGES.md").unlink()
-        (project / "docs/AI_STATUS.md").write_text("old status\n", encoding="utf-8")
+        (project / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
+        (project / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
         result = validate_project(project, self.workspace)
         self.assertFalse(result.ok)
-        self.assertIn("missing-required-file", self.issue_codes(project))
-        self.assertIn("competing-execution-state-file", self.issue_codes(project))
+        self.assertTrue(result.inspection_ok)
+        self.assertFalse(result.canonical_valid)
+        self.assertFalse(result.execution_allowed)
+        self.assertEqual(result.stage_state["status"], "migration_plan_available")
+        self.assertIn("stage-migration-plan-available", self.issue_codes(project))
+        self.assertNotIn("missing-required-file", self.issue_codes(project))
+        self.assertNotIn("competing-execution-state-file", self.issue_codes(project))
+
+    def test_no_stage_state_and_unsafe_legacy_are_typed(self) -> None:
+        no_state = self.make_project("no-state")
+        (no_state / "prompts/STAGES.md").unlink()
+        result = validate_project(no_state, self.workspace)
+        self.assertEqual(result.stage_state["status"], "no_stage_state")
+        self.assertIn("no-stage-state", {issue.code for issue in result.issues})
+
+        unsafe = self.make_project("unsafe")
+        (unsafe / "prompts/STAGES.md").unlink()
+        (unsafe / "docs/AI_PLAN.md").write_text(
+            LEGACY_PLAN.replace("- NEXT: STAGE-002\n", ""), encoding="utf-8"
+        )
+        (unsafe / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
+        result = validate_project(unsafe, self.workspace)
+        self.assertEqual(result.stage_state["status"], "migration_plan_unsafe")
+        self.assertIn("missing_next_selector", result.stage_state["issue_codes"])
+
+    def test_invalid_canonical_never_falls_back_to_valid_legacy(self) -> None:
+        project = self.make_project("invalid-canonical")
+        (project / "prompts/STAGES.md").write_text(
+            "- Stage ID: STAGE-001\n\n- Stage ID: STAGE-002\n", encoding="utf-8"
+        )
+        (project / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
+        (project / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
+        result = validate_project(project, self.workspace)
+        self.assertEqual(result.stage_state["status"], "conflicting_stage_state")
+        self.assertFalse(result.execution_allowed)
+        self.assertIn("conflicting-stage-state", {issue.code for issue in result.issues})
+
+    def test_cli_json_migration_is_inspectable_but_exit_one(self) -> None:
+        project = self.make_project("cli-legacy")
+        (project / "prompts/STAGES.md").unlink()
+        (project / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
+        (project / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = validator_main([
+                str(project), "--json", "--workspace-root", str(self.workspace)
+            ])
+        payload = json.loads(output.getvalue())
+        self.assertEqual(code, 1)
+        self.assertTrue(payload["inspection_ok"])
+        self.assertFalse(payload["canonical_valid"])
+        self.assertFalse(payload["execution_allowed"])
+        self.assertEqual(payload["stage_state"]["status"], "migration_plan_available")
+
+    def test_root_legacy_names_remain_competing_state(self) -> None:
+        project = self.make_project("root-legacy")
+        (project / "AI_PLAN.md").write_text("# competing\n", encoding="utf-8")
+        (project / "AI_STATUS.md").write_text("# competing\n", encoding="utf-8")
+        result = validate_project(project, self.workspace)
+        competing = [issue.path for issue in result.issues
+                     if issue.code == "competing-execution-state-file"]
+        self.assertEqual(competing, ["AI_PLAN.md", "AI_STATUS.md"])
+        self.assertFalse(result.execution_allowed)
+
+    def test_root_legacy_symlink_remains_competing_state(self) -> None:
+        project = self.make_project("root-legacy-link")
+        outside = self.root / "outside-plan.md"
+        outside.write_text("# outside\n", encoding="utf-8")
+        try:
+            (project / "AI_PLAN.md").symlink_to(outside)
+        except OSError as exc:
+            self.skipTest(f"file symlink unavailable: {exc}")
+        result = validate_project(project, self.workspace)
+        self.assertIn(
+            "AI_PLAN.md",
+            [issue.path for issue in result.issues
+             if issue.code == "competing-execution-state-file"],
+        )
 
     def test_legacy_stage_file_and_stale_workspace_path_are_reported(self) -> None:
         project = self.make_project()
@@ -168,7 +266,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
             "# Stages\n\n- Stage ID: `STAGE-001`\n\n"
             "```markdown\n## STAGE-001 — example only\n```\n\n"
             "## PRE-STAGE-001-POST — not a token match\n\n"
-            "## STAGE-001 — selected\n\nRunnable slice\n",
+            "## STAGE-001 — selected\n\n- Status: planned\n- NEXT: STAGE-001\n\nRunnable slice\n",
             encoding="utf-8",
         )
         result = validate_project(project, self.workspace)

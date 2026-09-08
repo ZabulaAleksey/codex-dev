@@ -8,7 +8,7 @@ import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Any, Iterable, Sequence
 
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +17,7 @@ if str(WORKSPACE_ROOT) not in sys.path:
 
 from hooks.stage_selector import find_stage_record, parse_stage_id
 from tools.master_execution import MasterExecutionError, extract_master_state
+from tools.stage_compatibility import stage_routing_snapshot
 
 REQUIRED_FILES = (
     "AGENTS.md",
@@ -172,6 +173,10 @@ class Issue:
 class ValidationResult:
     project: str
     ok: bool
+    inspection_ok: bool
+    canonical_valid: bool
+    execution_allowed: bool
+    stage_state: dict[str, Any]
     issues: tuple[Issue, ...]
 
 
@@ -637,7 +642,26 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
 
     if not project.is_dir():
         issues.append(Issue("project-not-directory", ".", "target path is not a directory"))
-        return ValidationResult(str(project), False, tuple(issues))
+        return ValidationResult(str(project), False, False, False, False, {}, tuple(issues))
+
+    routing, _ = stage_routing_snapshot(project)
+    routing_status = routing["status"]
+    routing_issue = {
+        "migration_plan_available": (
+            "stage-migration-plan-available", "brownfield stage state requires explicit migration; a safe plan is available"
+        ),
+        "migration_plan_unsafe": (
+            "stage-migration-plan-unsafe", "brownfield stage state requires migration but a safe plan cannot be built"
+        ),
+        "conflicting_stage_state": (
+            "conflicting-stage-state", "canonical or canonical/legacy stage state is conflicting; execution is blocked"
+        ),
+        "no_stage_state": (
+            "no-stage-state", "repository has no canonical or legacy stage state"
+        ),
+    }.get(routing_status)
+    if routing_issue:
+        issues.append(Issue(routing_issue[0], "prompts/STAGES.md", routing_issue[1]))
 
     git_marker = project / ".git"
     git_root, git_error = _git_root(project)
@@ -651,6 +675,8 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
         )
 
     for relative in REQUIRED_FILES:
+        if relative == "prompts/STAGES.md" and routing_status != "pass_canonical":
+            continue
         if not (project / relative).is_file():
             issues.append(Issue("missing-required-file", relative, "required project-framework file is missing"))
 
@@ -662,11 +688,14 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
         if not base.is_dir():
             continue
         for candidate in sorted(base.iterdir(), key=lambda item: item.name.casefold()):
-            if candidate.is_file() and candidate.name.casefold() in COMPETING_EXECUTION_STATE_NAMES:
+            relative = _posix_relative(candidate, project)
+            if (candidate.is_file()
+                    and candidate.name.casefold() in COMPETING_EXECUTION_STATE_NAMES
+                    and relative not in {"docs/AI_PLAN.md", "docs/AI_STATUS.md"}):
                 issues.append(
                     Issue(
                         "competing-execution-state-file",
-                        _posix_relative(candidate, project),
+                        relative,
                         "merge current facts into prompts/STAGES.md, validate, then remove this competing state file",
                     )
                 )
@@ -755,15 +784,36 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
 
     issues.extend(_dependency_issues(project))
     issues.extend(_backend_dx_issues(project, workspace))
-    issues.extend(_stage_selector_issues(project))
+    exact_stage_codes = {
+        "missing-stage-id", "ambiguous-stage-id", "invalid-stage-id",
+        "missing-stage-heading", "ambiguous-stage-heading",
+    }
+    for code in routing["issue_codes"]:
+        if code in exact_stage_codes:
+            issues.append(Issue(code, "prompts/STAGES.md", "invalid canonical same-file selector"))
+        elif code == "invalid_master_execution":
+            issues.append(Issue(
+                "invalid-master-execution-state", "prompts/STAGES.md",
+                "master-execution block fails the canonical CME schema",
+            ))
     ordered = tuple(sorted(issues, key=lambda item: (item.code, item.path.casefold(), item.message)))
-    return ValidationResult(str(project), not ordered, ordered)
+    overlay_ok = not ordered and routing["canonical_valid"] is True
+    return ValidationResult(
+        str(project), overlay_ok, routing["inspection_ok"],
+        routing["canonical_valid"], overlay_ok and routing["execution_allowed"] is True,
+        routing, ordered,
+    )
 
 
 def _human_output(result: ValidationResult) -> str:
     if result.ok:
         return f"Project overlay OK: {result.project}"
-    lines = [f"Project overlay validation failed: {result.project}"]
+    label = {
+        "migration_required": "Project overlay migration required",
+        "conflict": "Project overlay stage state conflicts",
+        "no_state": "Project overlay has no stage state",
+    }.get(result.stage_state.get("outcome"), "Project overlay validation failed")
+    lines = [f"{label}: {result.project}"]
     lines.extend(f"- [{issue.code}] {issue.path}: {issue.message}" for issue in result.issues)
     return "\n".join(lines)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import importlib.util
 import json
 import os
@@ -9,7 +10,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
+
+from tools.stage_compatibility import stage_routing_snapshot
 
 from tools.normalize_user_codex import ConcurrentConfigUpdateError, normalize_text, write_atomic
 from tools.validate_global_codex import documentation_layout_issues, managed_files, validate_global_codex
@@ -227,12 +232,42 @@ class HookRegressionTests(unittest.TestCase):
             (repo / ".git").mkdir()
             (repo / "prompts").mkdir()
             (repo / "prompts/STAGES.md").write_text(
-                "- Stage ID: `STAGE-001`\n\n## STAGE-001\n\nСтатус → готово\n",
+                "- Stage ID: `STAGE-001`\n\n## STAGE-001\n\n"
+                "- Status: planned\n- NEXT: STAGE-001\n\nСтатус → готово\n",
                 encoding="utf-8",
             )
             result = self.run_session_hook(repo)
             output = json.loads(result.stdout.decode("utf-8"))
             self.assertIn("Статус → готово", output["hookSpecificOutput"]["additionalContext"])
+
+    def test_session_hook_consumes_the_authorized_record_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repo = Path(temporary)
+            (repo / ".git").mkdir()
+            (repo / "prompts").mkdir()
+            stages = repo / "prompts/STAGES.md"
+            stages.write_text(
+                "- Stage ID: STAGE-001\n\n## STAGE-001\n\n- Status: planned\n"
+                "- NEXT: STAGE-001\n\nORIGINAL-SNAPSHOT\n", encoding="utf-8"
+            )
+            routing, record = stage_routing_snapshot(repo)
+            module = load_session_hook_module()
+
+            def drift(_root):
+                stages.write_text(
+                    "- Stage ID: OTHER\n\n## OTHER\n\n- Status: planned\n- NEXT: OTHER\n"
+                    "MUTATED-STATE\n", encoding="utf-8"
+                )
+                return routing, record
+
+            payload = json.dumps({"cwd": str(repo), "hook_event_name": "SessionStart"})
+            output = io.StringIO()
+            with patch.object(module, "stage_routing_snapshot", side_effect=drift), \
+                    patch("sys.stdin", io.StringIO(payload)), redirect_stdout(output):
+                module.main()
+            context = json.loads(output.getvalue())["hookSpecificOutput"]["additionalContext"]
+            self.assertIn("ORIGINAL-SNAPSHOT", context)
+            self.assertNotIn("MUTATED-STATE", context)
 
     def test_session_hook_skips_symlink_outside_repository(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
