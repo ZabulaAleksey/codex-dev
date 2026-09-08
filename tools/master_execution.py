@@ -7,6 +7,7 @@ performs merge, push, release, prompt cleanup, or worktree deletion.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -45,7 +46,7 @@ SLICE_KEYS = {
     "checkpoint_before", "checkpoint_after", "required_evidence", "evidence", "context_scope",
     "model_class", "reasoning_effort", "stop_after",
 }
-BLOCKER_KEYS = {"id", "class", "status", "owner", "evidence"}
+BLOCKER_KEYS = {"id", "class", "status", "blocking", "owner", "evidence"}
 BUDGET_KEYS = {"max_chars", "max_items", "max_contours", "max_decisions", "max_evidence_threads"}
 INTEGRATION_KEYS = {"required", "reason"}
 MASTER_STATUS = {"running", "partial", "blocked", "needs_continuation", "completed"}
@@ -55,6 +56,8 @@ EVIDENCE = {"L1", "L2", "L3", "L4", "L5", "L6"}
 MODEL_CLASS = {"LOW", "MEDIUM", "HIGH", "FRONTIER"}
 REASONING = {"low", "medium", "high", "xhigh", "max"}
 BLOCKER_CLASS = {"regression", "pre_existing", "unrelated_debt", "environment_unavailable"}
+TERMINAL_SLICE = {"verified", "completed"}
+EVIDENCE_RANK = {level: index for index, level in enumerate(("L1", "L2", "L3", "L4", "L5", "L6"), 1)}
 
 
 class MasterExecutionError(ValueError):
@@ -189,6 +192,24 @@ def validate_state(state: Any) -> dict[str, Any]:
         if item["id"] in refs or any(ref not in slice_ids for ref in refs):
             raise MasterExecutionError("invalid slice dependency reference")
 
+    graph = {item["id"]: item["predecessors"] + item["dependencies"] for item in slices}
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node: str) -> None:
+        if node in visiting:
+            raise MasterExecutionError("cyclic slice dependency")
+        if node in visited:
+            return
+        visiting.add(node)
+        for dependency in graph[node]:
+            visit(dependency)
+        visiting.remove(node)
+        visited.add(node)
+
+    for node in graph:
+        visit(node)
+
     blockers = state["blockers"]
     if type(blockers) is not list or len(blockers) > MAX_ITEMS:
         raise MasterExecutionError("invalid blockers")
@@ -201,6 +222,8 @@ def validate_state(state: Any) -> dict[str, Any]:
         blocker_ids.add(blocker_id)
         if blocker["class"] not in BLOCKER_CLASS or blocker["status"] not in {"active", "resolved"}:
             raise MasterExecutionError("invalid blocker classification")
+        if type(blocker["blocking"]) is not bool:
+            raise MasterExecutionError("invalid blocker blocking flag")
         _string(blocker["owner"], "blocker owner")
         _string(blocker["evidence"], "blocker evidence")
 
@@ -280,6 +303,121 @@ class WorktreeFact:
     branch: str
     detached: bool = False
     bare: bool = False
+
+
+@dataclass(frozen=True)
+class StopSignals:
+    explicit_stop: bool = False
+    user_decision_required: bool = False
+    external_input_required: bool = False
+    destructive_action_required: bool = False
+    integration_write_required: bool = False
+    canonical_conflict: bool = False
+    context_overflow: bool = False
+
+
+@dataclass(frozen=True)
+class ExecutionDecision:
+    action: str
+    reason: str
+    slice_id: str = ""
+    model_class: str = ""
+    reasoning_effort: str = ""
+
+
+def _evidence_satisfies(item: dict[str, Any]) -> bool:
+    available = set(item["evidence"])
+    return set(item["required_evidence"]).issubset(available)
+
+
+def next_execution_decision(state: dict[str, Any], signals: StopSignals | None = None) -> ExecutionDecision:
+    """Return the next deterministic lifecycle decision without executing a slice."""
+    validate_state(state)
+    signals = signals or StopSignals()
+    stops = (
+        (signals.explicit_stop, "stopped", "explicit_user_stop"),
+        (signals.canonical_conflict, "blocked", "canonical_contract_conflict"),
+        (signals.destructive_action_required, "user_decision", "destructive_or_irreversible_action"),
+        (signals.integration_write_required, "integration_checkpoint", "integration_write_requires_approval"),
+        (signals.user_decision_required, "user_decision", "product_or_architecture_decision_required"),
+        (signals.external_input_required, "blocked", "external_input_or_environment_required"),
+        (signals.context_overflow, "handoff", "context_budget_exceeded"),
+    )
+    for active, action, reason in stops:
+        if active:
+            return ExecutionDecision(action, reason)
+    if state["master"]["status"] == "completed":
+        return ExecutionDecision("complete", "master_already_completed")
+    if state["integration"]["required"]:
+        return ExecutionDecision("integration_checkpoint", state["integration"]["reason"] or "integration_required")
+    blocking = sorted(item["id"] for item in state["blockers"]
+                      if item["status"] == "active" and item["blocking"])
+    if blocking:
+        return ExecutionDecision("blocked", "active_blockers:" + ",".join(blocking))
+
+    running = [item for item in state["slices"] if item["status"] == "running"]
+    if len(running) > 1:
+        return ExecutionDecision("blocked", "multiple_running_slices")
+    if running:
+        item = running[0]
+        return ExecutionDecision("await_result", "slice_already_running", item["id"],
+                                 item["model_class"], item["reasoning_effort"])
+
+    by_id = {item["id"]: item for item in state["slices"]}
+    verification_needed: set[str] = set()
+    candidates: list[dict[str, Any]] = []
+    for item in state["slices"]:
+        if item["status"] not in {"queued", "ready"}:
+            continue
+        dependencies = [by_id[ref] for ref in item["predecessors"] + item["dependencies"]]
+        for dependency in dependencies:
+            if dependency["status"] in TERMINAL_SLICE and not _evidence_satisfies(dependency):
+                verification_needed.add(dependency["id"])
+        if all(dependency["status"] in TERMINAL_SLICE and _evidence_satisfies(dependency)
+               for dependency in dependencies):
+            candidates.append(item)
+    if verification_needed:
+        target = sorted(verification_needed)[0]
+        return ExecutionDecision("verification_gate", "mandatory_evidence_missing", target)
+    if len(candidates) > 1:
+        return ExecutionDecision("user_decision", "ambiguous_ready_slices:" + ",".join(
+            sorted(item["id"] for item in candidates)))
+    if len(candidates) == 1:
+        item = candidates[0]
+        return ExecutionDecision("continue", "single_dependency_ready_slice", item["id"],
+                                 item["model_class"], item["reasoning_effort"])
+    if all(item["status"] in TERMINAL_SLICE for item in state["slices"]):
+        return ExecutionDecision("complete", "all_slices_terminal_pending_master_sync")
+    return ExecutionDecision("blocked", "no_dependency_ready_slice")
+
+
+def apply_slice_result(state: dict[str, Any], slice_id: str, status: str, checkpoint: str,
+                       evidence: Sequence[str]) -> dict[str, Any]:
+    """Return a validated copy with one running slice result reconciled."""
+    validate_state(state)
+    if status not in {"implemented_unverified", "verified", "completed", "blocked"}:
+        raise MasterExecutionError("unsupported slice result status")
+    levels = _strings(list(evidence), "result evidence", allowed=EVIDENCE)
+    updated = copy.deepcopy(state)
+    item = next((candidate for candidate in updated["slices"] if candidate["id"] == slice_id), None)
+    if item is None or item["status"] != "running":
+        raise MasterExecutionError("slice result does not match one running slice")
+    if status in TERMINAL_SLICE and not checkpoint.strip():
+        raise MasterExecutionError("terminal slice result requires checkpoint")
+    item["evidence"] = sorted(levels, key=EVIDENCE_RANK.__getitem__)
+    if status in TERMINAL_SLICE and not _evidence_satisfies(item):
+        item["status"] = "implemented_unverified"
+        item["checkpoint_after"] = checkpoint
+        updated["next_action"] = f"verify {slice_id}"
+    else:
+        item["status"] = status
+        item["checkpoint_after"] = checkpoint
+        updated["next_action"] = "select next ready slice"
+    if checkpoint:
+        track = next(track for track in updated["tracks"] if track["id"] == item["worktree_track"])
+        track["checkpoint"] = checkpoint
+    updated["state_revision"] += 1
+    return validate_state(updated)
 
 
 def _active_tracks(state: dict[str, Any]) -> Iterable[dict[str, Any]]:
@@ -441,6 +579,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         stage_id, state = load_selected_state(args.project)
         output: dict[str, Any] = {"ok": True, "stage_id": stage_id,
                                   "master_id": state["master"]["id"], "state_revision": state["state_revision"]}
+        output["decision"] = asdict(next_execution_decision(state))
         if args.request:
             request = _request_from_json(_read_json(args.request))
             if args.worktree_root is None:

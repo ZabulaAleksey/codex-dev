@@ -10,8 +10,11 @@ from tools.master_execution import (
     GitWorktreeAdapter,
     MasterExecutionError,
     RouteRequest,
+    StopSignals,
     WorktreeFact,
+    apply_slice_result,
     extract_master_state,
+    next_execution_decision,
     route_worktree,
     validate_state,
 )
@@ -63,6 +66,66 @@ class StateContractTests(unittest.TestCase):
         unknown["slices"][0]["worktree_track"] = "missing"
         with self.assertRaises(MasterExecutionError):
             validate_state(unknown)
+
+    def test_cycle_fails_closed(self) -> None:
+        cyclic = state()
+        cyclic["slices"][0]["predecessors"] = ["SLICE-B"]
+        second = dict(cyclic["slices"][0])
+        second.update(id="SLICE-B", predecessors=["SLICE-A"])
+        cyclic["slices"].append(second)
+        with self.assertRaisesRegex(MasterExecutionError, "cyclic"):
+            validate_state(cyclic)
+
+
+class ExecutionControllerTests(unittest.TestCase):
+    def chain(self) -> dict:
+        value = state()
+        value["slices"][0]["status"] = "completed"
+        second = dict(value["slices"][0])
+        second.update(id="SLICE-B", title="B", status="queued", predecessors=["SLICE-A"],
+                      checkpoint_before="abc123", checkpoint_after="", evidence=[])
+        third = dict(second)
+        third.update(id="SLICE-C", title="C", predecessors=["SLICE-B"])
+        value["slices"].extend([second, third])
+        return value
+
+    def test_two_slices_auto_advance_without_user_prompt(self) -> None:
+        value = self.chain()
+        first = next_execution_decision(value)
+        self.assertEqual((first.action, first.slice_id), ("continue", "SLICE-B"))
+        value["slices"][1]["status"] = "running"
+        value = apply_slice_result(value, "SLICE-B", "completed", "def456", ["L1"])
+        second = next_execution_decision(value)
+        self.assertEqual((second.action, second.slice_id), ("continue", "SLICE-C"))
+
+    def test_unverified_dependency_inserts_verification_gate(self) -> None:
+        value = self.chain()
+        value["slices"][0]["required_evidence"] = ["L2"]
+        decision = next_execution_decision(value)
+        self.assertEqual((decision.action, decision.slice_id), ("verification_gate", "SLICE-A"))
+
+    def test_ambiguous_ready_set_stops(self) -> None:
+        value = self.chain()
+        value["slices"][2]["predecessors"] = ["SLICE-A"]
+        decision = next_execution_decision(value)
+        self.assertEqual(decision.action, "user_decision")
+
+    def test_hard_blocker_and_stop_signals_stop_auto_continue(self) -> None:
+        value = self.chain()
+        value["blockers"] = [{"id": "B-1", "class": "pre_existing", "status": "active",
+                              "blocking": True, "owner": "environment", "evidence": "check-1"}]
+        self.assertEqual(next_execution_decision(value).action, "blocked")
+        value["blockers"][0]["blocking"] = False
+        self.assertEqual(next_execution_decision(value, StopSignals(context_overflow=True)).action, "handoff")
+        self.assertEqual(next_execution_decision(value, StopSignals(integration_write_required=True)).action,
+                         "integration_checkpoint")
+
+    def test_terminal_result_without_evidence_downgrades(self) -> None:
+        value = self.chain()
+        value["slices"][1]["status"] = "running"
+        value["slices"][1]["required_evidence"] = ["L1", "L2"]
+        updated = apply_slice_result(value, "SLICE-B", "completed", "def456", ["L1"])
+        self.assertEqual(updated["slices"][1]["status"], "implemented_unverified")
 
 
 class WorktreeRoutingTests(unittest.TestCase):

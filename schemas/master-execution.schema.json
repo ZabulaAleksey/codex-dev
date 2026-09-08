@@ -82,11 +82,12 @@
     },
     "blocker": {
       "type": "object", "additionalProperties": false,
-      "required": ["id", "class", "status", "owner", "evidence"],
+      "required": ["id", "class", "status", "blocking", "owner", "evidence"],
       "properties": {
         "id": {"type": "string"},
         "class": {"enum": ["regression", "pre_existing", "unrelated_debt", "environment_unavailable"]},
-        "status": {"enum": ["active", "resolved"]}, "owner": {"type": "string"},
+        "status": {"enum": ["active", "resolved"]}, "blocking": {"type": "boolean"},
+        "owner": {"type": "string"},
         "evidence": {"type": "string"}
       }
     }
