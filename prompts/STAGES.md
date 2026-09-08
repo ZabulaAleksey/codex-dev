@@ -2,7 +2,7 @@
 
 - Stage ID: `DEV-CME-F`
 - Sequence: `DEV-CANONICAL-STAGES-001 → DEV-CME-A → DEV-CME-B → DEV-CME-C → DEV-CME-D → DEV-CME-E → DEV-CME-F`
-- NEXT: master complete; integration/finalization requires explicit merge approval.
+- NEXT: master complete and integrated; await an explicitly selected DEV prompt.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -119,13 +119,13 @@ diff PASS. Checkpoint: `252e935`.
 
 ## DEV-CME-F — Hierarchical Lifecycle + Recovery + Final Gates
 
-- Status: `verified`; Lifecycle: `completed`; Evidence level: `committed` at `c81ee81`.
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `merged` into local `main` at `1e34f41`.
 - Master: `DEV-CME-001`; master status: `completed`; predecessor `DEV-CME-E` verified.
 - Same continuation track; checkpoint before `252e935`.
 - Requirements: `CME-007..008`, `NFR-CME-002..003`; acceptance `AC-CME-006..009`.
 
 ```master-execution
-{"schema_version":1,"state_revision":7,"master":{"id":"DEV-CME-001","status":"completed","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3d461ed8-f246-812d-b41c-da2510a70dd3","revision":"2026-09-07T18:46:55.040Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"canonical-stages-policy","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-canonical-stages-policy","branch":"feature/canonical-stages-policy","checkpoint":"c81ee81d5722cca3db8fbbe1b91fc4055dd1a837","ownership":["global-orchestration-contract"],"status":"integration_required"}],"slices":[{"id":"DEV-CME-A","master_id":"DEV-CME-001","title":"Contract","status":"completed","predecessors":[],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"72197b268e5e0525d19cbee712535d68346062f4","checkpoint_after":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","required_evidence":["L1"],"evidence":["L1"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-B","master_id":"DEV-CME-001","title":"Routing","status":"completed","predecessors":["DEV-CME-A"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","checkpoint_after":"5401b65a925bce28af7c2d2b619781e2a4d0f392","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-C","master_id":"DEV-CME-001","title":"Graph","status":"completed","predecessors":["DEV-CME-B"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"5401b65a925bce28af7c2d2b619781e2a4d0f392","checkpoint_after":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":[],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-D","master_id":"DEV-CME-001","title":"Handoff","status":"completed","predecessors":["DEV-CME-C"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","checkpoint_after":"53138d5379458a1adaaf8c7c4e353ade045f9081","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":[],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-E","master_id":"DEV-CME-001","title":"Evidence","status":"completed","predecessors":["DEV-CME-D"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"53138d5379458a1adaaf8c7c4e353ade045f9081","checkpoint_after":"252e935d75fca284edc07bf48cb8ec8439c9b115","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-F","master_id":"DEV-CME-001","title":"Recovery","status":"completed","predecessors":["DEV-CME-E"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"252e935d75fca284edc07bf48cb8ec8439c9b115","checkpoint_after":"c81ee81d5722cca3db8fbbe1b91fc4055dd1a837","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[{"id":"CME-ROLLOUT-ET","class":"pre_existing","status":"active","blocking":false,"owner":"electro-tutor brownfield migration stage","evidence":"legacy AI_PLAN/AI_STATUS and missing same-file selector"}],"decisions":["keep-parent-master","no-integration-write"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"integration finalization requires explicit merge approval","integration":{"required":true,"reason":"master_complete"}}
+{"schema_version":1,"state_revision":8,"master":{"id":"DEV-CME-001","status":"completed","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3d461ed8-f246-812d-b41c-da2510a70dd3","revision":"2026-09-07T18:46:55.040Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"canonical-stages-policy","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-canonical-stages-policy","branch":"feature/canonical-stages-policy","checkpoint":"1e34f4192aff22b0b773b7df7314b054a140ae80","ownership":["global-orchestration-contract"],"status":"integrated"}],"slices":[{"id":"DEV-CME-A","master_id":"DEV-CME-001","title":"Contract","status":"completed","predecessors":[],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"72197b268e5e0525d19cbee712535d68346062f4","checkpoint_after":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","required_evidence":["L1"],"evidence":["L1"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-B","master_id":"DEV-CME-001","title":"Routing","status":"completed","predecessors":["DEV-CME-A"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","checkpoint_after":"5401b65a925bce28af7c2d2b619781e2a4d0f392","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-C","master_id":"DEV-CME-001","title":"Graph","status":"completed","predecessors":["DEV-CME-B"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"5401b65a925bce28af7c2d2b619781e2a4d0f392","checkpoint_after":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":[],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-D","master_id":"DEV-CME-001","title":"Handoff","status":"completed","predecessors":["DEV-CME-C"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","checkpoint_after":"53138d5379458a1adaaf8c7c4e353ade045f9081","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":[],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-E","master_id":"DEV-CME-001","title":"Evidence","status":"completed","predecessors":["DEV-CME-D"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"53138d5379458a1adaaf8c7c4e353ade045f9081","checkpoint_after":"252e935d75fca284edc07bf48cb8ec8439c9b115","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-F","master_id":"DEV-CME-001","title":"Recovery","status":"completed","predecessors":["DEV-CME-E"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"252e935d75fca284edc07bf48cb8ec8439c9b115","checkpoint_after":"c81ee81d5722cca3db8fbbe1b91fc4055dd1a837","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":[],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[{"id":"CME-ROLLOUT-ET","class":"pre_existing","status":"active","blocking":false,"owner":"electro-tutor brownfield migration stage","evidence":"legacy AI_PLAN/AI_STATUS and missing same-file selector"}],"decisions":["keep-parent-master","integration-complete"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"await an explicitly selected DEV prompt","integration":{"required":false,"reason":""}}
 ```
 
 
@@ -143,14 +143,15 @@ record PASS; real temporary Git worktree create/read-back supplies L3. Bash synt
 Read-only `electro-tutor` validation classified a pre-existing brownfield gap (legacy
 `AI_PLAN/AI_STATUS`, missing same-file selector); no product mutation or regression.
 
-Stop: master complete. Merge/push/worktree cleanup were not performed. Prompt cleanup: `retain`
-because this is a `master_prompt` with retention `keep`.
+Stop: master complete and fast-forward merged into local `main` at `1e34f41`; post-merge context,
+80 deterministic tests, diff and completed-state smoke PASS. Push was not performed. Prompt
+cleanup: `retain` because this is a `master_prompt` with retention `keep`.
 
 ## DEV-CANONICAL-STAGES-001 — Canonical STAGES.md Policy
 
 - Status: `verified`.
 - Lifecycle: `completed`.
-- Evidence level: `committed` at `72197b2`; merge и push не выполнялись.
+- Evidence level: `merged` into local `main` through `1e34f41`; push не выполнялся.
 - Source: Notion prompt `DEV — Astra prompt — Canonical STAGES.md Policy — 2026-09-07`;
   `https://app.notion.com/p/3d461ed8f24681059594f00e38ab3c82?pvs=204`;
   approved execution request 2026-09-08.
@@ -219,8 +220,8 @@ NEXT: await an explicitly selected DEV prompt; no future scope is inferred from 
   review without code findings; live exact-item Notion cleanup/read-back PASS; repeat `noop`.
 - Scope: global governance/tooling and minimal project delta; no product-domain work.
 - Contract: `rules/prompt-queue-lifecycle.md`, `PQ-01..11`.
-- Integration: checkpoint `80a63b3`; merge/push not performed.
-- NEXT: none inside this completed slice; integration remains separately approval-gated.
+- Integration: checkpoint `80a63b3` merged into local `main` through `1e34f41`; push not performed.
+- NEXT: none inside this completed slice.
 
 ## DEV-AI-PROFILING-001 — AI Policy Profiling Observe layer
 

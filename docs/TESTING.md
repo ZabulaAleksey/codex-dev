@@ -35,6 +35,8 @@ SPEC используют один state/cleanup owner и не требуют me
 Текущий global evidence: 181 tests PASS, context manifest 238 files PASS. Controlled read-only
 `electro-tutor` check вернул pre-existing migration gaps и не является regression/global test
 failure; temporary real Git integration остаётся positive portable adapter evidence.
+После fast-forward merge в local `main`: context validator 238 files PASS, 80 deterministic
+master/STAGES/overlay tests PASS, `git diff --check` и `master_already_completed` smoke PASS.
 
 Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real backend/
 concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует

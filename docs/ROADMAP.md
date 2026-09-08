@@ -8,20 +8,22 @@ execution graph/auto-continue, low-context handoff, evidence/integration gates �
 prompt lifecycle. Phases A–F completed; implementation checkpoint `c81ee81`, full 181 tests и
 238-file context validation PASS. Master сохраняется в Notion из-за retention `keep`.
 Read-only Tutor compatibility check выявил pre-existing legacy state/selector migration gap;
-product mutation не выполнялась. Merge/push не выполнялись.
+product mutation не выполнялась. Feature chain fast-forward merged into local `main` at
+`1e34f41`; post-merge verification PASS, push не выполнялся.
 
 ## Предыдущий internal delta — Canonical STAGES.md Policy
 
 Единый `prompts/STAGES.md` теперь владеет selector, current plan, lifecycle/evidence, blockers и
 `NEXT`. Global governance/hooks/validators/Skills/templates мигрированы; legacy AI plan/status
 sources удалены после semantic/link audit. Full suite 140 PASS, context validator 233 files PASS,
-`git diff --cached --check` PASS. Implementation committed as `72197b2`; merge/push не выполнялись.
+`git diff --cached --check` PASS. Implementation `72197b2` merged into local `main` through
+`1e34f41`; push не выполнялся.
 
 ## Предыдущий internal delta — Prompt Queue Lifecycle
 
 Retention/guard/receipt implementation и project propagation выполнены и проверены отдельно от product
 master. Source policy: `rules/prompt-queue-lifecycle.md`; current evidence — `prompts/STAGES.md`.
-Merge/push не выполняются до отдельного разрешения пользователя.
+Checkpoint `80a63b3` merged into local `main` through `1e34f41`; push не выполнялся.
 
 
 ## Выполнено
@@ -53,7 +55,8 @@ Merge/push не выполняются до отдельного разреше�
   Product rollout не выполнялся; synthetic sample не является ROI evidence policy.
 - Canonical STAGES.md Policy: single execution-state owner, same-file selector, deterministic
   brownfield `MERGE` classification и greenfield single template — 140 tests и 233-file context
-  validation PASS; validated locally without commit/merge/push.
+  validation PASS; commit `72197b2` fast-forward merged into local `main` through `1e34f41`,
+  push не выполнялся.
 
 ## Текущее
 
