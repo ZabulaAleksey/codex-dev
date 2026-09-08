@@ -325,6 +325,23 @@ class ExecutionDecision:
     reasoning_effort: str = ""
 
 
+@dataclass(frozen=True)
+class ContextItem:
+    ref: str
+    content: str
+    contour: str
+    evidence_thread: str = ""
+
+
+@dataclass(frozen=True)
+class ContextResolution:
+    overflow: bool
+    reason: str
+    items: tuple[ContextItem, ...]
+    chars: int
+    launcher: str = ""
+
+
 def _evidence_satisfies(item: dict[str, Any]) -> bool:
     available = set(item["evidence"])
     return set(item["required_evidence"]).issubset(available)
@@ -418,6 +435,126 @@ def apply_slice_result(state: dict[str, Any], slice_id: str, status: str, checkp
         track["checkpoint"] = checkpoint
     updated["state_revision"] += 1
     return validate_state(updated)
+
+
+def _slice(state: dict[str, Any], slice_id: str) -> dict[str, Any]:
+    item = next((candidate for candidate in state["slices"] if candidate["id"] == slice_id), None)
+    if item is None:
+        raise MasterExecutionError("unknown slice")
+    return item
+
+
+def build_handoff(state: dict[str, Any], slice_id: str) -> dict[str, Any]:
+    """Build the durable minimum needed by a fresh session; no separate file is implied."""
+    validate_state(state)
+    item = _slice(state, slice_id)
+    track = next(track for track in state["tracks"] if track["id"] == item["worktree_track"])
+    verified = [candidate["id"] for candidate in state["slices"]
+                if candidate["status"] in TERMINAL_SLICE and _evidence_satisfies(candidate)]
+    active_blockers = [
+        {key: blocker[key] for key in ("id", "class", "blocking", "owner", "evidence")}
+        for blocker in state["blockers"] if blocker["status"] == "active"
+    ]
+    return {
+        "schema_version": 1,
+        "master_id": state["master"]["id"],
+        "master_status": state["master"]["status"],
+        "state_revision": state["state_revision"],
+        "track_id": track["id"],
+        "repository": track["repository"],
+        "worktree": track["worktree"],
+        "branch": track["branch"],
+        "checkpoint": track["checkpoint"],
+        "verified_chain": verified,
+        "current_slice": item["id"],
+        "next_action": state["next_action"],
+        "blockers": active_blockers,
+        "stop_conditions": [
+            "user_decision", "external_input", "hard_blocker", "destructive_action",
+            "integration_write", "context_overflow", "canonical_conflict", "master_complete",
+        ],
+        "merge_push": "not_authorized",
+        "prompt_cleanup": (
+            "retain_parent_master" if state["master"]["status"] != "completed"
+            or state["master"]["source"]["retention"] == "keep" else "existing_guard_only"
+        ),
+    }
+
+
+def render_launcher(handoff: dict[str, Any]) -> str:
+    required = {
+        "schema_version", "master_id", "master_status", "state_revision", "track_id",
+        "repository", "worktree", "branch", "checkpoint", "verified_chain", "current_slice",
+        "next_action", "blockers", "stop_conditions", "merge_push", "prompt_cleanup",
+    }
+    if type(handoff) is not dict or set(handoff) != required:
+        raise MasterExecutionError("invalid handoff fields")
+    lines = [
+        "CONTINUE MASTER (low-context)",
+        f"master/track: {handoff['master_id']} / {handoff['track_id']}",
+        f"worktree: {handoff['worktree']}",
+        f"branch: {handoff['branch']}",
+        f"checkpoint: {handoff['checkpoint']}",
+        f"state_revision: {handoff['state_revision']}",
+        "verified_chain: " + ", ".join(handoff["verified_chain"]),
+        f"current_slice: {handoff['current_slice']}",
+        f"next_action: {handoff['next_action']}",
+        "blockers: " + (json.dumps(handoff["blockers"], ensure_ascii=False, sort_keys=True)
+                         if handoff["blockers"] else "none"),
+        "stop_conditions: " + ", ".join(handoff["stop_conditions"]),
+        f"merge/push: {handoff['merge_push']}",
+        f"prompt_cleanup: {handoff['prompt_cleanup']}",
+    ]
+    return "\n".join(lines)
+
+
+def validate_handoff(handoff: dict[str, Any], state: dict[str, Any], git_checkpoint: str) -> None:
+    validate_state(state)
+    current = build_handoff(state, handoff.get("current_slice", ""))
+    for field in ("master_id", "track_id", "worktree", "branch", "state_revision", "checkpoint"):
+        if handoff.get(field) != current[field]:
+            raise MasterExecutionError(f"stale handoff {field}")
+    if git_checkpoint != current["checkpoint"]:
+        raise MasterExecutionError("stale handoff Git checkpoint")
+
+
+def resolve_context(state: dict[str, Any], slice_id: str,
+                    available: Sequence[ContextItem]) -> ContextResolution:
+    """Select only current-slice refs and produce a handoff when the declared budget is exceeded."""
+    validate_state(state)
+    item = _slice(state, slice_id)
+    by_ref: dict[str, ContextItem] = {}
+    for candidate in available:
+        for value, label in ((candidate.ref, "context ref"), (candidate.content, "context content"),
+                             (candidate.contour, "context contour"),
+                             (candidate.evidence_thread, "context evidence thread")):
+            _string(value, label, empty=label == "context evidence thread", limit=MAX_STATE_CHARS)
+        if candidate.ref in by_ref:
+            raise MasterExecutionError("duplicate context ref")
+        by_ref[candidate.ref] = candidate
+    missing = [ref for ref in item["context_scope"] if ref not in by_ref]
+    if missing:
+        raise MasterExecutionError("missing context refs:" + ",".join(missing))
+    selected = tuple(by_ref[ref] for ref in item["context_scope"])
+    budget = state["context_budget"]
+    chars = sum(len(candidate.content) for candidate in selected)
+    contours = {candidate.contour for candidate in selected}
+    threads = {candidate.evidence_thread for candidate in selected if candidate.evidence_thread}
+    exceeded = []
+    if chars > budget["max_chars"]:
+        exceeded.append("chars")
+    if len(selected) > budget["max_items"]:
+        exceeded.append("items")
+    if len(contours) > budget["max_contours"]:
+        exceeded.append("contours")
+    if len(state["decisions"]) > budget["max_decisions"]:
+        exceeded.append("decisions")
+    if len(threads) > budget["max_evidence_threads"]:
+        exceeded.append("evidence_threads")
+    if exceeded:
+        launcher = render_launcher(build_handoff(state, slice_id))
+        return ContextResolution(True, "context_budget_exceeded:" + ",".join(exceeded), (), chars, launcher)
+    return ContextResolution(False, "within_budget", selected, chars)
 
 
 def _active_tracks(state: dict[str, Any]) -> Iterable[dict[str, Any]]:
@@ -568,10 +705,21 @@ def _read_json(path: Path) -> Any:
     return json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
 
 
+def _context_from_json(raw: Any) -> tuple[ContextItem, ...]:
+    if type(raw) is not list or len(raw) > MAX_ITEMS:
+        raise MasterExecutionError("invalid context input")
+    result = []
+    for item in raw:
+        data = _exact(item, {"ref", "content", "contour", "evidence_thread"}, "context item")
+        result.append(ContextItem(**data))
+    return tuple(result)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", type=Path)
     parser.add_argument("--request", type=Path)
+    parser.add_argument("--context", type=Path)
     parser.add_argument("--worktree-root", type=Path)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args(argv)
@@ -580,6 +728,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         output: dict[str, Any] = {"ok": True, "stage_id": stage_id,
                                   "master_id": state["master"]["id"], "state_revision": state["state_revision"]}
         output["decision"] = asdict(next_execution_decision(state))
+        if args.context:
+            decision = next_execution_decision(state)
+            target = decision.slice_id or next((item["id"] for item in state["slices"]
+                                                if item["status"] == "running"), "")
+            if not target:
+                raise MasterExecutionError("no current slice for context resolution")
+            output["context"] = asdict(resolve_context(state, target, _context_from_json(
+                _read_json(args.context))))
         if args.request:
             request = _request_from_json(_read_json(args.request))
             if args.worktree_root is None:

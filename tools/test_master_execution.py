@@ -8,14 +8,19 @@ from pathlib import Path
 
 from tools.master_execution import (
     GitWorktreeAdapter,
+    ContextItem,
     MasterExecutionError,
     RouteRequest,
     StopSignals,
     WorktreeFact,
     apply_slice_result,
+    build_handoff,
     extract_master_state,
     next_execution_decision,
+    render_launcher,
+    resolve_context,
     route_worktree,
+    validate_handoff,
     validate_state,
 )
 
@@ -126,6 +131,52 @@ class ExecutionControllerTests(unittest.TestCase):
         value["slices"][1]["required_evidence"] = ["L1", "L2"]
         updated = apply_slice_result(value, "SLICE-B", "completed", "def456", ["L1"])
         self.assertEqual(updated["slices"][1]["status"], "implemented_unverified")
+
+
+class LowContextTests(unittest.TestCase):
+    def current(self) -> dict:
+        value = state()
+        value["slices"][0]["status"] = "running"
+        value["slices"][0]["context_scope"] = ["routing", "SPEC:CME-005", "tests"]
+        return value
+
+    def items(self) -> list[ContextItem]:
+        return [
+            ContextItem("unrelated", "ignore", "other"),
+            ContextItem("tests", "targeted tests", "tests", "thread-1"),
+            ContextItem("routing", "nearest AGENTS", "governance"),
+            ContextItem("SPEC:CME-005", "relevant requirement", "spec"),
+        ]
+
+    def test_resolver_preserves_declared_order_and_ignores_unrelated(self) -> None:
+        result = resolve_context(self.current(), "SLICE-A", self.items())
+        self.assertFalse(result.overflow)
+        self.assertEqual([item.ref for item in result.items], ["routing", "SPEC:CME-005", "tests"])
+
+    def test_missing_required_context_fails_closed(self) -> None:
+        with self.assertRaisesRegex(MasterExecutionError, "missing context refs"):
+            resolve_context(self.current(), "SLICE-A", self.items()[:-1])
+
+    def test_budget_overflow_builds_complete_compact_launcher(self) -> None:
+        value = self.current()
+        value["context_budget"]["max_chars"] = 5
+        result = resolve_context(value, "SLICE-A", self.items())
+        self.assertTrue(result.overflow)
+        self.assertEqual(result.items, ())
+        for marker in ("MASTER-1", "feature/a", "/worktrees/a", "abc123", "current_slice"):
+            self.assertIn(marker, result.launcher)
+
+    def test_handoff_staleness_is_rejected(self) -> None:
+        value = self.current()
+        handoff = build_handoff(value, "SLICE-A")
+        validate_handoff(handoff, value, "abc123")
+        stale = dict(handoff)
+        stale["state_revision"] = 0
+        with self.assertRaisesRegex(MasterExecutionError, "state_revision"):
+            validate_handoff(stale, value, "abc123")
+        with self.assertRaisesRegex(MasterExecutionError, "Git checkpoint"):
+            validate_handoff(handoff, value, "different")
+        self.assertLess(len(render_launcher(handoff)), value["context_budget"]["max_chars"])
 
 
 class WorktreeRoutingTests(unittest.TestCase):

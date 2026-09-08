@@ -1,8 +1,8 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-CME-C`
+- Stage ID: `DEV-CME-D`
 - Sequence: `DEV-CANONICAL-STAGES-001 → DEV-CME-A → DEV-CME-B → DEV-CME-C → DEV-CME-D → DEV-CME-E → DEV-CME-F`
-- NEXT: реализовать execution graph/readiness/auto-continue slice `DEV-CME-C`.
+- NEXT: реализовать targeted context resolver, budget guard и durable handoff slice `DEV-CME-D`.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -60,14 +60,10 @@ the complete selected record without degradation; `git diff --check` PASS. Check
 
 ## DEV-CME-C — Execution Graph + Auto-Continue
 
-- Status: `implemented`; Lifecycle: `in_progress`; Evidence level: `implemented locally`.
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `validated locally`.
 - Master: `DEV-CME-001`; master status: `partial`; predecessor `DEV-CME-B` verified.
 - Track/worktree/branch: same continuation track; checkpoint before `5401b65`.
 - Requirements: `CME-001`, `CME-004`; acceptance `AC-CME-002`.
-
-```master-execution
-{"schema_version":1,"state_revision":3,"master":{"id":"DEV-CME-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3d461ed8-f246-812d-b41c-da2510a70dd3","revision":"2026-09-07T18:46:55.040Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"canonical-stages-policy","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-canonical-stages-policy","branch":"feature/canonical-stages-policy","checkpoint":"5401b65a925bce28af7c2d2b619781e2a4d0f392","ownership":["global-orchestration-contract"],"status":"active"}],"slices":[{"id":"DEV-CME-A","master_id":"DEV-CME-001","title":"Audit and canonical contract","status":"completed","predecessors":[],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"72197b268e5e0525d19cbee712535d68346062f4","checkpoint_after":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","required_evidence":["L1"],"evidence":["L1"],"context_scope":["SPEC","ADR","gap-map"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-B","master_id":"DEV-CME-001","title":"Track registry and worktree router","status":"completed","predecessors":["DEV-CME-A"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","checkpoint_after":"5401b65a925bce28af7c2d2b619781e2a4d0f392","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SPEC:CME-002..003","ADR","tools/master_execution.py","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-C","master_id":"DEV-CME-001","title":"Execution graph and auto-continue","status":"running","predecessors":["DEV-CME-B"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"5401b65a925bce28af7c2d2b619781e2a4d0f392","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SPEC:CME-001,004","controller","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-D","master_id":"DEV-CME-001","title":"Low-context handoff","status":"queued","predecessors":["DEV-CME-C"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SPEC:CME-005","context-policy","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-E","master_id":"DEV-CME-001","title":"Evidence and integration gates","status":"queued","predecessors":["DEV-CME-D"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SPEC:CME-006","governance","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-F","master_id":"DEV-CME-001","title":"Lifecycle recovery and final validation","status":"queued","predecessors":["DEV-CME-E"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SPEC:CME-007..008","queue-policy","recovery-tests","docs"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["keep-parent-master","no-integration-write"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"implement DEV-CME-C","integration":{"required":false,"reason":""}}
-```
 
 ### Runnable slice / PASS / boundaries
 
@@ -77,6 +73,29 @@ two ready slices without a user prompt; ambiguous ready sets, hard blockers and 
 predecessors stop fail closed. The controller returns decisions and never executes task commands.
 
 NEXT after PASS: checkpoint and select `DEV-CME-D` automatically. Blockers: none.
+
+Evidence: 16 controller tests and 40 policy tests PASS; CLI reports the running slice without
+executing it; context validator and `git diff --check` PASS. Checkpoint: `2f140c5`.
+
+## DEV-CME-D — Low-Context Scope + Handoff
+
+- Status: `implemented`; Lifecycle: `in_progress`; Evidence level: `implemented locally`.
+- Master: `DEV-CME-001`; master status: `partial`; predecessor `DEV-CME-C` verified.
+- Same continuation track; checkpoint before `2f140c5`.
+- Requirements: `CME-005`, `NFR-CME-001`; acceptance `AC-CME-004`.
+
+```master-execution
+{"schema_version":1,"state_revision":4,"master":{"id":"DEV-CME-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3d461ed8-f246-812d-b41c-da2510a70dd3","revision":"2026-09-07T18:46:55.040Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"canonical-stages-policy","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-canonical-stages-policy","branch":"feature/canonical-stages-policy","checkpoint":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","ownership":["global-orchestration-contract"],"status":"active"}],"slices":[{"id":"DEV-CME-A","master_id":"DEV-CME-001","title":"Audit and canonical contract","status":"completed","predecessors":[],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"72197b268e5e0525d19cbee712535d68346062f4","checkpoint_after":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","required_evidence":["L1"],"evidence":["L1"],"context_scope":["SPEC","ADR","gap-map"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-B","master_id":"DEV-CME-001","title":"Track registry and worktree router","status":"completed","predecessors":["DEV-CME-A"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"d4f711ec43964125dcd3a4658ef87d14cfca6c4a","checkpoint_after":"5401b65a925bce28af7c2d2b619781e2a4d0f392","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SPEC:CME-002..003","ADR","tools/master_execution.py","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-C","master_id":"DEV-CME-001","title":"Execution graph and auto-continue","status":"completed","predecessors":["DEV-CME-B"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"5401b65a925bce28af7c2d2b619781e2a4d0f392","checkpoint_after":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SPEC:CME-001,004","controller","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-D","master_id":"DEV-CME-001","title":"Low-context handoff","status":"running","predecessors":["DEV-CME-C"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"2f140c528d29f3af4a62ce7f3c48bc1e52ea25d9","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SPEC:CME-005","context-policy","targeted-tests"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-CME-E","master_id":"DEV-CME-001","title":"Evidence and integration gates","status":"queued","predecessors":["DEV-CME-D"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SPEC:CME-006","governance","targeted-tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-CME-F","master_id":"DEV-CME-001","title":"Lifecycle recovery and final validation","status":"queued","predecessors":["DEV-CME-E"],"dependencies":[],"worktree_track":"canonical-stages-policy","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SPEC:CME-007..008","queue-policy","recovery-tests","docs"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["keep-parent-master","no-integration-write"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"implement DEV-CME-D","integration":{"required":false,"reason":""}}
+```
+
+### Runnable slice / PASS / boundaries
+
+Resolve only ordered context items named by the current slice, enforce char/item/contour/decision/
+evidence-thread budgets, and build a compact launcher/handoff on overflow. Handoff contains master,
+track, worktree, branch, state revision, checkpoint, verified chain, next action, blockers and
+integration/cleanup rules. Stale checkpoint/revision fails closed. No separate status file.
+
+NEXT after PASS: checkpoint and select `DEV-CME-E` automatically. Blockers: none.
 
 ## DEV-CANONICAL-STAGES-001 — Canonical STAGES.md Policy
 
