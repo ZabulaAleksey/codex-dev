@@ -216,6 +216,25 @@ class StageCompatibilityTests(unittest.TestCase):
         result = inspect_compatibility(self.make(stages="\ufeff" + STAGES))
         self.assertEqual((result["classification"], result["route"]), ("canonical", "canonical"))
 
+    def test_crlf_fenced_state_contracts_are_supported(self):
+        from tools.test_master_execution import state
+
+        master_stages = (
+            "- Stage ID: SLICE-A\n\n## SLICE-A\n\n```master-execution\n"
+            + json.dumps(state()) + "\n```\n"
+        ).replace("\n", "\r\n")
+        canonical = stage_routing(self.make(stages=master_stages))
+        migrated = inspect_compatibility(self.make(
+            stages=self.manifest().replace("\n", "\r\n"),
+            plan=LEGACY_PLAN,
+            status=LEGACY_STATUS,
+        ))
+
+        self.assertEqual(canonical["status"], "pass_canonical")
+        self.assertTrue(canonical["execution_allowed"])
+        self.assertEqual((migrated["classification"], migrated["route"]),
+                         ("migrated", "canonical"))
+
     def test_unicode_format_control_is_rejected(self):
         result = inspect_compatibility(self.make(
             plan=LEGACY_PLAN.replace("abc123", "abc\u202edef"), status=LEGACY_STATUS
