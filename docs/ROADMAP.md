@@ -9,9 +9,11 @@ manifest contract и read-only dry-run migration plan реализованы б�
 STAGES materialization, canonical read-back, CAS rollback/recovery и idempotency реализованы и
 проверены только на temporary repositories. `DEV-BCSC-C` verified at implementation checkpoint
 `f1f8302`: normal router/validator/SessionStart adoption, same-snapshot selector enforcement,
-typed exit semantics, explicit migration handoff и read-only product evidence завершены. Master
-completed locally; router returns `master_already_completed`. Product rollout/legacy retirement
-не входят в master; feature integration ожидает отдельного разрешения, merge/push не выполнялись.
+typed exit semantics, explicit migration handoff и read-only product evidence завершены. Windows
+CRLF parity подтверждена post-merge regression fixes `3e03a24` и `60a1efb`; master completed and
+fast-forward integrated into local `main` through `60a1efb`, router returns
+`master_already_completed`. Product rollout/legacy retirement не входят в master; push не
+выполнялся.
 
 ## Текущий internal delta — Continuous Master Execution
 

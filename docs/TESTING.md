@@ -72,9 +72,11 @@ deterministic SessionStart без implicit materialization. Safe plan handoff п
 argv data с exact digest и `plan_persisted=false`; no-plan выдаёт exact missing facts без команды.
 Real `electro-tutor` остаётся read-only acceptance evidence, а не writable fixture.
 
-Current Slice C evidence: targeted router/adapter/validator/hook/global regression set — 162 PASS
-+ 1 expected POSIX-only skip; full `tools/test_*.py` suite — 251 PASS + тот же skip; context
-validator — 243 files PASS; `git diff --check` — PASS. Default `electro-tutor` router/validator
+Current integrated Slice C evidence: targeted router/adapter/validator/hook/global regression
+set — 164 PASS + 1 expected POSIX-only skip; CME/STAGES regression set — 151 PASS + тот же skip;
+full `tools/test_*.py` suite — 253 PASS + тот же skip; context validator — 243 files PASS;
+`git diff --check` — PASS. Windows CRLF fenced-state parity is covered. Default `electro-tutor`
+router/validator
 return exit `1` with `mixed / migration_plan_unsafe`, while SessionStart returns deterministic
 bounded advisory context at exit `0`; expected two missing-fact issues, no command/lock/write, Git
 clean before and after. Independent correctness/security conclusions are recorded in the stage
