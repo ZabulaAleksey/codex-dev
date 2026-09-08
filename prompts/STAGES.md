@@ -2,8 +2,7 @@
 
 - Stage ID: `DEV-BCSC-C`
 - Sequence: `DEV-CME-001 → DEV-BCSC-A → DEV-BCSC-B → DEV-BCSC-C`
-- NEXT: `DEV-BCSC-C` — validator/hook adoption and controlled evidence; not started because the
-  user explicitly stopped this run after `DEV-BCSC-B`.
+- NEXT: none — `DEV-BCSC-001` is completed locally; await separately authorized integration.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -73,17 +72,22 @@ repository was materialized; legacy files were not changed or deleted.
 
 ## DEV-BCSC-C — Validator/Hook Adoption + Controlled Evidence
 
-- Status: `ready`; Lifecycle: `planned`.
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `validated locally`.
 - Master: `DEV-BCSC-001`; predecessor `DEV-BCSC-B` verified at `1083478`.
 - Goal: integrate manifest validation into existing selector/overlay boundaries and gather
   controlled migration evidence without mass product mutation.
 
 ```master-execution
-{"schema_version":1,"state_revision":3,"master":{"id":"DEV-BCSC-001","status":"partial","source":{"backend":"chat","queue_id":"none","item_id":"direct-user-request-2026-09-08","revision":"2026-09-08","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"brownfield-stage-compatibility","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-brownfield-stage-compatibility","branch":"feature/brownfield-stage-compatibility","checkpoint":"10834789536ff4eb7952190f224af6d114ffeed2","ownership":["canonical-stage-compatibility","tools/master_execution.py"],"status":"active"}],"slices":[{"id":"DEV-BCSC-A","master_id":"DEV-BCSC-001","title":"Detection and dry-run plan","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"da869913af008b26c64903106773140823f63518","checkpoint_after":"2e442a929dc4b4f0384807113559dedd86598b52","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["BSC SPEC","stage selector","CME CLI","compatibility tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true},{"id":"DEV-BCSC-B","master_id":"DEV-BCSC-001","title":"Explicit materialization contract","status":"verified","predecessors":["DEV-BCSC-A"],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"2e442a929dc4b4f0384807113559dedd86598b52","checkpoint_after":"10834789536ff4eb7952190f224af6d114ffeed2","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["BSC SPEC","migration plan","validator"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true},{"id":"DEV-BCSC-C","master_id":"DEV-BCSC-001","title":"Validator and controlled rollout","status":"ready","predecessors":["DEV-BCSC-B"],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"10834789536ff4eb7952190f224af6d114ffeed2","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["BSC SPEC","hook","overlay tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["same-file-manifest","digest-matched-materialization","retained-legacy-state","no-product-mutation"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"implement DEV-BCSC-C only after explicit continuation","integration":{"required":false,"reason":""}}
+{"schema_version":1,"state_revision":4,"master":{"id":"DEV-BCSC-001","status":"completed","source":{"backend":"chat","queue_id":"none","item_id":"direct-user-request-2026-09-08","revision":"2026-09-08","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"brownfield-stage-compatibility","repository":"~/.codex","worktree":"~/codex-workspace/.worktrees/dev-brownfield-stage-compatibility","branch":"feature/brownfield-stage-compatibility","checkpoint":"f1f830208415e240a7d79394f1906185d83739e7","ownership":["canonical-stage-compatibility","tools/master_execution.py"],"status":"integration_required"}],"slices":[{"id":"DEV-BCSC-A","master_id":"DEV-BCSC-001","title":"Detection and dry-run plan","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"da869913af008b26c64903106773140823f63518","checkpoint_after":"2e442a929dc4b4f0384807113559dedd86598b52","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["BSC SPEC","stage selector","CME CLI","compatibility tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true},{"id":"DEV-BCSC-B","master_id":"DEV-BCSC-001","title":"Explicit materialization contract","status":"verified","predecessors":["DEV-BCSC-A"],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"2e442a929dc4b4f0384807113559dedd86598b52","checkpoint_after":"10834789536ff4eb7952190f224af6d114ffeed2","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["BSC SPEC","migration plan","validator"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true},{"id":"DEV-BCSC-C","master_id":"DEV-BCSC-001","title":"Validator and controlled rollout","status":"verified","predecessors":["DEV-BCSC-B"],"dependencies":[],"worktree_track":"brownfield-stage-compatibility","checkpoint_before":"10834789536ff4eb7952190f224af6d114ffeed2","checkpoint_after":"f1f830208415e240a7d79394f1906185d83739e7","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["BSC SPEC","hook","overlay tests"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true}],"blockers":[],"decisions":["same-file-manifest","digest-matched-materialization","retained-legacy-state","no-product-mutation"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":4,"max_decisions":4,"max_evidence_threads":6},"next_action":"await explicit integration authorization; no Slice D","integration":{"required":true,"reason":"completed feature track requires explicit merge authorization"}}
 ```
 
-Router state: `ready`; unique dependency-ready selector is `DEV-BCSC-C`. This run stops here by
-the user's explicit boundary and does not start validator/hook adoption or product rollout.
+Completion evidence: implementation checkpoint `f1f8302`; 162 targeted router/adapter/validator/
+hook/global tests PASS plus one expected POSIX-only skip; 251 full DEV tests PASS plus the same
+skip; context validator 243 files PASS; `git diff --check` PASS. Default router and validator
+classify read-only `electro-tutor` as `mixed / migration_plan_unsafe`, stage `ET-09.3`, status
+`blocked`, NEXT null, with exact missing blocker/NEXT issues; SessionStart is deterministic exit 0,
+creates no plan/lock/write, and Git remains clean. Independent correctness and security reviews
+PASS. Router state is `master_already_completed`; no Slice D exists. Merge/push are not authorized.
 
 ## DEV-CME-A — Audit + Canonical Contract
 

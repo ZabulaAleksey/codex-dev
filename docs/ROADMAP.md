@@ -7,8 +7,11 @@
 manifest contract и read-only dry-run migration plan реализованы без product mutations.
 `DEV-BCSC-B` verified at `1083478`: externally approved digest, full byte preconditions, atomic
 STAGES materialization, canonical read-back, CAS rollback/recovery и idempotency реализованы и
-проверены только на temporary repositories. Selector автоматически перешёл на dependency-ready
-`DEV-BCSC-C`; validator/hook adoption и controlled product evidence ещё не начаты.
+проверены только на temporary repositories. `DEV-BCSC-C` verified at implementation checkpoint
+`f1f8302`: normal router/validator/SessionStart adoption, same-snapshot selector enforcement,
+typed exit semantics, explicit migration handoff и read-only product evidence завершены. Master
+completed locally; router returns `master_already_completed`. Product rollout/legacy retirement
+не входят в master; feature integration ожидает отдельного разрешения, merge/push не выполнялись.
 
 ## Текущий internal delta — Continuous Master Execution
 
