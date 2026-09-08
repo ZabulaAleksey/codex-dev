@@ -342,9 +342,72 @@ class ContextResolution:
     launcher: str = ""
 
 
+@dataclass(frozen=True)
+class FailureObservation:
+    failed_before: bool
+    in_changed_scope: bool
+    environment_available: bool
+
+
+@dataclass(frozen=True)
+class IntegrationSignals:
+    coherent_boundary: bool = False
+    dependent_track: bool = False
+    divergence_risk: bool = False
+    release_gate: bool = False
+    master_complete: bool = False
+
+
 def _evidence_satisfies(item: dict[str, Any]) -> bool:
     available = set(item["evidence"])
     return set(item["required_evidence"]).issubset(available)
+
+
+def required_evidence_for(risk: str) -> tuple[str, ...]:
+    levels = {
+        "static": ("L1",),
+        "logic": ("L1", "L2"),
+        "component_integration": ("L1", "L2", "L3"),
+        "backend_concurrency": ("L1", "L2", "L3", "L4"),
+        "browser_runtime": ("L1", "L2", "L3", "L4", "L5"),
+        "external_manual": ("L1", "L2", "L3", "L4", "L5", "L6"),
+    }
+    try:
+        return levels[risk]
+    except KeyError as exc:
+        raise MasterExecutionError("unknown evidence risk class") from exc
+
+
+def evidence_decision(item: dict[str, Any]) -> ExecutionDecision:
+    _exact(item, SLICE_KEYS, "slice")
+    if _evidence_satisfies(item):
+        return ExecutionDecision("pass", "required_evidence_present", item["id"])
+    missing = sorted(set(item["required_evidence"]) - set(item["evidence"]),
+                     key=EVIDENCE_RANK.__getitem__)
+    return ExecutionDecision("verification_gate", "missing_evidence:" + ",".join(missing), item["id"])
+
+
+def classify_failure(observation: FailureObservation) -> str:
+    if not observation.environment_available:
+        return "environment_unavailable"
+    if observation.failed_before:
+        return "pre_existing"
+    if not observation.in_changed_scope:
+        return "unrelated_debt"
+    return "regression"
+
+
+def integration_decision(signals: IntegrationSignals) -> ExecutionDecision:
+    reasons = [name for name, enabled in (
+        ("coherent_boundary", signals.coherent_boundary),
+        ("dependent_track", signals.dependent_track),
+        ("divergence_risk", signals.divergence_risk),
+        ("release_gate", signals.release_gate),
+        ("master_complete", signals.master_complete),
+    ) if enabled]
+    if not reasons:
+        return ExecutionDecision("defer_integration", "no_integration_boundary")
+    return ExecutionDecision("integration_checkpoint", "+".join(reasons))
 
 
 def next_execution_decision(state: dict[str, Any], signals: StopSignals | None = None) -> ExecutionDecision:

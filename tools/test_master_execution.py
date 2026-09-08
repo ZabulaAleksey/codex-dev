@@ -9,14 +9,20 @@ from pathlib import Path
 from tools.master_execution import (
     GitWorktreeAdapter,
     ContextItem,
+    FailureObservation,
+    IntegrationSignals,
     MasterExecutionError,
     RouteRequest,
     StopSignals,
     WorktreeFact,
     apply_slice_result,
     build_handoff,
+    classify_failure,
+    evidence_decision,
     extract_master_state,
     next_execution_decision,
+    integration_decision,
+    required_evidence_for,
     render_launcher,
     resolve_context,
     route_worktree,
@@ -177,6 +183,38 @@ class LowContextTests(unittest.TestCase):
         with self.assertRaisesRegex(MasterExecutionError, "Git checkpoint"):
             validate_handoff(handoff, value, "different")
         self.assertLess(len(render_launcher(handoff)), value["context_budget"]["max_chars"])
+
+
+class EvidenceAndIntegrationTests(unittest.TestCase):
+    def test_risk_classes_require_real_higher_evidence(self) -> None:
+        self.assertEqual(required_evidence_for("static"), ("L1",))
+        self.assertEqual(required_evidence_for("backend_concurrency")[-1], "L4")
+        self.assertEqual(required_evidence_for("browser_runtime")[-1], "L5")
+        self.assertEqual(required_evidence_for("external_manual")[-1], "L6")
+        with self.assertRaises(MasterExecutionError):
+            required_evidence_for("synthetic-is-real")
+
+    def test_evidence_gate_does_not_inflate_partial_proof(self) -> None:
+        item = state()["slices"][0]
+        item["required_evidence"] = list(required_evidence_for("component_integration"))
+        item["evidence"] = ["L1", "L2"]
+        decision = evidence_decision(item)
+        self.assertEqual(decision.action, "verification_gate")
+        self.assertIn("L3", decision.reason)
+        item["evidence"].append("L3")
+        self.assertEqual(evidence_decision(item).action, "pass")
+
+    def test_failure_classes_are_separated(self) -> None:
+        self.assertEqual(classify_failure(FailureObservation(False, True, True)), "regression")
+        self.assertEqual(classify_failure(FailureObservation(True, True, True)), "pre_existing")
+        self.assertEqual(classify_failure(FailureObservation(False, False, True)), "unrelated_debt")
+        self.assertEqual(classify_failure(FailureObservation(False, True, False)), "environment_unavailable")
+
+    def test_integration_is_checkpoint_only_at_real_boundary(self) -> None:
+        self.assertEqual(integration_decision(IntegrationSignals()).action, "defer_integration")
+        decision = integration_decision(IntegrationSignals(dependent_track=True, divergence_risk=True))
+        self.assertEqual(decision.action, "integration_checkpoint")
+        self.assertNotIn("merge", decision.action)
 
 
 class WorktreeRoutingTests(unittest.TestCase):
