@@ -38,7 +38,10 @@ stage owners — `no_stage_state`, invalid/conflicting/oversized state — `Stag
 advisory exit `0` для стабильности host, не materialize-ит state и не исполняет suggested argv.
 Такой degraded context не разрешает completion claim до явного canonical validation.
 
-Поскольку Git-root ДЕВ совмещён с runtime-каталогом `~/.codex`, hook блокирует все формы принудительного `git clean`, включая раздельные flags `git clean -d -f -x`. Dry-run без `-f` / `--force` разрешён. Не запускай принудительный `git clean` в `~/.codex` вручную: игнорируемые runtime-файлы не восстанавливаются из Git.
+Hook блокирует все формы принудительного `git clean`, включая раздельные flags
+`git clean -d -f -x`. Dry-run без `-f` / `--force` разрешён. Особенно не инициализируй Git и не
+запускай cleanup в installed `~/.codex`: runtime-файлы не принадлежат source repository и не
+восстанавливаются из Git. Canonical DEV source очищается только после обычной проверки status/diff.
 
 ## Когда добавлять локальный hook
 

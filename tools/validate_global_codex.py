@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tools.sync_global_skills import compare_skills
+from tools.install_global import InstallError, LEDGER_NAME, load_install_policy, load_ledger
 
 
 DOCUMENT_LAYOUT_POLICY_FILES = (
@@ -55,20 +56,12 @@ def documentation_layout_issues(workspace: Path) -> tuple[Issue, ...]:
 
 
 def managed_files(workspace: Path) -> tuple[Path, ...]:
-    base = workspace
-    files = [base / "AGENTS.md", base / "hooks.json", base / "rules" / "ai-dev-team.rules"]
-    files.extend(sorted((base / "agents").glob("*.toml")))
-    files.extend(sorted((base / "hooks").glob("*.py")))
-    return tuple(files)
+    policy = load_install_policy(workspace.resolve())
+    return tuple(workspace.joinpath(*Path(item.path).parts) for item in policy.files)
 
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def installed_path(source: Path, workspace: Path, codex_home: Path) -> Path:
-    relative = source.relative_to(workspace)
-    return codex_home / relative
 
 
 def trusted_service_paths(raw: object) -> tuple[list[tuple[str, str]], bool]:
@@ -102,24 +95,59 @@ def installed_browser_hashes(codex_home: Path) -> set[str]:
     return hashes
 
 
-def validate_global_codex(workspace: Path, codex_home: Path) -> tuple[Issue, ...]:
+def installed_layer_issues(workspace: Path, codex_home: Path) -> tuple[Issue, ...]:
+    issues: list[Issue] = []
+    try:
+        policy = load_install_policy(workspace)
+    except InstallError as exc:
+        return (Issue("invalid-install-policy", "MANIFEST.txt", str(exc)),)
+    try:
+        ledger_manifest_hash, ledger_files = load_ledger(codex_home)
+    except InstallError as exc:
+        return (Issue("invalid-install-ledger", LEDGER_NAME, str(exc)),)
+    if not (codex_home / LEDGER_NAME).is_file():
+        issues.append(Issue("missing-install-ledger", LEDGER_NAME, "DEV ownership ledger is missing"))
+    elif ledger_manifest_hash != policy.manifest_sha256:
+        issues.append(Issue("install-ledger-manifest-drift", LEDGER_NAME, "ledger does not match canonical MANIFEST.txt"))
+
+    desired = {item.path: item.sha256 for item in policy.files}
+    recorded = {item.path: item.sha256 for item in ledger_files}
+    for relative in sorted(set(desired) - set(recorded)):
+        issues.append(Issue("missing-ledger-entry", relative, "managed source is not recorded in ownership ledger"))
+    for relative in sorted(set(recorded) - set(desired)):
+        issues.append(Issue("stale-ledger-entry", relative, "ledger still records a source artifact absent from install policy"))
+    for relative in sorted(set(desired) & set(recorded)):
+        if desired[relative] != recorded[relative]:
+            issues.append(Issue("install-ledger-hash-drift", relative, "ledger hash differs from canonical source"))
+
+    for item in policy.files:
+        source = workspace.joinpath(*Path(item.path).parts)
+        destination = codex_home.joinpath(*Path(item.path).parts)
+        if not source.is_file():
+            issues.append(Issue("missing-canonical-source", item.path, "canonical managed source is missing"))
+        elif not destination.is_file():
+            issues.append(Issue("missing-managed-file", item.path, "installed managed file is missing"))
+        elif digest(source) != digest(destination):
+            issues.append(Issue("managed-file-drift", item.path, "installed file differs from canonical source"))
+    return tuple(sorted(issues))
+
+
+def validate_global_codex(
+    workspace: Path,
+    codex_home: Path,
+    *,
+    validate_skills: bool = True,
+) -> tuple[Issue, ...]:
     workspace = workspace.resolve()
     codex_home = codex_home.expanduser().resolve()
     issues: list[Issue] = []
+    if (codex_home / ".git").exists():
+        issues.append(Issue("installed-home-is-git", ".git", "installed Codex home must not be a Git working tree"))
     issues.extend(documentation_layout_issues(workspace))
-    for skill_issue in compare_skills(workspace / "skill-sources", codex_home.parent / ".agents" / "skills"):
-        issues.append(Issue(skill_issue.code, f"skills/{skill_issue.path}", "runtime Skill differs from versioned source"))
-    for source in managed_files(workspace):
-        source_label = source.relative_to(workspace).as_posix()
-        if not source.is_file():
-            issues.append(Issue("missing-canonical-source", source_label, "canonical managed source is missing"))
-            continue
-        destination = installed_path(source, workspace, codex_home)
-        label = destination.relative_to(codex_home).as_posix()
-        if not destination.is_file():
-            issues.append(Issue("missing-managed-file", label, "installed managed file is missing"))
-        elif digest(source) != digest(destination):
-            issues.append(Issue("managed-file-drift", label, "installed file differs from canonical source"))
+    issues.extend(installed_layer_issues(workspace, codex_home))
+    if validate_skills:
+        for skill_issue in compare_skills(workspace / "skill-sources", codex_home.parent / ".agents" / "skills"):
+            issues.append(Issue(skill_issue.code, f"skills/{skill_issue.path}", "runtime Skill differs from versioned source"))
 
     config = codex_home / "config.toml"
     if not config.is_file():
@@ -214,9 +242,10 @@ def main() -> int:
         help="canonical source root (legacy option name; default: repository containing this tool)",
     )
     parser.add_argument("--codex-home", type=Path, default=Path.home() / ".codex")
+    parser.add_argument("--skip-skills", action="store_true", help="validate managed layer before Skill materialization")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    issues = validate_global_codex(args.workspace, args.codex_home)
+    issues = validate_global_codex(args.workspace, args.codex_home, validate_skills=not args.skip_skills)
     if args.json:
         print(json.dumps({"ok": not issues, "issues": [asdict(issue) for issue in issues]}, ensure_ascii=False, indent=2))
     elif issues:

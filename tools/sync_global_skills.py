@@ -73,13 +73,21 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="install drifted Skills with a recoverable backup")
     parser.add_argument("--source", type=Path, default=SOURCE_ROOT)
     parser.add_argument("--destination", type=Path, default=Path.home() / ".agents" / "skills")
+    parser.add_argument(
+        "--backup-root",
+        type=Path,
+        help="explicit transaction-scoped backup directory (default: timestamped migration backup)",
+    )
     args = parser.parse_args()
 
     source = args.source.expanduser().resolve()
     destination = args.destination.expanduser().resolve()
     if args.apply:
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        backup = destination.parent / ".migration-backup" / stamp
+        if args.backup_root:
+            backup = args.backup_root.expanduser().resolve()
+        else:
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            backup = destination.parent / ".migration-backup" / stamp
         changed = sync_skills(source, destination, backup)
         print("global Skills synchronized: " + (", ".join(changed) if changed else "no changes"))
 

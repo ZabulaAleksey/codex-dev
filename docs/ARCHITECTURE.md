@@ -83,14 +83,18 @@ Metadata/receipts сохраняются рядом с project evidence; global 
 
 ## Назначение и границы
 
-`~/.codex` — канонический Git repository общей AI-инфраструктуры и одновременно active operational layer Codex. `agents/`, `hooks/` и `rules/` используются непосредственно. Versioned source Skills находится в `skill-sources/`, а единственная active runtime-проекция — в `~/.agents/skills/`. `docs/`, `templates/`, `tools/` и `specs/` образуют project-agnostic инженерную библиотеку. Project-specific контекст хранится только в независимых repositories под `~/codex-workspace/*`.
-
-`~/codex-workspace/global/codex` не является source root и не создаётся как installed-копия.
+Canonical Git repository общей AI-инфраструктуры находится отдельно от runtime, обычно в
+`~/codex-workspace/codex-dev`. `~/.codex` — installed active Codex home layer: manifest-managed
+`agents/`, `hooks/`, `rules/` и другие portable artifacts сосуществуют там с защищённым
+device-local runtime state. Versioned source Skills находится в `<dev-root>/skill-sources`, а
+единственная active runtime-проекция — в `~/.agents/skills/`. Project-specific контекст хранится
+только в независимых repositories под `~/codex-workspace/*`.
 
 | Слой | Путь | Роль |
 |---|---|---|
-| Global canonical + direct operational layer | `~/.codex` | Git, AGENTS, agents, hooks, rules, docs, tools, templates, specs |
-| Versioned Skill source | `~/.codex/skill-sources` | единственный редактируемый source reusable Skills |
+| Canonical DEV source repository | `~/codex-workspace/codex-dev` или другой source path | Git, manifest, AGENTS, agents, hooks, rules, docs, tools, templates, specs, Skill sources |
+| Installed Codex home layer | `~/.codex` | manifest-managed projection + protected runtime/auth/cache/session/plugin state; не Git repository |
+| Versioned Skill source | `<dev-root>/skill-sources` | единственный редактируемый source reusable Skills |
 | Managed Skill runtime | `~/.agents/skills` | hash-verified materialization; не второй lifecycle/source |
 | Product repositories | `~/codex-workspace/<project>` | независимый Git root и project-specific overlay |
 
@@ -192,19 +196,29 @@ Dependency DAG, исполнимость slice и истинность end-to-en
 ## Контур глобального runtime Codex
 
 ```text
-~/.codex (канон в Git + активный runtime-слой)
-        ↓ read-only validation
-managed-файлы + безопасные инварианты config.toml
+canonical DEV Git source
+        ↓ MANIFEST allowlist + transactional installer + ownership ledger
+~/.codex installed managed layer + protected runtime state
+        ↓ sync_global_skills.py
+~/.agents/skills runtime materialization
 ```
 
 `install-global.ps1` и `install-global.sh` — thin platform wrappers одного Python path. Они
-проверяют canonical directory/Git root, выполняют read-only context validation до materialization,
-sync Skills через `tools/sync_global_skills.py`, повторяют context/global validation и не
-перезаписывают active `config.toml`. `tools/normalize_user_codex.py` выполняет отдельную
+определяют отдельный canonical source Git root по своему расположению и вызывают
+`tools/install_global.py`. Engine читает только explicit files из `MANIFEST.txt`, исключает
+source-maintenance paths, маршрутизирует `skill-sources/` в существующий Skill sync, проверяет
+protected runtime collisions и unknown destination collisions до writes, затем применяет managed
+delta через staging/atomic replace. Deterministic `~/.codex/.dev-install-manifest.json` подтверждает
+ownership для update/stale deletion; unknown files никогда не удаляются только из-за отсутствия в
+manifest. Validators выполняются после managed apply и повторно после Skill sync; failure
+восстанавливает pre-image из transaction backup.
+
+Active `config.toml` не является manifest-managed. `config.ai-dev-team.recommended.toml`
+устанавливается как reference; `tools/normalize_user_codex.py` выполняет отдельную
 ограниченную, идемпотентную и предварительно валидируемую нормализацию пользовательского TOML без
 вывода секретов. `tools/validate_global_codex.py` проверяет managed-файлы active layer и статические
-границы безопасности. Legacy option `--workspace` означает canonical source root (обычно
-`~/.codex`), а не parent product workspace; отсутствующий source возвращает структурированную
+границы безопасности. Legacy option `--workspace` означает canonical source root, а не installed
+Codex home или parent product workspace; отсутствующий source возвращает структурированную
 issue вместо exception.
 
 `.github/workflows/validate.yml` запускает read-only context validation, полный Python unit/contract

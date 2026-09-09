@@ -2,30 +2,35 @@
 
 ## Целостность глобального ДЕВ
 
-Из корня `~/.codex`:
+Из canonical DEV source Git root:
 
 ```powershell
 py -3 .\tools\validate_context.py
-py -3 .\tools\sync_global_skills.py --source .\skill-sources --destination ~\.agents\skills
-py -3 .\tools\validate_global_codex.py --codex-home ~/.codex
+.\install-global.ps1 -DryRun
+.\install-global.ps1
+py -3 .\tools\validate_global_codex.py --workspace . --codex-home ~/.codex
 ```
 
 На Linux/macOS используй симметричный wrapper:
 
 ```bash
-cd ~/.codex
+cd ~/codex-workspace/codex-dev
+./install-global.sh --dry-run
 ./install-global.sh
 ```
 
-Оба install wrapper проверяют canonical directory/Git root, выполняют `validate_context.py` до
-materialization, sync через `sync_global_skills.py`, повторную context/global validation и не
-перезаписывают `config.toml`.
+Оба install wrapper проверяют exact source Git root, но не требуют его совпадения с `~/.codex`.
+Они строят manifest-only plan, транзакционно materialize-ят managed layer, запускают context/global
+validation, sync через `sync_global_skills.py` и повторяют validation. Active `config.toml` и
+runtime namespaces не перезаписываются.
 
-Проверка подтверждает наличие обязательных документов, корректность `MANIFEST.txt`, отсутствие дубликатов путей без учёта регистра и соответствие manifest фактическим отслеживаемым/неигнорируемым файлам.
+Проверка подтверждает корректность source `MANIFEST.txt`, deterministic ownership ledger,
+соответствие installed managed files, отсутствие дубликатов путей без учёта регистра и Skill parity.
 
 Legacy option `validate_global_codex.py --workspace` принимает canonical source root, то есть
-`~/.codex`, а не `~/codex-workspace`. Неверный root должен вернуть структурированные
-`missing-canonical-source` issues и не завершаться traceback.
+`~/codex-workspace/codex-dev` или другой clone, а не installed `~/.codex`. Неверный root возвращает
+структурированные
+`invalid-install-policy` issues и не завершается traceback.
 
 ## Глобальная конфигурация
 

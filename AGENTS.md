@@ -7,11 +7,13 @@
 
 ## 1. Канонические границы
 
-- Global Git repository и operational layer ДЕВ находятся непосредственно в `~/.codex`.
+- Canonical Git-managed DEV source находится в `~/codex-workspace/codex-dev` или другом отдельном
+  пользовательском source path. `~/.codex` — только installed active Codex home layer и runtime
+  state; он не является canonical Git working tree.
 - Product repositories — независимые Git roots `~/codex-workspace/<project>`; каждый top-level
   product-каталог является отдельным repository.
-- Versioned Skills: `~/.codex/skill-sources`; `~/.agents/skills` — только hash-verified runtime
-  materialization, не второй source of truth.
+- Versioned Skills: `<dev-root>/skill-sources`; `~/.agents/skills` — только hash-verified runtime
+  materialization, не второй source of truth. `skill-sources` не копируется в `~/.codex`.
 - Runtime state Codex, credentials, sessions, cache, plugins и active `~/.codex/config.toml` не
   принадлежат Git repository ДЕВ. Не перезаписывай `config.toml`; меняй только
   `config.ai-dev-team.recommended.toml` и templates, если задача прямо этого требует.
@@ -106,8 +108,9 @@ dirty/merge state и stale references. Сохрани unique content и recovera
 
 Не выполняй destructive reset, массовое удаление untracked/runtime data, credential/config rewrite
 или необратимую data migration без точного target, backup/recovery contract и явного разрешения.
-Никогда не запускай force-clean в `~/.codex`: рядом находятся ignored runtime credentials,
-sessions, cache, plugins и active config.
+Никогда не инициализируй Git и не запускай destructive cleanup в `~/.codex`: там находятся
+runtime credentials, sessions, cache, plugins и active config. Global managed artifacts обновляет
+только manifest-driven installer с ownership ledger и rollback.
 
 ## 5. ДЕВ / КАРКАС и project overlay
 

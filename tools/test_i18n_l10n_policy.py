@@ -105,7 +105,7 @@ class I18nL10nPolicyTests(unittest.TestCase):
     def test_system_spec_owns_stable_requirement_and_acceptance(self) -> None:
         spec = read("specs/system.spec.md")
         for marker in (
-            "Версия: 1.7",
+            "Версия: 1.8",
             "FR-010",
             "AC-013",
             "internationalization (`i18n`)",

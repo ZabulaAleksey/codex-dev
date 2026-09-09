@@ -3,6 +3,10 @@
 Статус: APPROVED
 Дата: 2026-08-28
 
+> FR-GFH-004/AC-GFH-004 описывают исторический placement wrapper-а. С 2026-09-10 source/install
+> boundary superseded спецификацией `source-installed-layer.spec.md`; остальные требования этого
+> завершённого hardening contract остаются действующими.
+
 ## Цель
 
 Уменьшить обязательный контекст глобального ДЕВ, сделать Stage selector проверяемым до запуска

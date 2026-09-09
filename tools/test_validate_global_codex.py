@@ -18,6 +18,7 @@ from tools.stage_compatibility import stage_routing_snapshot
 
 from tools.normalize_user_codex import ConcurrentConfigUpdateError, normalize_text, write_atomic
 from tools.validate_global_codex import documentation_layout_issues, managed_files, validate_global_codex
+from tools.install_global import LEDGER_NAME, ledger_bytes, load_install_policy
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,6 +134,7 @@ class GlobalCodexValidatorTests(unittest.TestCase):
             destination = self.codex_home / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+        (self.codex_home / LEDGER_NAME).write_bytes(ledger_bytes(load_install_policy(ROOT)))
         for source in (ROOT / "skill-sources").iterdir():
             if source.is_dir():
                 shutil.copytree(source, self.runtime_skills / source.name)
@@ -171,6 +173,19 @@ trust_level = "trusted"
     def test_drift_is_reported(self) -> None:
         (self.codex_home / "hooks/session_context.py").write_text("drift\n", encoding="utf-8")
         self.assertIn("managed-file-drift", self.issue_codes())
+
+    def test_missing_ownership_ledger_is_reported(self) -> None:
+        (self.codex_home / LEDGER_NAME).unlink()
+        self.assertIn("missing-install-ledger", self.issue_codes())
+
+    def test_installed_codex_home_git_metadata_is_reported(self) -> None:
+        (self.codex_home / ".git").mkdir()
+        self.assertIn("installed-home-is-git", self.issue_codes())
+
+    def test_pre_skill_validation_can_skip_runtime_skill_parity(self) -> None:
+        shutil.rmtree(self.runtime_skills)
+        issues = validate_global_codex(ROOT, self.codex_home, validate_skills=False)
+        self.assertNotIn("missing-runtime-skill", {issue.code for issue in issues})
 
     def test_runtime_skill_drift_is_reported(self) -> None:
         skill = next(path for path in self.runtime_skills.iterdir() if path.is_dir())

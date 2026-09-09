@@ -90,7 +90,15 @@ guard, а production access остаётся deny-by-default.
 
 Hook контекста использует repository containment и bounded read. Destructive guard покрывает `git.exe`, `git -C`, варианты порядка PowerShell flags и `rm -fr /`, но остаётся дополнительным слоем поверх sandbox/approvals/execpolicy.
 
-Git-root ДЕВ совмещён с runtime-каталогом `~/.codex`. Поэтому принудительный `git clean` запрещён во всех формах (`-f`, combined/split flags и `--force`): иначе Git может удалить игнорируемые credentials, sessions, SQLite, cache, plugins и active config. Для аудита допустим только dry-run без force.
+Runtime-каталог `~/.codex` не является Git working tree. Не инициализируй в нём repository и не
+используй Git cleanup как механизм установки: это может удалить credentials, sessions, SQLite,
+cache, plugins и active config. Canonical DEV Git operations выполняются только в отдельном source
+repository.
+
+Installer использует deny-by-default границу: protected runtime namespaces проверяются до writes,
+manifest collision завершает операцию, unknown destination files сохраняются, а stale deletion
+разрешён только по валидному ownership ledger. Update/delete имеют transaction backup; validation и
+Skill-sync failure запускают rollback. Ledger не содержит absolute paths, payload или secrets.
 
 ## Остаточные действия владельца
 

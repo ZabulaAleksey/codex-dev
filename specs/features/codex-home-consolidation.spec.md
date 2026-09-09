@@ -1,9 +1,11 @@
 # SPEC: консолидация ДЕВ в `~/.codex`
 
 Дата: 2026-08-23
-Статус: SUPERSEDED — консолидация завершена; repository boundary уточнена 2026-08-24
+Статус: SUPERSEDED — с 2026-09-10 заменена `source-installed-layer.spec.md`
 
-> Исторический SPEC миграции. Упоминания project-named `presets/` описывают состояние на момент переноса и больше не являются активным требованием. Текущий contract: global `~/.codex` хранит только project-agnostic framework; project-specific контекст принадлежит project repository, а неоднозначный источник сохраняется только как `BLOCKED` quarantine до безопасной миграции.
+> Исторический SPEC миграции. Упоминания `~/.codex` как Git-корня и project-named `presets/`
+> больше не являются активным требованием. Текущий contract разделяет canonical DEV source Git
+> repository и installed `~/.codex`; см. `source-installed-layer.spec.md`.
 
 ## Цель
 

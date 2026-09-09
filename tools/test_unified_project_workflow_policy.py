@@ -92,13 +92,13 @@ class UnifiedProjectWorkflowPolicyTests(unittest.TestCase):
         )
         self.assertIn("не дублируй Git history", template)
 
-    def test_actual_global_root_is_explicit_and_competing_root_is_rejected(self) -> None:
+    def test_source_and_installed_global_roots_are_explicit(self) -> None:
         architecture = read("docs/ARCHITECTURE.md")
         compatibility = read("docs/CONTEXT_COMPATIBILITY.md")
-        self.assertIn("`~/.codex`", architecture)
-        self.assertIn("`~/codex-workspace/global/codex` не является source root", architecture)
-        self.assertIn("`CONFLICT` → `INHERITED`", compatibility)
-        self.assertIn("Skills этой задачей не затронуты", compatibility)
+        self.assertIn("Canonical DEV source repository", architecture)
+        self.assertIn("Installed Codex home layer", architecture)
+        self.assertIn("`CONFLICT → SUPERSEDED`", compatibility)
+        self.assertIn("ownership ledger", architecture)
 
 
 class GlobalSourceRootFailureTests(unittest.TestCase):
@@ -117,7 +117,7 @@ class GlobalSourceRootFailureTests(unittest.TestCase):
             issues = validate_global_codex(wrong_source, codex_home)
             codes = {issue.code for issue in issues}
 
-            self.assertIn("missing-canonical-source", codes)
+            self.assertIn("invalid-install-policy", codes)
             self.assertIn("missing-document-layout-policy", codes)
             self.assertIn("missing-source-root", codes)
 

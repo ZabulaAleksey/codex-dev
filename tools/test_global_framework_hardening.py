@@ -73,14 +73,22 @@ class GlobalFrameworkHardeningTests(unittest.TestCase):
     def test_installers_share_safe_sequence_without_config_writes(self) -> None:
         powershell = read("install-global.ps1")
         bash = read("install-global.sh")
+        engine = read("tools/install_global.py")
+        install_body = engine[engine.index("def install("):]
         powershell.encode("ascii")  # Windows PowerShell 5 parses UTF-8/no-BOM as ANSI.
         for content in (powershell, bash):
-            self.assertLess(content.index("validate_context.py"), content.index("sync_global_skills.py"))
-            self.assertLess(content.index("sync_global_skills.py"), content.index("validate_global_codex.py"))
-            self.assertIn("--workspace", content)
+            self.assertIn("tools", content)
+            self.assertIn("install_global.py", content)
+            self.assertIn("--source", content)
             self.assertIn("--codex-home", content)
+        self.assertLess(
+            install_body.index("run_validators(source_root, codex_home, True"),
+            install_body.index("runner(sync_skills_command"),
+        )
+        self.assertIn("run_validators(source_root, codex_home, False", install_body)
+        self.assertIn("sync_global_skills.py", engine)
         for forbidden in ("Set-Content", "Out-File", "sed -i", "config.toml >"):
-            self.assertNotIn(forbidden, powershell + bash)
+            self.assertNotIn(forbidden, powershell + bash + engine)
 
     def test_greenfield_router_template_uses_bootstrap_without_local_automation(self) -> None:
         template = read("templates/AGENTS_PROJECT_TEMPLATE.md")

@@ -57,6 +57,7 @@ REQUIRED = {
     "specs/features/canonical-stages-policy.spec.md",
     "specs/features/continuous-master-execution.spec.md",
     "specs/features/brownfield-stage-compatibility.spec.md",
+    "specs/features/source-installed-layer.spec.md",
     "schemas/ai-policy-profiling.schema.json",
     "schemas/master-execution.schema.json",
     "schemas/stage-compatibility.schema.json",
@@ -72,8 +73,10 @@ REQUIRED = {
     "tools/test_stage_compatibility.py",
     "tools/test_documentation_sync_policy.py",
     "tools/test_i18n_l10n_policy.py",
+    "tools/test_install_global.py",
     "tools/test_global_framework_hardening.py",
     "tools/ai_policy_profiler.py",
+    "tools/install_global.py",
     "tools/master_execution.py",
     "tools/test_ai_policy_profiler.py",
     "tools/test_stage_completion_policy.py",
@@ -85,9 +88,9 @@ REQUIRED = {
 }
 
 
-def git_visible_files() -> set[str]:
+def git_tracked_files() -> set[str]:
     result = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+        ["git", "-c", f"safe.directory={ROOT}", "ls-files", "--cached"],
         cwd=ROOT,
         check=True,
         capture_output=True,
@@ -129,16 +132,16 @@ def main() -> int:
         errors.append(f"required file is not listed in manifest: {entry}")
 
     try:
-        visible_files = git_visible_files()
+        tracked_files = git_tracked_files()
     except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-        errors.append(f"cannot enumerate Git-visible files: {exc}")
+        errors.append(f"cannot enumerate Git-tracked files: {exc}")
     else:
-        for entry in sorted(visible_files - manifest_files):
+        for entry in sorted(tracked_files - manifest_files):
             errors.append(
-                f"Git-visible file is not listed in manifest: {entry}")
-        for entry in sorted(manifest_files - visible_files):
+                f"Git-tracked file is not listed in manifest: {entry}")
+        for entry in sorted(manifest_files - tracked_files):
             errors.append(
-                f"manifest entry is ignored or outside Git-visible files: {entry}")
+                f"manifest entry is not Git-tracked: {entry}")
 
     if errors:
         print("Context validation failed:", file=sys.stderr)
@@ -146,7 +149,7 @@ def main() -> int:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    print(f"~/.codex DEV context OK ({len(manifest_files)} files)")
+    print(f"canonical DEV source context OK ({len(manifest_files)} files)")
     return 0
 
 

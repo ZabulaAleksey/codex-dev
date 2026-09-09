@@ -118,18 +118,23 @@ requirements
 
 ## Runtime boundary
 
-Не входят в active governance: credentials, `config.toml`, sessions, SQLite, caches, downloaded plugins, attachments, logs и generated artifacts. `.gitignore` использует deny-by-default allowlist, чтобы эти данные не попали в Git.
+Не входят в canonical source: credentials, active `config.toml`, sessions, SQLite, caches,
+downloaded plugins, attachments, logs и generated artifacts. Они остаются в installed
+`~/.codex`; installer защищает их отдельным deny-by-default path policy.
 
 ## Cross-device path
 
 ```text
-Git ~/.codex → install/validate → Skill parity
+Git ~/codex-workspace/codex-dev → MANIFEST install/validate → ~/.codex managed layer
+<dev-root>/skill-sources → sync/validate → ~/.agents/skills
 Git ~/codex-workspace/<project> → branch/status → dependencies/secrets
 project docs/evidence → restored Codex session
 ```
 
-`~/codex-workspace/global/codex`, history старого чата и ручное копирование отдельных context-файлов
-не входят в supported recovery path. Полный checklist находится в `docs/WORKFLOW.md`.
+Source path может отличаться от рекомендуемого `~/codex-workspace/codex-dev`, но не может
+совпадать или пересекаться с `~/.codex`. History старого чата и ручное копирование отдельных
+context-файлов не входят в supported recovery path. Полный checklist находится в
+`docs/WORKFLOW.md`.
 
 ## Project boundary
 

@@ -15,13 +15,13 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ## Canonical commands
 
-Из корня `~/.codex`:
+Из canonical DEV source Git root:
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler tools.test_master_execution tools.test_continuous_master_execution_policy tools.test_stage_compatibility
-py -3 -B tools\sync_global_skills.py
-py -3 -B tools\validate_global_codex.py --workspace ~/.codex --codex-home ~/.codex
+py -3 -B -m unittest tools.test_install_global tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler tools.test_master_execution tools.test_continuous_master_execution_policy tools.test_stage_compatibility
+.\install-global.ps1 -DryRun
+py -3 -B tools\validate_global_codex.py --workspace . --codex-home ~/.codex
 git diff --check
 ```
 
@@ -32,7 +32,8 @@ continuation/parallel routing, real temporary Git worktree create/read-back, aut
 L1–L6, context budget/handoff, hierarchical prompt eligibility и recovery matrix.
 `tools.test_continuous_master_execution_policy` проверяет, что router/governance/Skills/templates и
 SPEC используют один state/cleanup owner и не требуют merge question после каждого slice.
-Текущий global evidence: 204 tests PASS, context manifest 242 files PASS. Controlled read-only
+Текущий global evidence: 273 tests PASS, 6 platform-specific skips, context manifest 246 files
+PASS. Controlled read-only
 `electro-tutor` check вернул pre-existing migration gaps и не является regression/global test
 failure; temporary real Git integration остаётся positive portable adapter evidence.
 После fast-forward merge в local `main`: context validator 238 files PASS, 80 deterministic
@@ -87,8 +88,18 @@ Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real
 concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует
 соответствующего real level; synthetic evidence не повышается автоматически.
 
-`install-global.ps1` выполняет Skill sync и основные проверки installed layer, но
+`tools.test_install_global` использует только temporary source/home roots и проверяет separate
+source, populated runtime preservation, manifest allowlist, ledger-governed stale deletion,
+unknown/protected collisions, Skill routing, zero-write dry-run, rollback, validator order,
+idempotency и post-pull managed-only update.
+
+`install-global.ps1` выполняет transactional managed apply, Skill sync и основные проверки
+installed layer, но
 не заменяет целевой unit suite во время разработки.
+
+Windows wrapper дополнительно проверен на isolated populated Codex home: dry-run zero-write,
+managed apply, 9 Skill sources, оба validator phase, byte-identical auth/session markers и
+idempotent второй install PASS. Реальный пользовательский `~/.codex` не изменялся.
 
 ## Backend DX fixture contract
 

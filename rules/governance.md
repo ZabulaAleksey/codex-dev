@@ -47,7 +47,7 @@ recommendation существующему runtime router и не подменя�
 
 | Тип информации | Канонический владелец | Допустимые projections |
 |---|---|---|
-| Общие правила, agents, hooks, validators и versioned Skills | Git repository `~/.codex`; Skill source — `~/.codex/skill-sources` | `~/.agents/skills` только как hash-verified runtime materialization; docs summaries |
+| Общие правила, agents, hooks, validators и versioned Skills | canonical DEV source Git repository; Skill source — `<dev-root>/skill-sources` | manifest-managed `~/.codex`; `~/.agents/skills` только как hash-verified runtime materialization; docs summaries |
 | Product implementation и фактическое поведение | `<project>` Git repository, текущий worktree/branch, production code и migrations | build/release artifacts, GitHub views |
 | Требования и acceptance contract | утверждённые `specs/system.spec.md` / `specs/features/*` и согласованные ADR | stage prompts, plans, issues, human summaries |
 | Архитектурные границы и решения | `docs/ARCHITECTURE.md` и `docs/DECISIONS.md` | Eraser/другие диаграммы после подтверждённого изменения |
@@ -74,7 +74,8 @@ recommendation существующему runtime router и не подменя�
 - Project `AGENTS.md` не копирует global Git/testing/security/fallback/tool policy.
 - Project custom agents находятся в `<repo>/.codex/agents`.
 - Project Skills находятся в `<repo>/.agents/skills` только при доказанном project-specific gap.
-- Global agent TOML находится в `~/.codex/agents`; versioned Skill sources — в `~/.codex/skill-sources`, runtime Skills — в `~/.agents/skills`.
+- Global agent TOML versioned в `<dev-root>/agents` и устанавливается в `~/.codex/agents`;
+  versioned Skill sources — в `<dev-root>/skill-sources`, runtime Skills — в `~/.agents/skills`.
 
 ## Project state и документы
 
@@ -355,8 +356,9 @@ checks и обнови current record/NEXT в `prompts/STAGES.md` только �
 выполняются лишь при явном разрешении и по Git policy; без них незакоммиченный worktree не считается
 перенесённым на другое устройство, а handoff получает явный blocker.
 
-На другом устройстве сначала восстанови/обнови Git repository глобального ДЕВ непосредственно в
-`~/.codex`, выполни штатные install/validation и Skill parity checks, затем clone/pull нужного
+На другом устройстве сначала восстанови/обнови canonical Git repository глобального ДЕВ в
+`~/codex-workspace/codex-dev` или другом source path, выполни штатные install/validation и Skill
+parity checks в отдельный installed `~/.codex`, затем clone/pull нужного
 `~/codex-workspace/<project>`. После проверки branch/status восстанови dependencies и локальные
 secrets штатными механизмами проекта, прочитай context по `docs/CONTEXT_POLICY.md` и продолжай
 только после согласования локального состояния с repository evidence. История чата и ручное

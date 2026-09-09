@@ -1,5 +1,17 @@
 # Roadmap AI Dev Team
 
+## Текущий internal delta — DEV source → installed Codex home
+
+`DEV-INSTALL-LAYER-001` разделяет canonical DEV Git source и installed `~/.codex`. Scope:
+manifest-only materialization, protected runtime denylist, deterministic ownership ledger,
+ledger-only stale cleanup, staged/atomic apply with rollback, zero-write dry-run, existing Skill
+sync и повторные validators. Реальный runtime home не изменяется до отдельного запуска installer;
+acceptance принадлежит `specs/features/source-installed-layer.spec.md`; current master selector в
+`prompts/STAGES.md` сохранён без нового competing execution graph. Implementation validated
+locally: 273 tests PASS с 6 ожидаемыми
+platform skips, 246-file context manifest PASS, PowerShell isolated apply/dry-run/idempotency и
+Git Bash dry-run PASS; реальный runtime home не изменялся.
+
 ## Текущий master — Brownfield Canonical Stage Compatibility
 
 `DEV-BCSC-001` расширяет integrated CME generic compatibility adapter-ом. Runnable slice
@@ -55,7 +67,7 @@ Checkpoint `80a63b3` merged into local `main` through `1e34f41`; push не вы�
 - канонический контракт архитектурно завершённых stages, scaffold-safe lifecycle/evidence и
   task-aware `STAGES selector → selected STAGES record` projection — fast-forward merged locally,
   88 tests PASS, runtime Skill parity 9/9.
-- единый project workflow: actual `~/.codex` source ownership, восемь lifecycle requests,
+- единый project workflow: canonical DEV source ownership и installed `~/.codex` projection, восемь lifecycle requests,
   documentation/LEARNING triggers, external projection rules, computer↔laptop restore, monitoring
   classes и fail-visible global source-root validation — 94 tests PASS, 199-file manifest PASS;
   feature commit `4bcdf32` fast-forward merged в локальную `main`, push не выполнялся.

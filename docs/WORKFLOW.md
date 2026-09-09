@@ -227,8 +227,8 @@ NEEDS_RESEARCH, NEEDS_DECISION, DUPLICATE, ALREADY_IMPLEMENTED или BLOCKED; �
 
 На другом устройстве:
 
-1. clone/pull глобальный ДЕВ непосредственно в `~/.codex`;
-2. запусти `install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS; wrappers
+1. clone/pull canonical global DEV source в `~/codex-workspace/codex-dev` или другой отдельный path;
+2. из source Git root запусти `install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS; wrappers
    выполняют context validation, Skill materialization/parity и global validator;
 3. clone/pull `~/codex-workspace/<project>`, проверь branch/status и восстанови dependencies;
 4. восстанови локальные secrets через разрешённый machine-local механизм, не из Git/чата;

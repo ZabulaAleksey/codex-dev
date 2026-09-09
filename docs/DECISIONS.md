@@ -158,7 +158,7 @@ hooks, MCP и Skills не добавляются; product repositories этим 
 
 ## 2026-08-27 — Один global root и один операционный project workflow
 
-**Статус:** принято.
+**Статус:** SUPERSEDED для DEV placement решением 2026-09-10; workflow ownership сохраняется.
 
 **Контекст:** новый workflow brief предполагал отдельный source
 `~/codex-workspace/global/codex` и installed runtime в `~/.codex`. Фактическая архитектура уже
@@ -326,6 +326,8 @@ project framework и reusable automation, но не хранит канонич�
 
 ## 2026-08-23 — `~/.codex` является Git-корнем и единственным каноном ДЕВ
 
+**Статус:** SUPERSEDED 2026-09-10 решением об отдельном canonical source repository и installed layer.
+
 **Решение:** перенести versioned AI Dev Team в `~/.codex` и использовать
 `AGENTS.md`, `agents/`, `hooks/`, `skills/` и `rules/` непосредственно из активного
 пользовательского слоя Codex. Product repositories остаются независимыми Git roots
@@ -400,3 +402,29 @@ privacy risk и ложную точность для всех задач до п
 **Последствия:** existing projects остаются backward-compatible; explicit `init` включает
 observation. Corrupt telemetry fail closed. Markdown/JSON report является достаточным dashboard
 Observe-фазы. Threshold tuning остаётся human-approved future scope.
+
+## 2026-09-10 — DEV source и installed Codex home являются разными слоями
+
+**Статус:** принято; supersedes решение 2026-08-23 о `~/.codex` как Git-корне и уточняет
+Skill-source paths решения 2026-08-24.
+
+**Решение:** canonical Git-managed DEV source находится в `~/codex-workspace/codex-dev` или другом
+отдельном пользовательском path. `~/.codex` является только installed active Codex home layer и
+runtime home, не Git working tree. Существующие wrappers используют один Python engine,
+`MANIFEST.txt` как explicit file allowlist и deterministic ownership ledger. `skill-sources/`
+остаётся в source и materialize-ится в `~/.agents/skills` существующим sync tool.
+
+**Причина:** совмещение Git worktree с credentials, sessions, caches, plugins, SQLite и другим
+runtime state делало source lifecycle зависимым от host state и создавало риск destructive Git
+operations. Отдельный source clone обеспечивает обычный clone/pull flow и детерминированную
+установку на нескольких устройствах.
+
+**Альтернативы:** blanket mirror отклонён из-за риска копирования `.git`/runtime-like artifacts;
+полный overwrite `~/.codex` отклонён из-за потери user state; второй installer отклонён — wrappers
+остаются единственными entry points и делегируют общей engine; active `config.toml` merge не введён,
+поскольку нет утверждённого узкого non-secret invariant.
+
+**Последствия:** unknown destination collisions и manifest/runtime collisions fail closed; stale
+managed files удаляются только по ledger; staging/backup/atomic replace и post-apply validation
+образуют rollback boundary. Legacy `~/.codex/.git` переносится вручную до install. Historical docs
+могут упоминать прежнюю схему только с явным `SUPERSEDED` context.

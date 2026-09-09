@@ -7,7 +7,7 @@
 - `tools/prompt_queue.py`, `tools/test_prompt_queue.py`: guard/CLI/receipt verifier и tests.
 
 
-Дата проверки: 2026-08-27.
+Дата проверки: 2026-09-10.
 
 Точный пофайловый состав Git-контекста задаёт `MANIFEST.txt`. Этот документ объясняет роль каждого класса файлов; любой tracked-файл обязан одновременно присутствовать в manifest и в одной из категорий ниже.
 
@@ -16,12 +16,13 @@
 | Путь | Роль |
 |---|---|
 | `AGENTS.md` | единственный global instruction router |
-| `.gitignore` | deny-by-default граница между governance и runtime/secrets |
+| `.gitignore` | allowlisted граница canonical source и local generated/secrets |
 | `README.md`, `QUICKSTART.md` | human-readable навигация и проверка |
 | `config.ai-dev-team.recommended.toml` | безопасное предложение конфигурации без credentials |
 | `hooks.json` | event → hook wiring |
-| `install-global.ps1` | read-only install/verification entry point |
-| `MANIFEST.txt` | точный tracked file set для validator |
+| `install-global.ps1`, `install-global.sh` | platform entry points source → installed layer; dry-run поддерживается |
+| `tools/install_global.py` | manifest policy, protected paths, ownership ledger, transaction/rollback и validation sequence |
+| `MANIFEST.txt` | точный tracked source file set и верхняя allowlist-граница installer |
 
 Именованные project installers, backlog и project inventory в active global root запрещены.
 
@@ -127,5 +128,6 @@ policy; перенос или удаление требует отдельног
 
 1. `git ls-files` должен точно совпадать с `MANIFEST.txt`.
 2. `tools/validate_context.py` проверяет наличие, canonical paths и Git visibility.
-3. `tools/validate_global_codex.py` проверяет managed files, config invariants и Skill parity.
+3. `tools/validate_global_codex.py` проверяет ownership ledger, все installable manifest files,
+   config invariants и Skill parity.
 4. Broken-reference и contamination scans выполняются отдельно, потому что manifest доказывает наличие, но не семантическую корректность.

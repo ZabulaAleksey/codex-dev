@@ -1,7 +1,7 @@
 # Системная спецификация AI Dev Team Codex
 
 Статус: Действует
-Версия: 1.7
+Версия: 1.8
 
 ## 1. Назначение
 
@@ -11,7 +11,11 @@ AI Dev Team предоставляет один переиспользуемый
 
 ### FR-001 Единое глобальное ядро
 
-Общие agents, Skills, hooks, rules, MCP-рекомендации и Git workflow должны иметь один versioned канонический источник непосредственно в `~/.codex`. Runtime-проекция Skills в `~/.agents/skills` допустима только как hash-verified materialization канона и не является вторым source of truth.
+Общие agents, Skills, hooks, rules, MCP-рекомендации и Git workflow должны иметь один versioned
+canonical source Git repository, отдельный от `~/.codex`. Installed Codex home является
+manifest-managed projection плюс protected runtime state. Runtime Skills в `~/.agents/skills`
+допустимы только как hash-verified materialization `<dev-root>/skill-sources` и не являются вторым
+source of truth.
 
 ### FR-002 Проект как overlay
 
@@ -19,7 +23,9 @@ AI Dev Team предоставляет один переиспользуемый
 
 ### FR-003 Независимые репозитории
 
-Каждый каталог верхнего уровня в `~/codex-workspace/` должен быть самостоятельным Git-репозиторием. Git repository ДЕВ в `~/.codex` не должен отслеживать их содержимое или runtime state Codex.
+Каждый product-каталог верхнего уровня в `~/codex-workspace/` должен быть самостоятельным
+Git-репозиторием. Canonical DEV обычно находится в `~/codex-workspace/codex-dev`; installed
+`~/.codex` не должен содержать `.git` или отслеживать runtime state Codex.
 
 ### NFR-001 Минимальный контекст
 
@@ -172,9 +178,9 @@ state, выдаёт dry-run migration plan и не запускает work пр�
   `completed`, `verified` или `DONE`.
 - AC-008 Канонический stage contract, planning/execution Skills, templates и status workflow
   структурно согласованы и не превращают tests или status documents в источник требований.
-- AC-009 Единственный Git-канон глобального ДЕВ находится непосредственно в `~/.codex`;
-  `~/codex-workspace/global/codex` не является поддерживаемым source root, а `~/.agents/skills`
-  остаётся только hash-verified runtime projection.
+- AC-009 Единственный Git-канон глобального ДЕВ находится в отдельном canonical source repository;
+  `~/.codex` является manifest-installed non-Git layer, а `~/.agents/skills` остаётся только
+  hash-verified runtime projection.
 - AC-010 `docs/WORKFLOW.md` содержит copy-ready запросы для восьми lifecycle-сценариев,
   cross-device handoff и ссылки на один канонический documentation/learning contract без его
   копирования в project overlays.

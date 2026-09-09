@@ -1,5 +1,22 @@
 # Аудит совместимости контекста
 
+## Source repository → installed layer delta — 2026-09-10
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
+|---|---|---|---|---|
+| DEV root | Git и runtime были совмещены в `~/.codex` | отдельный portable source clone | `CONFLICT → SUPERSEDED` | `~/codex-workspace/codex-dev` или другой source Git root |
+| Installed layer | direct use без ownership metadata | manifest-only projection | `EXTEND` | `MANIFEST.txt` + `.dev-install-manifest.json` |
+| Runtime state | находился рядом с tracked files | никогда не выводить ownership из directory absence | `FORBIDDEN_TO_OVERWRITE` | Codex runtime; installer protected namespaces |
+| Existing managed files | legacy layout не имел ledger | безопасная миграция без blind overwrite | `EXTEND` | identical adoption; differing unknown collision fail closed |
+| Stale cleanup | ownership нельзя было доказать вне Git | удалять только ранее recorded managed file | `EXTEND` | deterministic ownership ledger |
+| Skills | source и runtime уже разделены | сохранить единственную runtime projection | `INHERITED` | `<dev-root>/skill-sources` → `sync_global_skills.py` → `~/.agents/skills` |
+| Config | recommendation и active config имели разные роли | исключить implicit replacement/merge | `INHERITED` | installed recommendation reference; active runtime config |
+| Prompt Queue | portable policy/metadata принадлежат source | подготовить future bootstrap path | `INHERITED` | manifest-managed rules/hooks/tools; runtime payload вне source |
+
+Предыдущие решения о `~/.codex` как Git-корне ниже сохранены как audit trail и superseded этим
+разделением. Installer не выполняет destructive migration `.git`; legacy repository сначала
+переносится пользователем в отдельный source path.
+
 ## Brownfield stage compatibility delta — 2026-09-08
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
@@ -115,7 +132,7 @@ brownfield projects. Project-specific реализации остаются ис
 Controlled evidence использует temporary Git repositories; product repositories этой фазой не
 мутируются.
 
-## Решение 2026-08-27 — единый project workflow без второго global layer
+## Решение 2026-08-27 — единый project workflow без второго global layer (SUPERSEDED для DEV root)
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический источник |
 |---|---|---|---|---|
@@ -259,9 +276,8 @@ Live inventory product repositories больше не является capabilit
 каноническим источником, а `docs/FALLBACKS.md` в product repository — только
 project-specific delta.
 
-Историческое решение о каноническом runtime Skill superseded 2026-08-24: `~/.codex/AGENTS.md`
-остаётся каноническим router, versioned Skill source находится в
-`~/.codex/skill-sources/bootstrap-project-framework`, а
+Текущий installed router находится в `~/.codex/AGENTS.md`, versioned Skill source — в
+`<dev-root>/skill-sources/bootstrap-project-framework`, а
 `~/.agents/skills/bootstrap-project-framework` является только hash-verified runtime projection.
 Проекты наследуют router/Skill и не копируют их локально.
 
@@ -280,7 +296,7 @@ project-specific delta.
 | Shell environment | spawned commands наследовали `*_TOKEN` | `CONFLICT` | `ignore_default_excludes = false`; проверка фактического нового shell после restart |
 | Recommendation files | устаревший AGENTS staging и актуальный config proposal | `OBSOLETE` / `EXTEND` | obsolete AGENTS staging удалён после hash-check; config recommendation сохранён как неактивный proposal |
 
-## Решение 2026-08-23 — консолидация ДЕВ в `~/.codex`
+## Решение 2026-08-23 — консолидация ДЕВ в `~/.codex` (SUPERSEDED 2026-09-10)
 
 | Возможность | Найденное состояние | Статус | Решение и канонический источник |
 |---|---|---|---|

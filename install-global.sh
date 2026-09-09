@@ -5,16 +5,13 @@ dev_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 codex_home="${HOME}/.codex"
 skill_runtime="${HOME}/.agents/skills"
 python_bin="${PYTHON_BIN:-python3}"
+dry_run=()
 
-if [[ ! -d "${codex_home}" ]]; then
-  printf 'ДЕВ должен быть клонирован или перемещён непосредственно в %s.\n' "${codex_home}" >&2
-  exit 1
-fi
-
-canonical_codex_home="$(cd -- "${codex_home}" && pwd -P)"
-if [[ "${dev_root}" != "${canonical_codex_home}" ]]; then
-  printf 'ДЕВ должен быть запущен из канонического ~/.codex: %s\n' "${canonical_codex_home}" >&2
-  exit 1
+if [[ "${1:-}" == "--dry-run" ]]; then
+  dry_run=(--dry-run)
+elif [[ $# -gt 0 ]]; then
+  printf 'Usage: %s [--dry-run]\n' "$0" >&2
+  exit 2
 fi
 
 if ! command -v "${python_bin}" >/dev/null 2>&1; then
@@ -25,19 +22,12 @@ fi
 git_root="$(git -C "${dev_root}" rev-parse --show-toplevel)"
 git_root="$(cd -- "${git_root}" && pwd -P)"
 if [[ "${git_root}" != "${dev_root}" ]]; then
-  printf 'Git root должен совпадать с каноническим ~/.codex: %s\n' "${dev_root}" >&2
+  printf 'install-global.sh must run from the canonical DEV source Git root: %s\n' "${dev_root}" >&2
   exit 1
 fi
 
-printf 'ДЕВ уже расположен в каноническом ~/.codex.\n'
-"${python_bin}" -B "${dev_root}/tools/validate_context.py"
-"${python_bin}" -B "${dev_root}/tools/sync_global_skills.py" \
-  --source "${dev_root}/skill-sources" \
-  --destination "${skill_runtime}" \
-  --apply
-"${python_bin}" -B "${dev_root}/tools/validate_context.py"
-"${python_bin}" -B "${dev_root}/tools/validate_global_codex.py" \
-  --workspace "${dev_root}" \
-  --codex-home "${canonical_codex_home}"
-
-printf 'Проверки завершены. Runtime config.toml и secrets не изменялись.\n'
+"${python_bin}" -B "${dev_root}/tools/install_global.py" \
+  --source "${dev_root}" \
+  --codex-home "${codex_home}" \
+  --skills-destination "${skill_runtime}" \
+  "${dry_run[@]}"

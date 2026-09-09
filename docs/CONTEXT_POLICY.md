@@ -8,10 +8,11 @@
 
 Более локальное правило уточняет общее только в своей области. Прямая инструкция пользователя для текущей задачи имеет высший приоритет, если не нарушает ограничения безопасности.
 
-Глобальный Git-канон и active operational layer находятся непосредственно в `~/.codex`.
-`~/codex-workspace/global/codex` не является поддерживаемым source root. Product repositories
-располагаются как независимые Git roots в `~/codex-workspace/<project>`; runtime Skills в
-`~/.agents/skills` являются только проверяемой projection `~/.codex/skill-sources`.
+Canonical global DEV Git source находится отдельно, обычно в `~/codex-workspace/codex-dev`.
+`~/.codex` содержит manifest-installed global context и device-local runtime state, но не является
+canonical Git working tree. Product repositories располагаются как независимые Git roots в
+`~/codex-workspace/<project>`; runtime Skills в `~/.agents/skills` являются только проверяемой
+projection `<dev-root>/skill-sources`.
 
 ## Порядок загрузки
 

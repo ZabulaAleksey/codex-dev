@@ -7,18 +7,19 @@
 Project наследует правило через global router и добавляет только свои required checks.
 
 
-Актуализировано: 2026-08-27.
+Актуализировано: 2026-09-10.
 
 Этот набор организует одну постоянную ИИ-команду разработчиков для нескольких репозиториев. Он рассчитан на работу в Codex CLI, IDE и настольном приложении с `AGENTS.md`, пользовательскими субагентами, skills, hooks, rules и MCP.
 
 ## Расположение каталогов
 
-- `~/.codex` — этот Git repository, общая AI-инфраструктура и активный пользовательский слой Codex.
+- `~/codex-workspace/codex-dev` (или другой пользовательский path) — canonical Git-managed DEV source repository.
+- `~/.codex` — installed active Codex home layer и runtime state; это не canonical Git working tree.
 - `~/codex-workspace/<project>` — рабочий Git-репозиторий конкретного проекта.
 
-Путь `~/codex-workspace/global/codex` не поддерживается как второй source: он конфликтует с
-консолидированным Git-root `~/.codex`. В `~/.agents/skills` находится только проверяемая runtime-
-проекция Skills, а не ещё один канонический repository.
+Canonical source materialize-ится в `~/.codex` по `MANIFEST.txt`; blanket mirror запрещён. В
+`~/.agents/skills` находится только проверяемая runtime-проекция Skills, а не ещё один canonical
+repository.
 
 Такая схема позволяет переносить домашний каталог между компьютерами без изменения документации и не смешивает шаблоны с рабочими проектами.
 
@@ -26,8 +27,8 @@ Project наследует правило через global router и добав
 
 Не копировать 20 одинаковых агентов в каждый проект. Вместо этого:
 
-1. **Глобальное ядро команды** хранится в `~/.codex/agents/`.
-2. **Глобальные Skills** версионируются в `~/.codex/skill-sources/` и устанавливаются в `~/.agents/skills/`.
+1. **Глобальное ядро команды** версионируется в canonical source и устанавливается в `~/.codex/`.
+2. **Глобальные Skills** версионируются в `<dev-root>/skill-sources/` и устанавливаются в `~/.agents/skills/`.
 3. Каждый full staged repository имеет тонкий `AGENTS.md`, SPEC и единственный execution-state
    owner `prompts/STAGES.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при
    подтверждённом project gap.
@@ -142,39 +143,49 @@ dashboard описаны в [`docs/notes/AI_POLICY_PROFILING.md`](docs/notes/AI_
 
 ### Windows
 
-Repository ДЕВ должен быть клонирован или перемещён непосредственно в `~/.codex`.
-Открой PowerShell в этом каталоге:
+Clone/pull canonical source вне `~/.codex`, затем открой PowerShell в его Git root:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
+.\install-global.ps1 -DryRun
 .\install-global.ps1
 ```
 
 ### Linux / macOS
 
-Repository также должен находиться непосредственно в `~/.codex`:
-
 ```bash
-cd ~/.codex
+cd ~/codex-workspace/codex-dev
+./install-global.sh --dry-run
 ./install-global.sh
 ```
 
 Если executable bit не сохранился при переносе, запусти `bash ./install-global.sh`; сам script
 не требует изменения active config.
 
-Оба wrapper сначала проверяют canonical Git root, запускают read-only context validation, затем
-materialize-ят Skills существующим Python tool и повторяют context/global validation. Они
-**не перезаписывают `~/.codex/config.toml`**. Рекомендуемые настройки находятся в:
+Оба wrapper определяют canonical source Git root по своему расположению и передают работу единому
+`tools/install_global.py`. Installer строит manifest-only plan, fail closed проверяет protected
+runtime paths и unknown collisions, применяет изменения транзакционно, пишет deterministic
+ownership ledger `~/.codex/.dev-install-manifest.json`, запускает validators, materialize-ит Skills
+существующим `sync_global_skills.py` и повторяет validators. Validation failure входит в rollback
+boundary. `-DryRun` / `--dry-run` ничего не меняет.
+
+Installer **не перезаписывает `~/.codex/config.toml`**. Рекомендуемые настройки находятся в:
 
 ```text
 config.ai-dev-team.recommended.toml
 ```
 
-Их нужно объединить со своим `~/.codex/config.toml`.
+Это reference/template. Если настройки нужны, объединяй их со своим `~/.codex/config.toml`
+явно; installer не делает неоговорённый merge.
 
-`AGENTS.md`, agents, hooks и rules используются непосредственно из `~/.codex`. Versioned Skills
-хранятся в `~/.codex/skill-sources`, а единственная active runtime-проекция materialize-ится в
-`~/.agents/skills` с file-set/SHA-256 verification; она не является вторым source of truth.
+Installed `AGENTS.md`, agents, hooks и rules используются из `~/.codex`. Versioned Skills остаются
+только в `<dev-root>/skill-sources`, а active runtime-проекция materialize-ится в
+`~/.agents/skills` с file-set/SHA-256 verification.
+
+Для миграции старого layout сначала перенеси/клонируй Git repository из `~/.codex` в отдельный
+source path. Пока `~/.codex/.git` существует, installer fail closed и не меняет ни Git metadata,
+ни runtime state. После отделения repository запусти dry-run: идентичные installed files безопасно
+принимаются в ledger; различающийся unknown file требует ручного reconcile.
 
 ## Проверка
 
@@ -240,8 +251,9 @@ $bootstrap-project-framework
 $backend-dx-audit
 ```
 
-При смене компьютера сначала синхронизируй отдельный Git repository ДЕВ в `~/.codex` и выполни
-`install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS, затем clone/pull нужный product repository в
+При смене компьютера clone/pull canonical DEV source в `~/codex-workspace/codex-dev` (или другой
+source path), выполни `install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS,
+затем clone/pull нужный product repository в
 `~/codex-workspace/<project>`. Рабочее состояние восстанавливается из Git и project docs по
 [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md), не из истории чата или ручных копий файлов.
 

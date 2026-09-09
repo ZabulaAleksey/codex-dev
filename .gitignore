@@ -1,5 +1,5 @@
-# `~/.codex` одновременно является runtime-каталогом Codex и Git-корнем ДЕВ.
-# По умолчанию не отслеживать host-managed state, credentials, sessions и cache.
+# Canonical DEV source repository is allowlisted by top-level source areas.
+# Runtime state belongs only to the separate installed `~/.codex` layer.
 /*
 
 # Канонические файлы и каталоги ДЕВ.
@@ -25,14 +25,14 @@
 !/tools/
 !/.github/
 
-# Runtime rules Codex не являются частью ДЕВ.
+# Host/runtime rules are not canonical DEV source artifacts.
 /rules/default.rules
 
 # Versioned source глобальных Skills. Активная runtime-проекция устанавливается
 # в `~/.agents/skills`; host-managed `~/.codex/skills` остаётся вне Git.
 !/skill-sources/**
 
-# Локальные секреты, caches и служебные файлы внутри управляемых каталогов.
+# Локальные секреты, caches и служебные файлы внутри source tree.
 **/.env
 **/.env.*
 !**/.env.example
