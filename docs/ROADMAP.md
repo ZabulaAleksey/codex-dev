@@ -9,15 +9,17 @@ lookup, structured `.codex/dev-project.toml` opt-in и migration diagnostics. `d
 и portable wrappers добавляют clone/pull bootstrap с version/capability checks. Installer, global validator,
 SessionStart/`Продолжай` и Prompt Queue потребляют resolver. Plain repositories не наследуют DEV
 project policy по filesystem location. Controlled physical migration follows the attached delta;
-GitHub rename, remote update, real runtime install, merge и push остаются approval-gated. Acceptance
+canonical source and product repositories are now materialized and Git-verified, while legacy
+recovery copies remain pending explicit cleanup. GitHub rename and origin update to `codex-dev` are
+complete; real runtime install remains a separate security-gated item. Acceptance
 принадлежит `specs/features/unified-dev-path-layout.spec.md`; current execution record —
 `prompts/STAGES.md`. Bootstrap implementation locally validated: 129 targeted tests PASS (2
 expected skips), full 302 tests PASS (6 expected skips), 266-file manifest PASS, isolated installer
 dry-run/apply/idempotency + global validator PASS, both wrapper syntax checks and diff check PASS.
-Canonical `~/codex-dev` has been materialized and Git-verified while the legacy checkout remains.
-Products remain unmoved because preflight found dirty/legacy-reference/ambiguous-adoption blockers;
-real `CODEX_HOME` apply rolled back on its pre-existing shell-environment security gate. GitHub
-rename, product decisions, runtime-config remediation, merge and push remain explicit next steps.
+Canonical `~/codex-dev`, `~/math-morph` and `~/math-morph-astra` have been materialized and
+Git-verified while legacy recovery copies remain. The dirty/untracked MathMorph state was preserved
+losslessly; filesystem location did not change DEV membership. Real `CODEX_HOME` apply rolled back
+on its pre-existing shell-environment security gate and remains outside this completed path slice.
 
 ## Текущий internal delta — DEV source → installed Codex home
 

@@ -27,7 +27,7 @@
 | Prompt Queue / resume | explicit path принимался без DEV adoption check | resolver + Git root + bridge gate | `EXTEND` | `tools/prompt_queue.py` + session hook |
 | Clone/pull bootstrap | global install order depended on operator memory | marker → capability/version check → explicit installer apply | `EXTEND` | `dev-contract.toml` + `tools/project_bootstrap.py` + portable wrappers |
 | Legacy migration | scattered path checks | read-only source/product diagnostics and preflight | `MERGE → EXTEND` | `tools/dev_paths.py diagnose/move-plan` |
-| Repository identity | remote ещё может называться `codex-workspace` | target `codex-dev`, remote change user-controlled | `BLOCKED` external rename | GitHub/user workflow |
+| Repository identity | GitHub rename выполнен пользователем | canonical remote `https://github.com/ZabulaAleksey/codex-dev.git` | `VERIFIED` | `origin` + `dev-contract.toml` |
 
 ## Brownfield stage compatibility delta — 2026-09-08
 

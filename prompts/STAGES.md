@@ -2,16 +2,17 @@
 
 - Stage ID: `DEV-BCSC-C`
 - Sequence: `DEV-CME-001 → DEV-BCSC-A → DEV-BCSC-B → DEV-BCSC-C`
-- NEXT: the selected master remains completed. `DEV-PATHS-001` is an in-progress standalone
-  direct-request delta; its structured bootstrap is verified and controlled physical migration is
-  pending preflight. GitHub rename, remote update, merge and push remain approval-gated.
+- NEXT: the selected master and standalone `DEV-PATHS-001` delta are completed. Canonical source
+  and product paths are physically materialized and verified; legacy recovery copies remain until
+  an explicit cleanup decision. The GitHub repository is renamed to `codex-dev`, and this checkpoint
+  is explicitly authorized for merge and push. Runtime `CODEX_HOME` remediation remains separate.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
 
 ## DEV-PATHS-001 — Unified DEV and product path roles (standalone delta)
 
-- Status: `partial`; Lifecycle: `in_progress`; Evidence level: `validated locally + physical source verified`.
+- Status: `completed`; Lifecycle: `verified`; Evidence level: `validated locally + physical migration verified`.
 - Branch: `feature/unified-dev-product-paths`; source: direct user request 2026-09-10.
 - Requirements: `FR-DPL-001..008`; acceptance: `AC-DPL-001..013` from
   `specs/features/unified-dev-path-layout.spec.md`.
@@ -19,9 +20,10 @@ SPEC, долговременный порядок — `docs/ROADMAP.md`, archite
 ### Dependencies and entry evidence
 
 `DEV-INSTALL-LAYER-001` is the completed source/installed separation baseline at `5051018`.
-The legacy source currently exists at `~/codex-workspace/codex-dev`; target `~/codex-dev` does not.
-The attached physical-migration delta authorizes controlled local materialization/move after a
-clean preflight. GitHub mutation, remote deletion, merge and push remain separately gated.
+The canonical source exists at `~/codex-dev`; the legacy source remains retained at
+`~/codex-workspace/codex-dev` as recovery/worktree metadata. The attached physical-migration delta
+authorized controlled local materialization after a clean preflight. GitHub rename, remote update,
+merge and push were subsequently authorized explicitly by the user.
 
 ### Runnable slice and consumer scenario
 
@@ -51,15 +53,18 @@ Current evidence: 129 targeted tests PASS with 2 expected platform skips; full 3
 repeat idempotency, nine-Skill parity and global validator PASS; PowerShell and Git Bash bootstrap
 syntax PASS; staged diff check PASS. An independent canonical clone now exists at `~/codex-dev` on
 the same feature HEAD; `git fsck`, fetch, exact root, clean status and remote read-back passed. The
-legacy source checkout remains retained. Product moves were skipped: `math-morph` is dirty and
-both discovered MathMorph roots have tracked legacy path references plus ambiguous legacy DEV
-signals without a structured marker. Real `CODEX_HOME` dry-run passed, but apply hit the existing
-shell-environment security validator and rolled back completely; no ledger/pending transaction or
-managed file remained.
+legacy source checkout remains retained. `math-morph` and its legitimate dirty/untracked Stage 310
+state were copied losslessly to `${PROJECTS_ROOT}/math-morph`; all 14 untracked files match by
+SHA-256. The independent remote-backed `math-morph-astra` WIP clone was likewise preserved at
+`${PROJECTS_ROOT}/math-morph-astra`. Exact roots, HEADs, branches, remotes, fetch, worktree/submodule
+metadata, file inventories and project validators passed; only semantically active path references
+were updated. DEV membership remained independent from physical location. Real `CODEX_HOME` dry-run
+passed, but apply hit the existing shell-environment security validator and rolled back completely;
+no ledger/pending transaction or managed file remained.
 
-NEXT: resolve the protected active-config security blocker, explicitly classify/adopt or retain
-the MathMorph repositories, and perform the GitHub repository rename. Product move, remote update,
-merge and push remain approval-gated; legacy paths remain retained.
+NEXT: no remaining `DEV-PATHS-001` implementation work. Legacy recovery copies require an explicit
+cleanup decision, and protected active-config remediation remains a separate migration item. The
+canonical GitHub repository and origin are `https://github.com/ZabulaAleksey/codex-dev.git`.
 
 ## DEV-BCSC-A — Detection + Dry-Run Compatibility Plan
 
