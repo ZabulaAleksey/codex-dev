@@ -7,7 +7,8 @@
 - `PROJECTS_ROOT=~` — discovery parent независимых product repositories.
 
 Filesystem location не включает global DEV policy. Product repository подключает DEV только
-через project-local `AGENTS.md` с exact marker `Global DEV bridge: enabled`.
+через valid project-local `.codex/dev-project.toml`; declaration в `AGENTS.md` без structured
+marker остаётся DEV-disabled.
 
 ## Windows PowerShell
 
@@ -44,6 +45,10 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 # Explicitly DEV-enabled full overlay only:
 py -3 "$HOME\.codex\tools\validate_project_overlay.py" "$HOME\<project>"
+
+# Inside a cloned DEV-managed product:
+.\.codex\bootstrap.ps1 check
+.\.codex\bootstrap.ps1 apply
 ```
 
 ## Linux / macOS
@@ -63,6 +68,10 @@ python3 -B tools/dev_paths.py diagnose --json
 ./install-global.sh
 
 python3 -B "$CODEX_HOME/tools/validate_project_overlay.py" "$PROJECTS_ROOT/<project>"
+
+# Inside a cloned DEV-managed product:
+./.codex/bootstrap.sh --check
+./.codex/bootstrap.sh --apply
 ```
 
 Optional per-device fallback config: `~/.codex/dev-layout.toml`.
@@ -102,6 +111,7 @@ Set-Location "$env:PROJECTS_ROOT\<project>"
 py -3 "$env:CODEX_HOME\tools\dev_paths.py" project . --json
 ```
 
-A plain Git repository should report `dev_integration: disabled`. A deliberately adopted project
-uses the existing project-local `AGENTS.md` overlay contract and exact bridge marker. Only then may
-SessionStart, `Продолжай`, Prompt Queue and full overlay validation route global DEV project policy.
+A plain Git repository should report `dev_managed: false` and `dev_integration: disabled`. A
+deliberately adopted project uses a valid `.codex/dev-project.toml`; the AGENTS declaration alone
+does not enable it. Only then may SessionStart, `Продолжай`, Prompt Queue and full overlay
+validation route global DEV project policy.

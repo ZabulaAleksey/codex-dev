@@ -44,9 +44,11 @@ Credentials, environment inventory и runtime file contents не выводят�
 ### FR-DPL-003 Product isolation
 
 Product path разрешается только как `${PROJECTS_ROOT}/<project>`. Три факта независимы: path
-exists, exact path является Git root, global DEV integration enabled. Existing project-local
-`AGENTS.md` остаётся canonical bridge и включает exact marker `Global DEV bridge: enabled`.
-Один лишь path, `.git`, `.codex/` или generic `AGENTS.md` integration не включает.
+exists, exact path является Git root, global DEV integration enabled. Valid structured
+`.codex/dev-project.toml` является canonical machine-readable bridge. Project `AGENTS.md`
+включает exact human-readable declaration `Global DEV bridge: enabled`, но одна эта строка
+integration не включает. Один лишь path, `.git`, arbitrary `.codex/` или generic `AGENTS.md`
+integration не включает.
 
 Session/bootstrap/Prompt Queue проверяют bridge до project-policy routing. Global DEV source
 repository распознаётся отдельно по exact `DEV_SOURCE_ROOT` и не требует product marker.
@@ -79,6 +81,15 @@ GitHub rename, remote mutation и physical product moves остаются user/a
 global stage/Prompt Queue injection. Prompt Queue accepts explicit path or project name resolved
 under `PROJECTS_ROOT`, verifies exact Git root and bridge, then applies its existing lifecycle.
 
+### FR-DPL-008 Clone/pull bootstrap and compatibility
+
+Global `dev-contract.toml` owns DEV version, capabilities, supported project marker schemas,
+canonical `codex-dev` URL and default source path. DEV-managed projects receive only the portable
+marker and `bootstrap.ps1`/`bootstrap.sh` wrappers from `templates/dev-project/.codex/`. Check is
+read-only; apply delegates to the existing transactional installer. Missing source returns a
+reviewable clone command without network mutation. Version, capability, schema, remote, installed
+manifest and project overlay mismatches fail closed.
+
 ## Acceptance criteria
 
 - AC-DPL-001 defaults resolve to `~/codex-dev`, `~/.codex`, and `~`;
@@ -86,7 +97,8 @@ under `PROJECTS_ROOT`, verifies exact Git root and bridge, then applies its exis
 - AC-DPL-003 Windows separators, `~`, `.` and `..` normalize deterministically;
 - AC-DPL-004 product name resolves under `PROJECTS_ROOT` without implying policy inheritance;
 - AC-DPL-005 plain Git repository and generic `AGENTS.md` remain DEV-disabled;
-- AC-DPL-006 canonical marked overlay is DEV-enabled and resolves global DEV source;
+- AC-DPL-006 structured marked overlay is DEV-enabled, AGENTS-only overlay is disabled, and the
+  enabled overlay resolves global DEV source;
 - AC-DPL-007 installer source differs from `CODEX_HOME`, preserves runtime state and stays
   idempotent;
 - AC-DPL-008 Prompt Queue and SessionStart reject/ignore plain repositories and accept marked
@@ -97,6 +109,8 @@ under `PROJECTS_ROOT`, verifies exact Git root and bridge, then applies its exis
   references are classified historical/detection/test fixtures;
 - AC-DPL-012 targeted tests, full unittest suite, context/global validators, installer dry-run and
   `git diff --check` pass before commit readiness.
+- AC-DPL-013 fresh clone diagnostics, read-only check, idempotent apply and version/capability
+  mismatch behavior are deterministic on Windows and POSIX wrappers.
 
 ## Rollback
 

@@ -11,6 +11,7 @@
 !/install-global.ps1
 !/install-global.sh
 !/config.ai-dev-team.recommended.toml
+!/dev-contract.toml
 !/hooks.json
 !/agents/
 !/docs/

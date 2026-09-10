@@ -99,9 +99,11 @@ device-local runtime state. Versioned source Skills находится в `<dev-
 | Product repositories | `${PROJECTS_ROOT}/<project>` | независимый Git root; overlay только с explicit local DEV bridge |
 
 `tools/dev_paths.py` — единственный resolver ролей. Filesystem discovery, Git identity и DEV policy
-inheritance являются разными фактами. Existing project-local `AGENTS.md` включает integration
-только exact marker `Global DEV bridge: enabled`; plain repository не получает SessionStart stage
-injection, Prompt Queue или global project overlay.
+inheritance являются разными фактами. Valid `.codex/dev-project.toml` включает integration;
+project-local `AGENTS.md` declaration `Global DEV bridge: enabled` без structured marker ничего не
+включает. Plain repository не получает SessionStart stage injection, Prompt Queue или global
+project overlay. `tools/project_bootstrap.py` сверяет marker с `dev-contract.toml` и installed
+manifest до validation overlay.
 
 ## Project-framework контур
 

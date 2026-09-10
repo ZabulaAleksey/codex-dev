@@ -12,6 +12,7 @@ from hooks.session_context import dev_integration_enabled
 
 from tools.dev_paths import (
     BRIDGE_MARKER,
+    PROJECT_MARKER_RELATIVE_PATH,
     PathResolutionError,
     inspect_project,
     migration_diagnostics,
@@ -111,6 +112,16 @@ class ProjectIsolationTests(unittest.TestCase):
         subprocess.run(["git", "init", "-q", str(root)], check=True)
         return root
 
+    def _enable(self, root: Path) -> None:
+        marker = root / PROJECT_MARKER_RELATIVE_PATH
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(
+            'schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\n'
+            'minimum_version = "2026.09.10"\nrequired_capabilities = ["path-resolver-v1"]\n'
+            'required_contract_schema = 1\n',
+            encoding="utf-8",
+        )
+
     def test_plain_repo_does_not_inherit_global_dev(self) -> None:
         state = inspect_project(self._repo("plain"), self.layout)
         self.assertTrue(state.exists)
@@ -123,18 +134,38 @@ class ProjectIsolationTests(unittest.TestCase):
         (root / "AGENTS.md").write_text("# Local instructions\n", encoding="utf-8")
         self.assertEqual("disabled", inspect_project(root, self.layout).dev_integration)
 
-    def test_canonical_agents_marker_enables_global_dev(self) -> None:
+    def test_agents_declaration_alone_does_not_enable_global_dev(self) -> None:
         root = self._repo("enabled")
         (root / "AGENTS.md").write_text(f"# Project overlay\n\n{BRIDGE_MARKER}\n", encoding="utf-8")
         state = inspect_project(root, self.layout)
+        self.assertEqual("disabled", state.dev_integration)
+        self.assertFalse(state.dev_managed)
+
+    def test_structured_marker_enables_global_dev(self) -> None:
+        root = self._repo("structured-enabled")
+        (root / "AGENTS.md").write_text(f"# Project overlay\n\n{BRIDGE_MARKER}\n", encoding="utf-8")
+        self._enable(root)
+        state = inspect_project(root, self.layout)
         self.assertEqual("enabled", state.dev_integration)
-        self.assertEqual("agents_marker", state.bridge)
+        self.assertTrue(state.dev_managed)
+        self.assertEqual("dev_project_marker", state.bridge)
         self.assertEqual(str(self.layout.dev_source_root), state.dev_source_root)
+
+    def test_invalid_structured_marker_fails_closed(self) -> None:
+        root = self._repo("invalid-marker")
+        marker = root / PROJECT_MARKER_RELATIVE_PATH
+        marker.parent.mkdir(parents=True)
+        marker.write_text("[dev]\nmanaged = true\n", encoding="utf-8")
+        state = inspect_project(root, self.layout)
+        self.assertEqual("disabled", state.dev_integration)
+        self.assertEqual("invalid_dev_project_marker", state.bridge)
+        self.assertTrue(state.marker_issue)
 
     def test_session_bootstrap_uses_the_same_bridge_gate(self) -> None:
         plain = self._repo("plain-hook")
         enabled = self._repo("enabled-hook")
         (enabled / "AGENTS.md").write_text(BRIDGE_MARKER + "\n", encoding="utf-8")
+        self._enable(enabled)
         with patch("hooks.session_context.resolve_layout", return_value=self.layout):
             self.assertFalse(dev_integration_enabled(plain))
             self.assertTrue(dev_integration_enabled(enabled))
@@ -227,6 +258,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("project_not_dev_enabled", queue)
         self.assertIn("dev_integration_enabled", hook)
         self.assertIn(BRIDGE_MARKER, (root / "templates/AGENTS_PROJECT_TEMPLATE.md").read_text(encoding="utf-8"))
+        self.assertTrue((root / "templates/dev-project/.codex/dev-project.toml").is_file())
 
 
 if __name__ == "__main__":

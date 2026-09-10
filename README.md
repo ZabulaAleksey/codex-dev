@@ -18,10 +18,11 @@ Project наследует правило через global router и добав
 - `PROJECTS_ROOT=~` — parent только для resolution/discovery; product path —
   `${PROJECTS_ROOT}/<project>`.
 
-Физическое нахождение repository под `PROJECTS_ROOT` не включает global DEV. Existing
-project-local `AGENTS.md` overlay является explicit bridge только при exact marker
-`Global DEV bridge: enabled`. Plain repositories не получают project overlay, Prompt Queue или
-`Продолжай` bootstrap автоматически. Resolver/config/migration contract описан в
+Физическое нахождение repository под `PROJECTS_ROOT` не включает global DEV. Membership включает
+только valid project-local `.codex/dev-project.toml`; `Global DEV bridge: enabled` в `AGENTS.md`
+является дополнительной human-readable declaration, а не самостоятельным opt-in. Plain
+repositories не получают project overlay, Prompt Queue или `Продолжай` bootstrap автоматически.
+Resolver/config/migration contract описан в
 [`docs/DEV_LAYOUT.md`](docs/DEV_LAYOUT.md).
 
 Canonical source materialize-ится в `~/.codex` по `MANIFEST.txt`; blanket mirror запрещён. В
@@ -29,6 +30,12 @@ Canonical source materialize-ится в `~/.codex` по `MANIFEST.txt`; blanket
 repository.
 
 Такая схема позволяет переносить домашний каталог между компьютерами без изменения документации и не смешивает шаблоны с рабочими проектами.
+
+DEV-managed project хранит portable bootstrap files из `templates/dev-project/.codex/` и после
+clone/pull запускает `.\.codex\bootstrap.ps1 check|apply` или
+`./.codex/bootstrap.sh --check|--apply`. Global compatibility задаётся machine-readable
+`dev-contract.toml`; missing source никогда не клонируется молча — bootstrap печатает один
+canonical reviewable clone command.
 
 ## Идея
 

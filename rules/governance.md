@@ -41,8 +41,9 @@ recommendation существующему runtime router и не подменя�
    являются derived projections, кроме узкого внешнего артефакта, которому project mapping явно
    назначил собственную роль и направление синхронизации.
 4. Product repository разрешается как `${PROJECTS_ROOT}/<project>` и является независимым Git
-   root. `PROJECTS_ROOT` используется только для discovery: policy inheritance требует explicit
-   project-local `AGENTS.md` marker `Global DEV bridge: enabled`.
+   root. `PROJECTS_ROOT` используется только для discovery: policy inheritance требует valid
+   project-local `.codex/dev-project.toml`. `Global DEV bridge: enabled` в `AGENTS.md` — только
+   human-readable declaration и сам по себе inheritance не включает.
 5. Critical context должен восстанавливаться после clone/pull без старого чата и machine-local файлов.
 
 ### Матрица ответственности

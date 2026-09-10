@@ -139,9 +139,9 @@ context-файлов не входят в supported recovery path. Полный 
 ## Project boundary
 
 Product repositories разрешаются как `${PROJECTS_ROOT}/<project>` и являются независимыми Git
-roots. Они наследуют global DEV project policy только через exact project-local `AGENTS.md` bridge
-marker; filesystem location не является inheritance. Global repository не хранит их inventory,
-roadmap, design, agents или Skills.
+roots. Они наследуют global DEV project policy только через valid project-local
+`.codex/dev-project.toml`; AGENTS declaration и filesystem location не являются inheritance.
+Global repository не хранит их inventory, roadmap, design, agents или Skills.
 
 Project-specific материалы без доказанного destination остаются quarantine/`BLOCKED`; они не подключены к router, hooks или installer. Удаление разрешено только после preservation + exact/semantic verification.
 

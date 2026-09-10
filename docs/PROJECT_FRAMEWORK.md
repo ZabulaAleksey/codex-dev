@@ -181,9 +181,12 @@ contract tests, а изменение хранения — data model, security/
 
 ## Закон отсутствия дубликатов
 
-Проект с exact `Global DEV bridge: enabled` marker в project-local `AGENTS.md` наследует общие
-agents, Skills, hooks, Git workflow, review и quality practices. Repository без marker остаётся
-обычным независимым repository. Локальное расширение допустимо только при подтверждённом пробеле и должно иметь узкую область, владельца, способ проверки и безопасный fallback.
+Проект с valid `.codex/dev-project.toml` наследует общие agents, Skills, hooks, Git workflow,
+review и quality practices. Exact `Global DEV bridge: enabled` в project-local `AGENTS.md` —
+обязательная human-readable declaration полного overlay, но не machine-readable membership.
+Repository без structured marker остаётся обычным независимым repository. Локальное расширение
+допустимо только при подтверждённом пробеле и должно иметь узкую область, владельца, способ
+проверки и безопасный fallback.
 
 Отсутствие локального config, hook, MCP, Skill или subagent является нормальным результатом bootstrap.
 

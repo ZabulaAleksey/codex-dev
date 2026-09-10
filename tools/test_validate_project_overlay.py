@@ -60,6 +60,14 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
+        marker = project / ".codex/dev-project.toml"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(
+            'schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\n'
+            'minimum_version = "2026.09.10"\nrequired_capabilities = ["path-resolver-v1"]\n'
+            'required_contract_schema = 1\n',
+            encoding="utf-8",
+        )
         if git:
             subprocess.run(["git", "init", "--quiet", str(project)], check=True, capture_output=True)
         return project
@@ -82,6 +90,11 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         self.assertTrue(result.execution_allowed)
         self.assertEqual(result.stage_state["status"], "pass_canonical")
         self.assertEqual((), result.issues)
+
+    def test_agents_declaration_without_structured_marker_fails_closed(self) -> None:
+        project = self.make_project("agents-only")
+        (project / ".codex/dev-project.toml").unlink()
+        self.assertIn("missing-dev-project-marker", self.issue_codes(project))
 
     def test_incomplete_overlay_reports_typed_legacy_migration(self) -> None:
         project = self.make_project()

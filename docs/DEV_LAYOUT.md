@@ -21,15 +21,40 @@ does not read or print credentials, runtime contents or the broader environment.
 2. exact path is an independent Git root;
 3. global DEV integration is enabled.
 
-The existing project-local `AGENTS.md` overlay is the only bridge. Deliberate adoption adds an
-exact standalone line:
+The canonical bridge is a valid structured `.codex/dev-project.toml` based on
+`templates/dev-project/.codex/dev-project.toml`. Deliberate adoption also adds a human-readable
+line to `AGENTS.md`:
 
 ```text
 Global DEV bridge: enabled
 ```
 
-A directory location, `.git`, `.codex/` directory or unrelated `AGENTS.md` does not enable the
-bridge. Do not add this marker to repositories that should remain ordinary independent projects.
+A directory location, `.git`, an arbitrary `.codex/` directory, unrelated `AGENTS.md`, or the
+AGENTS declaration alone does not enable the bridge. Invalid marker content fails closed. Do not
+materialize the structured marker in repositories that should remain ordinary independent
+projects.
+
+## Clone and pull bootstrap
+
+`dev-contract.toml` is the single global source for DEV version, capabilities, supported project
+marker schema, canonical GitHub repository and default source path. A DEV-managed project carries
+only its minimum version/capability requirements plus thin wrappers; it does not copy global
+rules. After clone or pull:
+
+```powershell
+.\.codex\bootstrap.ps1 check   # read-only
+.\.codex\bootstrap.ps1 apply   # explicit managed-layer install/update
+```
+
+```bash
+./.codex/bootstrap.sh --check
+./.codex/bootstrap.sh --apply
+```
+
+The check detects missing source, canonical remote mismatch, unsupported marker schema, old DEV
+version, missing capability, stale installed manifest and invalid project overlay. Missing source
+produces a deterministic clone command but is never cloned automatically. Apply delegates to the
+transactional global installer and is idempotent; it cannot update Git or remove runtime data.
 
 ## Resolver and diagnostics
 

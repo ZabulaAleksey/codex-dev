@@ -1,0 +1,15 @@
+schema_version = 1
+
+[dev]
+version = "2026.09.10"
+capabilities = [
+  "path-resolver-v1",
+  "project-bootstrap-v1",
+  "prompt-queue-v1",
+  "stage-router-v1",
+]
+
+[global_dev]
+repository = "https://github.com/ZabulaAleksey/codex-dev.git"
+default_path = "~/codex-dev"
+project_schema_versions = [1]

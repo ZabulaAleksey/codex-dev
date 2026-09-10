@@ -184,6 +184,9 @@ class StageCompletionPolicyTests(unittest.TestCase):
     def create_stage_repo(self, root: Path) -> None:
         subprocess.run(["git", "init", "-q", str(root)], check=True)
         (root / "AGENTS.md").write_text("Global DEV bridge: enabled\n", encoding="utf-8")
+        marker = root / ".codex/dev-project.toml"
+        marker.parent.mkdir(parents=True)
+        marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["stage-router-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
         (root / "docs").mkdir()
         (root / "prompts").mkdir()
 

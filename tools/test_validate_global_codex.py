@@ -246,6 +246,9 @@ class HookRegressionTests(unittest.TestCase):
             repo = Path(temporary)
             subprocess.run(["git", "init", "-q", str(repo)], check=True)
             (repo / "AGENTS.md").write_text("Global DEV bridge: enabled\n", encoding="utf-8")
+            marker = repo / ".codex/dev-project.toml"
+            marker.parent.mkdir(parents=True)
+            marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["stage-router-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
             (repo / "prompts").mkdir()
             (repo / "prompts/STAGES.md").write_text(
                 "- Stage ID: `STAGE-001`\n\n## STAGE-001\n\n"
@@ -261,6 +264,9 @@ class HookRegressionTests(unittest.TestCase):
             repo = Path(temporary)
             subprocess.run(["git", "init", "-q", str(repo)], check=True)
             (repo / "AGENTS.md").write_text("Global DEV bridge: enabled\n", encoding="utf-8")
+            marker = repo / ".codex/dev-project.toml"
+            marker.parent.mkdir(parents=True)
+            marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["stage-router-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
             (repo / "prompts").mkdir()
             stages = repo / "prompts/STAGES.md"
             stages.write_text(

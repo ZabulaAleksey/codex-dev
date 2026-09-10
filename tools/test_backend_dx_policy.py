@@ -88,6 +88,9 @@ class BackendDxPolicyValidatorTests(unittest.TestCase):
             target = project / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
+        marker = project / ".codex/dev-project.toml"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["path-resolver-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
         context = project / "docs/project-context.md"
         context.write_text(COMPLETE_DELTA, encoding="utf-8")
         subprocess.run(["git", "init", "--quiet", str(project)], check=True, capture_output=True)

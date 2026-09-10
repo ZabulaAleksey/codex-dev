@@ -26,6 +26,8 @@ DEFAULTS = {
     "projects_root": "~",
 }
 BRIDGE_MARKER = "Global DEV bridge: enabled"
+PROJECT_MARKER_RELATIVE_PATH = Path(".codex") / "dev-project.toml"
+PROJECT_MARKER_SCHEMA_VERSION = 1
 CONFIG_RELATIVE_PATH = Path(".codex") / "dev-layout.toml"
 LEGACY_WORKSPACE_NAME = "codex-workspace"
 
@@ -55,9 +57,22 @@ class ProjectState:
     path: str
     exists: bool
     git_repo: bool
+    dev_managed: bool
     dev_integration: str
     bridge: str
+    marker: str
+    marker_issue: str
     dev_source_root: str
+
+
+@dataclass(frozen=True)
+class DevProjectContract:
+    schema_version: int
+    managed: bool
+    requires_global_dev: bool
+    minimum_version: str
+    required_capabilities: tuple[str, ...]
+    required_contract_schema: int
 
 
 def _expand_tilde(raw: str, user_home: str) -> str:
@@ -199,7 +214,7 @@ def is_exact_git_root(path: Path) -> bool:
         return False
 
 
-def has_dev_bridge(project: Path) -> bool:
+def has_agents_bridge_declaration(project: Path) -> bool:
     agents = project / "AGENTS.md"
     if not agents.is_file():
         return False
@@ -209,19 +224,90 @@ def has_dev_bridge(project: Path) -> bool:
         return False
 
 
+def load_dev_project_contract(project: Path) -> DevProjectContract:
+    marker = project / PROJECT_MARKER_RELATIVE_PATH
+    if not marker.is_file() or marker.is_symlink():
+        raise PathResolutionError(f"DEV project marker is missing: {marker}")
+    try:
+        raw = tomllib.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
+        raise PathResolutionError(f"DEV project marker is unreadable or invalid: {type(exc).__name__}") from exc
+    if not isinstance(raw, dict) or set(raw) != {"schema_version", "dev"}:
+        raise PathResolutionError("DEV project marker must contain only schema_version and [dev]")
+    if raw["schema_version"] != PROJECT_MARKER_SCHEMA_VERSION:
+        raise PathResolutionError("unsupported DEV project marker schema")
+    dev = raw["dev"]
+    required = {
+        "managed", "requires_global_dev", "minimum_version",
+        "required_capabilities", "required_contract_schema",
+    }
+    if not isinstance(dev, dict) or set(dev) != required:
+        raise PathResolutionError("DEV project marker [dev] fields are incomplete or unknown")
+    if type(dev["managed"]) is not bool or type(dev["requires_global_dev"]) is not bool:
+        raise PathResolutionError("DEV project marker managed flags must be booleans")
+    if not isinstance(dev["minimum_version"], str) or not re.fullmatch(r"\d{4}\.\d{2}\.\d{2}", dev["minimum_version"]):
+        raise PathResolutionError("DEV project minimum_version must be YYYY.MM.DD")
+    capabilities = dev["required_capabilities"]
+    if (
+        not isinstance(capabilities, list)
+        or not capabilities
+        or any(not isinstance(item, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*-v\d+", item) for item in capabilities)
+        or len(set(capabilities)) != len(capabilities)
+    ):
+        raise PathResolutionError("DEV project required_capabilities must be unique capability-vN strings")
+    if type(dev["required_contract_schema"]) is not int or dev["required_contract_schema"] < 1:
+        raise PathResolutionError("DEV project required_contract_schema must be a positive integer")
+    if dev["managed"] is not True or dev["requires_global_dev"] is not True:
+        raise PathResolutionError("DEV project marker must explicitly opt in to global DEV")
+    return DevProjectContract(
+        schema_version=raw["schema_version"],
+        managed=dev["managed"],
+        requires_global_dev=dev["requires_global_dev"],
+        minimum_version=dev["minimum_version"],
+        required_capabilities=tuple(capabilities),
+        required_contract_schema=dev["required_contract_schema"],
+    )
+
+
+def has_dev_bridge(project: Path) -> bool:
+    """Return true only for an explicit, valid structured project opt-in."""
+    try:
+        load_dev_project_contract(project)
+    except PathResolutionError:
+        return False
+    return True
+
+
 def inspect_project(path: Path, layout: DevLayout) -> ProjectState:
     resolved = path.expanduser().resolve(strict=False)
     exists = resolved.is_dir()
     git_repo = is_exact_git_root(resolved) if exists else False
     is_source = resolved == layout.dev_source_root.resolve(strict=False)
-    bridge = "dev_source" if is_source else "agents_marker" if has_dev_bridge(resolved) else "none"
+    marker = resolved / PROJECT_MARKER_RELATIVE_PATH
+    marker_issue = ""
+    if is_source:
+        bridge = "dev_source"
+    elif marker.exists():
+        try:
+            load_dev_project_contract(resolved)
+            bridge = "dev_project_marker"
+        except PathResolutionError as exc:
+            bridge = "invalid_dev_project_marker"
+            marker_issue = str(exc)
+    else:
+        bridge = "none"
     enabled = git_repo and bridge != "none"
+    if bridge == "invalid_dev_project_marker":
+        enabled = False
     return ProjectState(
         path=str(resolved),
         exists=exists,
         git_repo=git_repo,
+        dev_managed=enabled,
         dev_integration="enabled" if enabled else "disabled",
         bridge=bridge,
+        marker=str(marker),
+        marker_issue=marker_issue,
         dev_source_root=str(layout.dev_source_root),
     )
 
@@ -270,17 +356,41 @@ def _nested_git_roots(source: Path) -> list[str]:
     return sorted(found, key=str.casefold)
 
 
+def _legacy_path_references(source: Path) -> list[str]:
+    result = _run_git(source, "ls-files", "-z")
+    if result.returncode != 0:
+        return []
+    references: list[str] = []
+    source_texts = {str(source), source.as_posix(), f"~/{LEGACY_WORKSPACE_NAME}/"}
+    text_suffixes = {".md", ".txt", ".toml", ".json", ".yaml", ".yml", ".ps1", ".sh", ".py", ".js", ".ts"}
+    for relative in result.stdout.split("\0"):
+        candidate = source / relative
+        if not relative or candidate.suffix.casefold() not in text_suffixes:
+            continue
+        try:
+            if candidate.stat().st_size > 1024 * 1024:
+                continue
+            for number, line in enumerate(candidate.read_text(encoding="utf-8-sig", errors="replace").splitlines(), 1):
+                if any(value in line for value in source_texts):
+                    references.append(f"{relative.replace(os.sep, '/')}:{number}")
+        except OSError:
+            continue
+    return references
+
+
 def project_move_preflight(source: Path, destination: Path) -> dict[str, object]:
     source = source.expanduser().resolve(strict=False)
     destination = destination.expanduser().resolve(strict=False)
     git_root = is_exact_git_root(source)
-    status = _run_git(source, "status", "--porcelain=v1", "--branch") if git_root else None
+    status = _run_git(source, "status", "--porcelain=v1", "--branch", "--untracked-files=all") if git_root else None
     branch = _run_git(source, "branch", "--show-current") if git_root else None
+    head = _run_git(source, "rev-parse", "HEAD") if git_root else None
     remotes = _run_git(source, "remote", "-v") if git_root else None
     worktrees = _run_git(source, "worktree", "list", "--porcelain") if git_root else None
     submodules = _run_git(source, "submodule", "status", "--recursive") if git_root else None
     status_lines = status.stdout.splitlines() if status and status.returncode == 0 else []
     dirty = any(line and not line.startswith("##") for line in status_lines)
+    untracked = [line[3:] for line in status_lines if line.startswith("?? ")]
     branch_name = branch.stdout.strip() if branch and branch.returncode == 0 else ""
     remote_lines = sorted({_sanitize_remote(line.split("\t", 1)[1].rsplit(" ", 1)[0])
                            for line in remotes.stdout.splitlines() if "\t" in line}) if remotes else []
@@ -288,6 +398,7 @@ def project_move_preflight(source: Path, destination: Path) -> dict[str, object]
     nested = _nested_git_roots(source) if source.is_dir() else []
     submodule_lines = submodules.stdout.splitlines() if submodules and submodules.returncode == 0 else []
     submodule_problem = any(line.startswith(("-", "+", "U")) for line in submodule_lines)
+    path_references = _legacy_path_references(source) if git_root else []
     checks = {
         "source_exists": source.is_dir(),
         "exact_git_root": git_root,
@@ -295,6 +406,9 @@ def project_move_preflight(source: Path, destination: Path) -> dict[str, object]
         "working_tree_clean": bool(status and status.returncode == 0 and not dirty),
         "branch_known": bool(branch_name),
         "branch": branch_name,
+        "head_known": bool(head and head.returncode == 0 and head.stdout.strip()),
+        "head": head.stdout.strip() if head and head.returncode == 0 else "",
+        "untracked_files": untracked,
         "remotes_checked": bool(remotes and remotes.returncode == 0),
         "remotes": remote_lines,
         "nested_git_repositories": nested,
@@ -303,13 +417,16 @@ def project_move_preflight(source: Path, destination: Path) -> dict[str, object]
         "submodules_checked": bool(submodules and submodules.returncode == 0),
         "submodules": submodule_lines,
         "submodules_clean": not submodule_problem,
+        "absolute_path_references_checked": bool(git_root),
+        "legacy_path_references": path_references,
         "destination_collision": destination.exists(),
     }
     safe = all((
         checks["source_exists"], checks["exact_git_root"], checks["working_tree_known"],
-        checks["working_tree_clean"], checks["branch_known"], checks["remotes_checked"],
+        checks["working_tree_clean"], checks["branch_known"], checks["head_known"], checks["remotes_checked"],
         checks["worktrees_checked"], checks["submodules_checked"], checks["submodules_clean"],
         not checks["nested_git_repositories"], not checks["additional_worktrees"],
+        not checks["legacy_path_references"],
         not checks["destination_collision"],
     ))
     commands: list[str] = []
@@ -321,6 +438,7 @@ def project_move_preflight(source: Path, destination: Path) -> dict[str, object]
             f"git -C '{quoted_destination}' status --short --branch",
             f"git -C '{quoted_destination}' remote -v",
             f"git -C '{quoted_destination}' rev-parse --show-toplevel",
+            f"git -C '{quoted_destination}' fetch",
         ]
     return {
         "source": str(source),
@@ -346,7 +464,9 @@ def migration_diagnostics(layout: DevLayout, *, user_home: Path | None = None) -
             if candidate.name in {"codex-dev", ".worktrees"} or not is_exact_git_root(candidate):
                 continue
             destination = project_path(layout, candidate.name)
-            old_projects.append(project_move_preflight(candidate, destination))
+            plan = project_move_preflight(candidate, destination)
+            plan["project_state"] = asdict(inspect_project(candidate, layout))
+            old_projects.append(plan)
     collisions = [item["destination"] for item in old_projects if item["checks"]["destination_collision"]]
     source_collision = bool(
         len(old_source_paths) > 1

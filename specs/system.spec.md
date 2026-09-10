@@ -29,7 +29,8 @@ source of truth.
 Canonical DEV source разрешается через `DEV_SOURCE_ROOT` (default `~/codex-dev`), installed layer
 через `CODEX_HOME` (default `~/.codex`), а product discovery через `PROJECTS_ROOT` (default `~`).
 `CODEX_HOME` не должен содержать `.git` или отслеживать runtime state Codex. Product repository
-принимает global DEV только через explicit project-local `AGENTS.md` bridge marker.
+принимает global DEV только через valid structured project-local `.codex/dev-project.toml`;
+AGENTS declaration без marker недостаточна.
 
 ### NFR-001 Минимальный контекст
 
@@ -174,7 +175,8 @@ Global DEV source, active runtime layer and product discovery root разреш�
 `DEV_SOURCE_ROOT`, `CODEX_HOME`, `PROJECTS_ROOT` общим resolver. Current defaults равны
 `~/codex-dev`, `~/.codex`, `~`. Environment имеет приоритет над device-local config; ambiguity
 fail closed. Product location не является inheritance signal: project DEV policy, Prompt Queue и
-resume bootstrap требуют explicit project-local `AGENTS.md` bridge marker.
+resume bootstrap требуют valid project-local `.codex/dev-project.toml` и проверяемый global
+version/capability contract.
 
 ## 3. Критерии приёмки
 

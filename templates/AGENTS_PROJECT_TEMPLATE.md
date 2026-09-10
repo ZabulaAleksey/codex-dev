@@ -7,6 +7,9 @@
 
 Global DEV bridge: enabled
 
+Machine-readable membership is declared only by `.codex/dev-project.toml`; this line is the
+human-readable router declaration and is not sufficient by itself.
+
 ## Project facts
 
 - Назначение: <кратко>

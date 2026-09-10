@@ -194,7 +194,14 @@ class PromptQueueTests(unittest.TestCase):
             root = Path(directory)
             subprocess.run(["git", "init", "-q", str(root)], check=True)
             (root / "AGENTS.md").write_text(BRIDGE_MARKER + "\n", encoding="utf-8")
-            subprocess.run(["git", "add", "AGENTS.md"], cwd=root, check=True)
+            marker = root / ".codex/dev-project.toml"
+            marker.parent.mkdir(parents=True)
+            marker.write_text(
+                'schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\n'
+                'minimum_version = "2026.09.10"\nrequired_capabilities = ["prompt-queue-v1"]\n'
+                'required_contract_schema = 1\n', encoding="utf-8"
+            )
+            subprocess.run(["git", "add", "AGENTS.md", ".codex/dev-project.toml"], cwd=root, check=True)
             subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
                             "commit", "-qm", "fixture"], cwd=root, check=True)
             self.record["project_revision"] = subprocess.check_output(["git", "rev-parse", "HEAD"],

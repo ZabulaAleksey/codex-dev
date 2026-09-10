@@ -11,8 +11,8 @@
 Canonical global DEV Git source разрешается через `DEV_SOURCE_ROOT` (default `~/codex-dev`).
 `CODEX_HOME` (default `~/.codex`) содержит manifest-installed global context и device-local
 runtime state, но не является canonical Git working tree. Product repositories разрешаются как
-независимые Git roots `${PROJECTS_ROOT}/<project>`; path не включает DEV policy без exact
-project-local `AGENTS.md` bridge marker. Runtime Skills в `~/.agents/skills` являются только
+независимые Git roots `${PROJECTS_ROOT}/<project>`; path не включает DEV policy без valid
+project-local `.codex/dev-project.toml`. AGENTS declaration alone недостаточна. Runtime Skills в `~/.agents/skills` являются только
 проверяемой projection `${DEV_SOURCE_ROOT}/skill-sources`.
 
 ## Порядок загрузки

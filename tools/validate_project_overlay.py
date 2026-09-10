@@ -18,7 +18,7 @@ if str(WORKSPACE_ROOT) not in sys.path:
 from hooks.stage_selector import find_stage_record, parse_stage_id
 from tools.master_execution import MasterExecutionError, extract_master_state
 from tools.stage_compatibility import stage_routing_snapshot
-from tools.dev_paths import BRIDGE_MARKER, has_dev_bridge
+from tools.dev_paths import BRIDGE_MARKER, has_agents_bridge_declaration, has_dev_bridge
 
 REQUIRED_FILES = (
     "AGENTS.md",
@@ -234,6 +234,7 @@ def _automation_files(project: Path) -> list[Path]:
         candidate = project / relative
         if candidate.is_file():
             files.add(candidate)
+    files.discard(project / ".codex/dev-project.toml")
     return sorted(files, key=lambda candidate: _posix_relative(candidate, project).casefold())
 
 
@@ -684,12 +685,20 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
     agents_file = project / "AGENTS.md"
     if agents_file.is_file() and agents_file.stat().st_size > 32 * 1024:
         issues.append(Issue("agents-not-thin", "AGENTS.md", "project router exceeds 32 KiB"))
-    if agents_file.is_file() and not has_dev_bridge(project):
+    if not has_dev_bridge(project):
+        issues.append(
+            Issue(
+                "missing-dev-project-marker",
+                ".codex/dev-project.toml",
+                "full DEV overlay must contain a valid structured DEV opt-in marker",
+            )
+        )
+    if agents_file.is_file() and not has_agents_bridge_declaration(project):
         issues.append(
             Issue(
                 "missing-dev-bridge",
                 "AGENTS.md",
-                f"full DEV overlay must declare exact marker: {BRIDGE_MARKER}",
+                f"full DEV overlay must also declare exact human-readable marker: {BRIDGE_MARKER}",
             )
         )
 

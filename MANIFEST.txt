@@ -15,6 +15,7 @@ agents/reviewer.toml
 agents/security_reviewer.toml
 agents/test_engineer.toml
 config.ai-dev-team.recommended.toml
+dev-contract.toml
 docs/ARCHITECTURE.md
 docs/CONTEXT_COMPATIBILITY.md
 docs/CONTEXT_POLICY.md
@@ -54,6 +55,9 @@ presets/field-lab/.codex/agents/math_verifier.toml
 presets/field-lab/.codex/agents/numerical_methods_engineer.toml
 presets/field-lab/.codex/agents/scientific_visualization_engineer.toml
 presets/field-lab/.codex/config.toml
+presets/field-lab/.codex/bootstrap.ps1
+presets/field-lab/.codex/bootstrap.sh
+presets/field-lab/.codex/dev-project.toml
 presets/field-lab/AGENTS.md
 presets/field-lab/docs/ARCHITECTURE.md
 presets/field-lab/docs/MCP.md
@@ -65,6 +69,9 @@ presets/music-sequencer/.codex/agents/realtime_audio_engineer.toml
 presets/music-sequencer/.codex/agents/sequencer_model_engineer.toml
 presets/music-sequencer/.codex/agents/wasm_audio_engineer.toml
 presets/music-sequencer/.codex/config.toml
+presets/music-sequencer/.codex/bootstrap.ps1
+presets/music-sequencer/.codex/bootstrap.sh
+presets/music-sequencer/.codex/dev-project.toml
 presets/music-sequencer/AGENTS.md
 presets/music-sequencer/audio/AGENTS.override.md
 presets/music-sequencer/docs/ARCHITECTURE.md
@@ -78,6 +85,9 @@ presets/tutor-platform/.codex/agents/education_content_engineer.toml
 presets/tutor-platform/.codex/agents/pwa_mobile_engineer.toml
 presets/tutor-platform/.codex/agents/realtime_comms_engineer.toml
 presets/tutor-platform/.codex/config.toml
+presets/tutor-platform/.codex/bootstrap.ps1
+presets/tutor-platform/.codex/bootstrap.sh
+presets/tutor-platform/.codex/dev-project.toml
 presets/tutor-platform/AGENTS.md
 presets/tutor-platform/collaboration/AGENTS.override.md
 presets/tutor-platform/docs/ARCHITECTURE.md
@@ -217,6 +227,9 @@ templates/prompt-modes/ZERO_DEPENDENCY.md
 templates/SPEC_TEMPLATE.md
 templates/SPECS_README_TEMPLATE.md
 templates/STAGES_TEMPLATE.md
+templates/dev-project/.codex/bootstrap.ps1
+templates/dev-project/.codex/bootstrap.sh
+templates/dev-project/.codex/dev-project.toml
 tools/ai_policy_profiler.py
 tools/dev_paths.py
 tools/install_global.py
@@ -248,4 +261,6 @@ prompts/STAGES.md
 rules/prompt-queue-lifecycle.md
 specs/features/prompt-queue-lifecycle.spec.md
 tools/prompt_queue.py
+tools/project_bootstrap.py
 tools/test_prompt_queue.py
+tools/test_project_bootstrap.py

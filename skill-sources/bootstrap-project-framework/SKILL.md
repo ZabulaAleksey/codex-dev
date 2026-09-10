@@ -7,9 +7,10 @@ description: Создать или актуализировать проектн
 
 1. Прочитай ближайшие `AGENTS.md`, `~/.codex/docs/PROJECT_FRAMEWORK.md`, `~/.codex/docs/CONTEXT_POLICY.md`, `~/.codex/docs/CONTEXT_COMPATIBILITY.md` и Stage contract из `~/.codex/rules/governance.md`.
 2. Определи Git-корень, состояние рабочей копии, сложность, режим, этап SDLC, домен, стек и каноническую SPEC.
-   Filesystem path под `PROJECTS_ROOT` не означает DEV adoption. Добавляй existing project-local
-   `AGENTS.md` bridge marker `Global DEV bridge: enabled` только при explicit bootstrap/adoption
-   request; не создавай bridge для plain repository автоматически.
+   Filesystem path под `PROJECTS_ROOT` не означает DEV adoption. При explicit bootstrap/adoption
+   request материализуй `templates/dev-project/.codex/` и добавь в project-local `AGENTS.md`
+   declaration `Global DEV bridge: enabled`. Только valid `.codex/dev-project.toml` является
+   machine-readable opt-in; строка в `AGENTS.md` сама по себе membership не включает.
 3. Классифицируй repository как `GREENFIELD` или `BROWNFIELD`. Для brownfield фактический repository и baseline-тесты — source of truth текущего состояния; КАРКАС адаптируется к реализации.
 4. Для brownfield до любых mutations запусти read-only `tools/reconcile_project_framework.py` и зафиксируй compatibility matrix в `docs/CONTEXT_COMPATIBILITY.md`.
 5. Сними baseline тестов до refresh; старые failures зафиксируй отдельно, а новые failures после refresh трактуй как regression.
@@ -26,6 +27,8 @@ description: Создать или актуализировать проектн
 14. Проверь согласованность SPEC → contracts → stages → acceptance/tests, отсутствие дублирующих status/source-of-truth файлов и приемлемый context budget.
 15. Оформляй человекочитаемый контекст на русском языке по умолчанию; не переводи программные идентификаторы, API, команды, пути и машинные ключи.
 16. Обнови текущий status и остановись до реализации продукта, если пользователь явно не запросил код.
+17. Проверь `./.codex/bootstrap.sh --check` или `.\.codex\bootstrap.ps1 check`; `--apply`/`apply`
+   запускай только как explicit bootstrap action. Не клонируй global DEV автоматически при missing source.
 
 ## Ограничения
 

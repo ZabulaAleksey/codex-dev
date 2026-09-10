@@ -12,8 +12,9 @@
   `~/.codex`, и это не canonical Git working tree.
 - Product repositories — независимые Git roots `${PROJECTS_ROOT}/<project>`; current default
   `PROJECTS_ROOT=~`. Filesystem location не означает global DEV policy inheritance. Product
-  принимает DEV только через project-local `AGENTS.md` bridge с exact marker
-  `Global DEV bridge: enabled`.
+  принимает DEV только через valid project-local `.codex/dev-project.toml`. Exact line
+  `Global DEV bridge: enabled` в `AGENTS.md` остаётся human-readable declaration, но сама по
+  себе policy inheritance не включает.
 - Versioned Skills: `<dev-root>/skill-sources`; `~/.agents/skills` — только hash-verified runtime
   materialization, не второй source of truth. `skill-sources` не копируется в `~/.codex`.
 - Runtime state Codex, credentials, sessions, cache, plugins и active `~/.codex/config.toml` не
