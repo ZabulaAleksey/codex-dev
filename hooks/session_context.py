@@ -3,14 +3,19 @@ import sys
 from pathlib import Path
 
 try:
+    from tools.dev_paths import PathResolutionError, inspect_project, resolve_layout
     from tools.stage_compatibility import render_stage_routing_context, stage_routing_snapshot
 except ImportError:  # Direct script execution from the repository root.
     project_root = str(Path(__file__).resolve().parents[1])
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
     try:
+        from tools.dev_paths import PathResolutionError, inspect_project, resolve_layout
         from tools.stage_compatibility import render_stage_routing_context, stage_routing_snapshot
     except ImportError:  # Bootstrap fallback remains advisory and fail-closed.
+        PathResolutionError = RuntimeError
+        inspect_project = None
+        resolve_layout = None
         render_stage_routing_context = None
         stage_routing_snapshot = None
 
@@ -95,6 +100,16 @@ def _routing(root: Path) -> tuple[dict, str | None]:
         }, None)
 
 
+def dev_integration_enabled(root: Path) -> bool:
+    """Filesystem discovery is not policy inheritance."""
+    if resolve_layout is None or inspect_project is None:
+        return False
+    try:
+        return inspect_project(root, resolve_layout()).dev_integration == "enabled"
+    except (PathResolutionError, OSError):
+        return False
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -104,6 +119,8 @@ def main() -> None:
         return
     cwd = Path(payload.get("cwd") or ".").expanduser()
     root = find_repo_root(cwd).resolve()
+    if not dev_integration_enabled(root):
+        return
     chunks = []
     remaining = MAX_CHARS
 

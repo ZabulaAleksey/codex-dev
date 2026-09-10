@@ -125,20 +125,23 @@ downloaded plugins, attachments, logs и generated artifacts. Они остаю�
 ## Cross-device path
 
 ```text
-Git ~/codex-workspace/codex-dev → MANIFEST install/validate → ~/.codex managed layer
-<dev-root>/skill-sources → sync/validate → ~/.agents/skills
-Git ~/codex-workspace/<project> → branch/status → dependencies/secrets
+Git ${DEV_SOURCE_ROOT} → MANIFEST install/validate → ${CODEX_HOME} managed layer
+${DEV_SOURCE_ROOT}/skill-sources → sync/validate → ~/.agents/skills
+Git ${PROJECTS_ROOT}/<project> → explicit bridge → branch/status → dependencies/secrets
 project docs/evidence → restored Codex session
 ```
 
-Source path может отличаться от рекомендуемого `~/codex-workspace/codex-dev`, но не может
-совпадать или пересекаться с `~/.codex`. History старого чата и ручное копирование отдельных
+Source path разрешается через `DEV_SOURCE_ROOT` (current default `~/codex-dev`) и не может
+совпадать или пересекаться с `CODEX_HOME`. History старого чата и ручное копирование отдельных
 context-файлов не входят в supported recovery path. Полный checklist находится в
 `docs/WORKFLOW.md`.
 
 ## Project boundary
 
-Product repositories находятся непосредственно под `~/codex-workspace/*`, являются независимыми Git roots и наследуют `~/.codex/AGENTS.md`. Global repository не хранит их inventory, roadmap, design, agents или Skills.
+Product repositories разрешаются как `${PROJECTS_ROOT}/<project>` и являются независимыми Git
+roots. Они наследуют global DEV project policy только через exact project-local `AGENTS.md` bridge
+marker; filesystem location не является inheritance. Global repository не хранит их inventory,
+roadmap, design, agents или Skills.
 
 Project-specific материалы без доказанного destination остаются quarantine/`BLOCKED`; они не подключены к router, hooks или installer. Удаление разрешено только после preservation + exact/semantic verification.
 

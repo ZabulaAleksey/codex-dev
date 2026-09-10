@@ -13,6 +13,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from tools.dev_paths import PathResolutionError, inspect_project, resolve_layout, resolve_project_reference
+except ImportError:  # Direct execution from tools/.
+    from dev_paths import PathResolutionError, inspect_project, resolve_layout, resolve_project_reference
+
 LIMIT = 1024 * 1024
 SOURCE_KEYS = {"backend", "queue_id", "item_id", "revision"}
 RECORD_KEYS = {
@@ -240,21 +245,37 @@ def main() -> int:
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--after", type=Path)
     group.add_argument("--receipt", type=Path)
-    parser.add_argument("--project", type=Path, required=True, help="verify current Git HEAD")
+    parser.add_argument(
+        "--project",
+        required=True,
+        help="explicit project path or top-level name resolved under PROJECTS_ROOT",
+    )
     args = parser.parse_args()
     try:
         record = read_json(args.record)
         validate_record(record)
-        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=args.project,
-                                  capture_output=True, check=True, text=True).stdout.strip()
-        if revision != record["project_revision"]:
-            decision = result(record, "cleanup_blocked", "project_revision_changed")
-        elif args.after:
-            decision = verify_cleanup(record, read_json(args.observation), read_json(args.after))
+        layout = resolve_layout()
+        project = resolve_project_reference(args.project, layout)
+        project_state = inspect_project(project, layout)
+        revision = ""
+        if not project_state.git_repo or project_state.dev_integration != "enabled":
+            decision = result(record, "cleanup_blocked", "project_not_dev_enabled")
         else:
+            revision = subprocess.run(
+                ["git", "-c", f"safe.directory={project}", "-C", str(project), "rev-parse", "HEAD"],
+                capture_output=True,
+                check=True,
+                text=True,
+            ).stdout.strip()
+        enabled = project_state.git_repo and project_state.dev_integration == "enabled"
+        if enabled and revision != record["project_revision"]:
+            decision = result(record, "cleanup_blocked", "project_revision_changed")
+        elif enabled and args.after:
+            decision = verify_cleanup(record, read_json(args.observation), read_json(args.after))
+        elif enabled:
             receipt = read_json(args.receipt) if args.receipt else None
             decision = evaluate(record, read_json(args.observation), receipt=receipt)
-    except (ValueError, TypeError, KeyError, OSError, RecursionError, subprocess.SubprocessError):
+    except (PathResolutionError, ValueError, TypeError, KeyError, OSError, RecursionError, subprocess.SubprocessError):
         decision = {"schema_version": 1, "action": "cleanup", "decision": "retain",
                     "reason": "invalid_or_unreadable_input"}
     print(json.dumps(decision, ensure_ascii=True, sort_keys=True))

@@ -5,8 +5,9 @@
 
 ## Цель
 
-Устанавливать versioned global DEV из отдельного canonical Git repository (обычно
-`~/codex-workspace/codex-dev`) в active `~/.codex` без превращения runtime home в Git working tree
+Устанавливать versioned global DEV из отдельного canonical Git repository, resolved через
+`DEV_SOURCE_ROOT` (current default `~/codex-dev`), в active `CODEX_HOME` (current default
+`~/.codex`) без превращения runtime home в Git working tree
 и без потери device-local state.
 
 ## Границы
@@ -24,8 +25,9 @@ fail closed: перенос старого repository завершается д�
 
 ### FR-DIL-001 Source discovery
 
-Wrapper определяет DEV root по своему расположению и проверяет, что это точный Git root. Source
-может находиться в любом пользовательском path и не обязан совпадать с `~/.codex`.
+Wrapper использует единый `tools/dev_paths.py` resolver и проверяет, что собственное расположение
+совпадает с resolved `DEV_SOURCE_ROOT` и является exact Git root. Source не обязан совпадать с
+`CODEX_HOME` и по контракту должен находиться в отдельном tree.
 
 ### FR-DIL-002 Manifest allowlist
 

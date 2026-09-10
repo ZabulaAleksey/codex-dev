@@ -1,5 +1,7 @@
 # Music Sequencer — инструкции проекта
 
+Global DEV bridge: enabled
+
 ## Границы продукта
 
 Интерфейс на React/TypeScript; Web Audio API; AudioWorklet; DSP на Rust/WASM; необязательная оболочка настольного приложения на Tauri; Yjs для совместного состояния проекта, если будет добавлена совместная работа.

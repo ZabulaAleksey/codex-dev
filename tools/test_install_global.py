@@ -156,6 +156,12 @@ class GlobalInstallerTests(unittest.TestCase):
                 self.write_manifest("AGENTS.md", "MANIFEST.txt", relative)
                 with self.assertRaisesRegex(InstallError, "protected runtime"):
                     self.policy()
+
+    def test_local_layout_config_is_protected_runtime_state(self) -> None:
+        self.write_source("dev-layout.toml", "[paths]\n")
+        self.write_manifest("AGENTS.md", "MANIFEST.txt", "dev-layout.toml")
+        with self.assertRaisesRegex(InstallError, "protected runtime"):
+            self.policy()
         self.assertFalse(self.codex_home.exists())
 
     def test_skills_materialize_through_existing_sync_tool(self) -> None:

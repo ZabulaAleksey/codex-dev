@@ -9,6 +9,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 from tools.validate_project_overlay import main as validator_main, validate_project
+from tools.dev_paths import BRIDGE_MARKER
 
 
 LEGACY_PLAN = """# Plan
@@ -26,7 +27,7 @@ LEGACY_STATUS = """# Status
 
 
 REQUIRED_CONTENT = {
-    "AGENTS.md": "# Project router\n",
+    "AGENTS.md": f"# Project router\n\n{BRIDGE_MARKER}\n",
     "prompts/STAGES.md": "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-001 — first slice\n\n- Lifecycle: `planned`\n- NEXT: `STAGE-001`\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",

@@ -4,7 +4,7 @@
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
 |---|---|---|---|---|
-| DEV root | Git и runtime были совмещены в `~/.codex` | отдельный portable source clone | `CONFLICT → SUPERSEDED` | `~/codex-workspace/codex-dev` или другой source Git root |
+| DEV root | Git и runtime были совмещены в `~/.codex` | отдельный portable source clone | `CONFLICT → SUPERSEDED` | `DEV_SOURCE_ROOT`, default `~/codex-dev` |
 | Installed layer | direct use без ownership metadata | manifest-only projection | `EXTEND` | `MANIFEST.txt` + `.dev-install-manifest.json` |
 | Runtime state | находился рядом с tracked files | никогда не выводить ownership из directory absence | `FORBIDDEN_TO_OVERWRITE` | Codex runtime; installer protected namespaces |
 | Existing managed files | legacy layout не имел ledger | безопасная миграция без blind overwrite | `EXTEND` | identical adoption; differing unknown collision fail closed |
@@ -16,6 +16,17 @@
 Предыдущие решения о `~/.codex` как Git-корне ниже сохранены как audit trail и superseded этим
 разделением. Installer не выполняет destructive migration `.git`; legacy repository сначала
 переносится пользователем в отдельный source path.
+
+## Unified role-based layout delta — 2026-09-10
+
+| Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
+|---|---|---|---|---|
+| Path roles | active docs смешивали physical paths и roles | env → local config → defaults, fail closed | `CONFLICT → EXTEND` | `tools/dev_paths.py` |
+| Product discovery | `~/codex-workspace/<project>` использовался как architecture assumption | `${PROJECTS_ROOT}/<project>`, default `~` | `SUPERSEDED` | resolver + `docs/DEV_LAYOUT.md` |
+| Policy inheritance | SessionStart routed every Git location | только explicit project-local AGENTS bridge | `CONFLICT → EXTEND` | `Global DEV bridge: enabled` |
+| Prompt Queue / resume | explicit path принимался без DEV adoption check | resolver + Git root + bridge gate | `EXTEND` | `tools/prompt_queue.py` + session hook |
+| Legacy migration | scattered path checks | read-only source/product diagnostics and preflight | `MERGE → EXTEND` | `tools/dev_paths.py diagnose/move-plan` |
+| Repository identity | remote ещё может называться `codex-workspace` | target `codex-dev`, remote change user-controlled | `BLOCKED` external rename | GitHub/user workflow |
 
 ## Brownfield stage compatibility delta — 2026-09-08
 

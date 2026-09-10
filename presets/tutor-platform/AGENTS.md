@@ -1,5 +1,7 @@
 # Tutor Platform — инструкции проекта
 
+Global DEV bridge: enabled
+
 ## Границы продукта
 
 Next.js/React/TypeScript; backend/API и PostgreSQL; связь через WebRTC; Yjs CRDT для совместного состояния доски и документов; интеграция с календарём; сценарии уведомлений и звонков в PWA и мобильных устройствах; необязательное развёртывание в Cloudflare.

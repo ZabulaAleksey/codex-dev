@@ -19,6 +19,7 @@ docs/ARCHITECTURE.md
 docs/CONTEXT_COMPATIBILITY.md
 docs/CONTEXT_POLICY.md
 docs/DECISIONS.md
+docs/DEV_LAYOUT.md
 docs/DESIGN.md
 docs/HOOK_POLICY.md
 docs/LEARNING_LOG.md
@@ -27,6 +28,7 @@ docs/notes/AI_POLICY_PROFILING.md
 docs/notes/AUTOMATION_EXTENSIONS.md
 docs/notes/CONTEXT_DEPENDENCY_MAP.md
 docs/notes/CONTEXT_FILE_INVENTORY.md
+docs/notes/DEV_PATH_AUDIT.md
 docs/notes/LEARNING_LOG.md
 docs/notes/MENTORING_GUIDE.md
 docs/notes/ORCHESTRATION_LATER.md
@@ -187,6 +189,7 @@ specs/features/global-codex-normalization.spec.md
 specs/features/global-framework-hardening.spec.md
 specs/features/project-overlay-rollout.spec.md
 specs/features/source-installed-layer.spec.md
+specs/features/unified-dev-path-layout.spec.md
 specs/README.md
 specs/system.spec.md
 templates/AGENTS_PROJECT_TEMPLATE.md
@@ -215,6 +218,7 @@ templates/SPEC_TEMPLATE.md
 templates/SPECS_README_TEMPLATE.md
 templates/STAGES_TEMPLATE.md
 tools/ai_policy_profiler.py
+tools/dev_paths.py
 tools/install_global.py
 tools/master_execution.py
 tools/normalize_user_codex.py
@@ -224,6 +228,7 @@ tools/sync_global_skills.py
 tools/test_ai_policy_profiler.py
 tools/test_backend_dx_policy.py
 tools/test_continuous_master_execution_policy.py
+tools/test_dev_paths.py
 tools/test_documentation_sync_policy.py
 tools/test_global_framework_hardening.py
 tools/test_i18n_l10n_policy.py

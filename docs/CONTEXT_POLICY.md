@@ -8,11 +8,12 @@
 
 Более локальное правило уточняет общее только в своей области. Прямая инструкция пользователя для текущей задачи имеет высший приоритет, если не нарушает ограничения безопасности.
 
-Canonical global DEV Git source находится отдельно, обычно в `~/codex-workspace/codex-dev`.
-`~/.codex` содержит manifest-installed global context и device-local runtime state, но не является
-canonical Git working tree. Product repositories располагаются как независимые Git roots в
-`~/codex-workspace/<project>`; runtime Skills в `~/.agents/skills` являются только проверяемой
-projection `<dev-root>/skill-sources`.
+Canonical global DEV Git source разрешается через `DEV_SOURCE_ROOT` (default `~/codex-dev`).
+`CODEX_HOME` (default `~/.codex`) содержит manifest-installed global context и device-local
+runtime state, но не является canonical Git working tree. Product repositories разрешаются как
+независимые Git roots `${PROJECTS_ROOT}/<project>`; path не включает DEV policy без exact
+project-local `AGENTS.md` bridge marker. Runtime Skills в `~/.agents/skills` являются только
+проверяемой projection `${DEV_SOURCE_ROOT}/skill-sources`.
 
 ## Порядок загрузки
 

@@ -18,6 +18,7 @@ if str(WORKSPACE_ROOT) not in sys.path:
 from hooks.stage_selector import find_stage_record, parse_stage_id
 from tools.master_execution import MasterExecutionError, extract_master_state
 from tools.stage_compatibility import stage_routing_snapshot
+from tools.dev_paths import BRIDGE_MARKER, has_dev_bridge
 
 REQUIRED_FILES = (
     "AGENTS.md",
@@ -683,6 +684,14 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
     agents_file = project / "AGENTS.md"
     if agents_file.is_file() and agents_file.stat().st_size > 32 * 1024:
         issues.append(Issue("agents-not-thin", "AGENTS.md", "project router exceeds 32 KiB"))
+    if agents_file.is_file() and not has_dev_bridge(project):
+        issues.append(
+            Issue(
+                "missing-dev-bridge",
+                "AGENTS.md",
+                f"full DEV overlay must declare exact marker: {BRIDGE_MARKER}",
+            )
+        )
 
     for base in (project, project / "docs"):
         if not base.is_dir():

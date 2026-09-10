@@ -45,7 +45,9 @@ readiness, `reviewer` — duplication/hidden steps/overengineering, а
 
 ## 4. Проектные специалисты
 
-У каждого проекта есть 2–6 узких специалистов. Они находятся в `~/codex-workspace/<project>/.codex/agents/` и не засоряют остальные проекты.
+У DEV-enabled проекта может быть 2–6 узких специалистов. Они находятся в
+`${PROJECTS_ROOT}/<project>/.codex/agents/` и не засоряют остальные проекты. Наличие repository под
+`PROJECTS_ROOT` само по себе не включает global DEV или локальных специалистов.
 
 ## 5. Правило владения файлами
 

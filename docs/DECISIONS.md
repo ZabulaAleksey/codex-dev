@@ -428,3 +428,25 @@ operations. Отдельный source clone обеспечивает обычн�
 managed files удаляются только по ledger; staging/backup/atomic replace и post-apply validation
 образуют rollback boundary. Legacy `~/.codex/.git` переносится вручную до install. Historical docs
 могут упоминать прежнюю схему только с явным `SUPERSEDED` context.
+
+## 2026-09-10 — DEV и product paths унифицированы через logical roles
+
+**Статус:** принято; supersedes physical-path часть решений 2026-08-24 и 2026-09-10, но сохраняет
+source/installed separation и independent Git roots.
+
+**Решение:** `DEV_SOURCE_ROOT`, `CODEX_HOME` и `PROJECTS_ROOT` разрешаются единственным
+`tools/dev_paths.py` по precedence environment → local config → default. Current defaults:
+`~/codex-dev`, `~/.codex`, `~`. Product repository path не является policy signal; global DEV
+adoption требует exact `Global DEV bridge: enabled` marker в existing project-local `AGENTS.md`.
+
+**Причина:** одинаковая physical layout на устройствах упрощает перенос, но hardcoded path и
+автоматическое inheritance по parent directory связывают discovery с governance и способны
+подключить plain repository к Prompt Queue/overlay без согласия проекта.
+
+**Альтернативы:** автоматически наследовать DEV всем repositories под `PROJECTS_ROOT` отклонено
+из-за нарушения isolation; отдельный `.codex` marker отклонён как competing bridge; silent legacy
+auto-detection отклонён из-за ambiguity и риска неверного move/install source.
+
+**Последствия:** installer/validator/hooks/Prompt Queue потребляют resolver; legacy layout только
+диагностируется; migration helper не выполняет move/delete; GitHub rename и remote update остаются
+user-authorized operations. Исторические records сохраняют прежние paths как audit trail.

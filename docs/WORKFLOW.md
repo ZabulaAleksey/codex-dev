@@ -97,8 +97,8 @@ profiler.
 ### Начать работу с проектом
 
 ```text
-Открой проект <project> в ~/codex-workspace. Прочитай глобальный ДЕВ из ~/.codex,
-project AGENTS.md, README.md, current selector/record из prompts/STAGES.md, относящиеся к задаче
+Разреши проект <project> через PROJECTS_ROOT и tools/dev_paths.py. Если explicit DEV bridge
+enabled, прочитай installed global ДЕВ из CODEX_HOME, project AGENTS.md, README.md, current selector/record из prompts/STAGES.md, относящиеся к задаче
 SPEC/архитектурные документы и только релевантные записи docs/LEARNING_LOG.md. Проверь
 Git branch/status/diff и определи последний подтверждённый результат, blockers, monitoring class
 и первый незавершённый шаг. Старый чат не используй как source of truth. Сначала дай компактный
@@ -227,10 +227,10 @@ NEEDS_RESEARCH, NEEDS_DECISION, DUPLICATE, ALREADY_IMPLEMENTED или BLOCKED; �
 
 На другом устройстве:
 
-1. clone/pull canonical global DEV source в `~/codex-workspace/codex-dev` или другой отдельный path;
+1. clone/pull canonical global DEV source в `DEV_SOURCE_ROOT` (default `~/codex-dev`);
 2. из source Git root запусти `install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS; wrappers
    выполняют context validation, Skill materialization/parity и global validator;
-3. clone/pull `~/codex-workspace/<project>`, проверь branch/status и восстанови dependencies;
+3. clone/pull `${PROJECTS_ROOT}/<project>`, проверь branch/status и explicit DEV bridge, затем восстанови dependencies;
 4. восстанови локальные secrets через разрешённый machine-local механизм, не из Git/чата;
 5. используй запрос «Возобновить проект» выше и продолжай только после совпадения local state с
    repository evidence.

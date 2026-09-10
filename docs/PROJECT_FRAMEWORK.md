@@ -1,6 +1,7 @@
 # КАРКАС проекта и автоматизация контекста
 
-Этот документ задаёт общую для `~/codex-workspace/*` терминологию. Он описывает инженерный процесс, а не структуру конкретного продукта.
+Этот документ задаёт общую терминологию для explicit DEV-enabled repositories, разрешённых как
+`${PROJECTS_ROOT}/<project>`. Path под `PROJECTS_ROOT` сам по себе не включает этот contract.
 
 ## Continuous Master Execution
 
@@ -132,13 +133,13 @@ Future stage может расширить или заменить работа�
 Готовый overlay проверяется без изменений repository:
 
 ```powershell
-py -3 ~/.codex/tools/validate_project_overlay.py ~/codex-workspace/<project>
+py -3 "$env:CODEX_HOME\tools\validate_project_overlay.py" "$env:PROJECTS_ROOT\<project>"
 ```
 
 Перед изменением brownfield repository:
 
 ```powershell
-py -3 ~/.codex/tools/reconcile_project_framework.py ~/codex-workspace/<project>
+py -3 "$env:CODEX_HOME\tools\reconcile_project_framework.py" "$env:PROJECTS_ROOT\<project>"
 ```
 
 Для машинного чтения доступен `--json`; отдельный registry при этом не создаётся.
@@ -180,7 +181,9 @@ contract tests, а изменение хранения — data model, security/
 
 ## Закон отсутствия дубликатов
 
-Проект наследует общие agents, Skills, hooks, Git workflow, review и quality practices. Локальное расширение допустимо только при подтверждённом пробеле и должно иметь узкую область, владельца, способ проверки и безопасный fallback.
+Проект с exact `Global DEV bridge: enabled` marker в project-local `AGENTS.md` наследует общие
+agents, Skills, hooks, Git workflow, review и quality practices. Repository без marker остаётся
+обычным независимым repository. Локальное расширение допустимо только при подтверждённом пробеле и должно иметь узкую область, владельца, способ проверки и безопасный fallback.
 
 Отсутствие локального config, hook, MCP, Skill или subagent является нормальным результатом bootstrap.
 

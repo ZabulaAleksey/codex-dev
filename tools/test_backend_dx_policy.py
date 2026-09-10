@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_CONTENT = {
     "AGENTS.md": (
-        "# Project router\n\n"
+        "# Project router\n\nGlobal DEV bridge: enabled\n\n"
         "Backend workflow: read ~/.codex/rules/backend-dx.md and "
         "docs/project-context.md.\n"
     ),

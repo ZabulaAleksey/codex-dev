@@ -23,6 +23,8 @@
 - [`features/source-installed-layer.spec.md`](features/source-installed-layer.spec.md) — текущий
   contract отдельного canonical DEV source, manifest-managed installed `~/.codex`, ownership
   ledger, runtime protection, rollback и Skill materialization.
+- [`features/unified-dev-path-layout.spec.md`](features/unified-dev-path-layout.spec.md) — единый
+  role-based layout, resolver/config/diagnostics, product isolation bridge и migration preflight.
 - [`features/global-codex-normalization.spec.md`](features/global-codex-normalization.spec.md) — безопасная синхронизация канонического и установленного пользовательского слоя Codex.
 - [`features/project-overlay-rollout.spec.md`](features/project-overlay-rollout.spec.md) — `SUPERSEDED` audit trail первого rollout project overlays; live inventory больше не хранится глобально.
 - [`features/dependency-manager-policy.spec.md`](features/dependency-manager-policy.spec.md) — canonical manager, lockfile, shared-cache и read-only drift contract.

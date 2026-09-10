@@ -13,6 +13,11 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Callable, Iterable
 
+try:
+    from tools.dev_paths import PathResolutionError, resolve_layout
+except ImportError:  # Direct execution from tools/.
+    from dev_paths import PathResolutionError, resolve_layout
+
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER_NAME = ".dev-install-manifest.json"
@@ -40,6 +45,7 @@ PROTECTED_ROOT_FILES = frozenset({
     "chrome-native-hosts-v2.json",
     "config.toml",
     "credentials.json",
+    "dev-layout.toml",
     "installation_id",
     "models_cache.json",
     "session_index.jsonl",
@@ -694,7 +700,7 @@ def validation_commands(source_root: Path, codex_home: Path, skip_skills: bool) 
         sys.executable,
         "-B",
         str(source_root / "tools" / "validate_global_codex.py"),
-        "--workspace",
+        "--dev-source-root",
         str(source_root),
         "--codex-home",
         str(codex_home),
@@ -790,14 +796,43 @@ def install(
 
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Install the canonical DEV source into the active Codex home layer")
-    parser.add_argument("--source", type=Path, default=ROOT, help="canonical DEV source Git root")
-    parser.add_argument("--codex-home", type=Path, default=Path.home() / ".codex")
-    parser.add_argument("--skills-destination", type=Path, default=Path.home() / ".agents" / "skills")
+    parser.add_argument(
+        "--source",
+        type=Path,
+        help="compatibility assertion; must equal resolved DEV_SOURCE_ROOT",
+    )
+    parser.add_argument(
+        "--codex-home",
+        type=Path,
+        help="compatibility assertion; must equal resolved CODEX_HOME",
+    )
+    parser.add_argument(
+        "--skills-destination",
+        type=Path,
+        help="runtime Skill destination (default: ~/.agents/skills)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(list(argv) if argv is not None else None)
     try:
-        install(args.source, args.codex_home, args.skills_destination, dry_run=args.dry_run)
-    except (InstallError, OSError, subprocess.CalledProcessError) as exc:
+        layout = resolve_layout()
+        source_root = layout.dev_source_root
+        codex_home = layout.codex_home
+        if args.source is not None and args.source.expanduser().resolve() != source_root:
+            raise InstallError("--source must match resolved DEV_SOURCE_ROOT")
+        if args.codex_home is not None and args.codex_home.expanduser().resolve() != codex_home:
+            raise InstallError("--codex-home must match resolved CODEX_HOME")
+        if ROOT.resolve() != source_root:
+            raise InstallError(
+                "installer engine must execute from resolved DEV_SOURCE_ROOT; "
+                "run tools/dev_paths.py diagnose before migrating a legacy checkout"
+            )
+        skills_destination = (
+            args.skills_destination.expanduser().resolve()
+            if args.skills_destination is not None
+            else Path.home().resolve() / ".agents" / "skills"
+        )
+        install(source_root, codex_home, skills_destination, dry_run=args.dry_run)
+    except (InstallError, PathResolutionError, OSError, subprocess.CalledProcessError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     return 0

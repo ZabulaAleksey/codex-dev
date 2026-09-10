@@ -1,81 +1,107 @@
 # Быстрый старт на Windows, Linux и macOS
 
-Canonical DEV source repository и installed Codex home — разные слои:
+Одинаковый canonical layout на laptop и desktop:
 
-- `~/codex-workspace/codex-dev` (или другой пользовательский path) — Git-managed source;
-- `~/.codex` — installed global layer и device-local runtime state, не Git repository;
-- `~/.agents/skills` — runtime materialization versioned Skills.
+- `DEV_SOURCE_ROOT=~/codex-dev` — Git-managed source repository;
+- `CODEX_HOME=~/.codex` — installed global layer и device-local runtime state, не Git repository;
+- `PROJECTS_ROOT=~` — discovery parent независимых product repositories.
+
+Filesystem location не включает global DEV policy. Product repository подключает DEV только
+через project-local `AGENTS.md` с exact marker `Global DEV bridge: enabled`.
 
 ## Windows PowerShell
 
+Temporary variables для текущего PowerShell:
+
 ```powershell
-# 1) Clone/pull canonical source
-git clone <dev-remote> "$HOME\codex-workspace\codex-dev"
-Set-Location "$HOME\codex-workspace\codex-dev"
+$env:DEV_SOURCE_ROOT = "$HOME\codex-dev"
+$env:CODEX_HOME = "$HOME\.codex"
+$env:PROJECTS_ROOT = "$HOME"
+```
+
+Persistent user variables:
+
+```powershell
+[Environment]::SetEnvironmentVariable("DEV_SOURCE_ROOT", "$HOME\codex-dev", "User")
+[Environment]::SetEnvironmentVariable("CODEX_HOME", "$HOME\.codex", "User")
+[Environment]::SetEnvironmentVariable("PROJECTS_ROOT", "$HOME", "User")
+```
+
+После persistent change полностью перезапусти Codex и открой новый PowerShell: уже работающие
+processes не получают обновлённый user environment автоматически.
+
+```powershell
+git clone https://github.com/ZabulaAleksey/codex-dev.git "$HOME\codex-dev"
+Set-Location "$HOME\codex-dev"
 git pull --ff-only
 
-# 2) Сначала просмотреть точный install plan
+py -3 -B .\tools\dev_paths.py resolve --json
+py -3 -B .\tools\dev_paths.py diagnose --json
+
 Set-ExecutionPolicy -Scope Process Bypass
 .\install-global.ps1 -DryRun
-
-# 3) Установить managed layer, materialize Skills и выполнить validators
 .\install-global.ps1
 
-# 4) Проверить один full project overlay установленным validator
-py -3 "$HOME\.codex\tools\validate_project_overlay.py" "$HOME\codex-workspace\<project>"
+# Explicitly DEV-enabled full overlay only:
+py -3 "$HOME\.codex\tools\validate_project_overlay.py" "$HOME\<project>"
 ```
 
 ## Linux / macOS
 
 ```bash
-git clone <dev-remote> ~/codex-workspace/codex-dev
-cd ~/codex-workspace/codex-dev
+export DEV_SOURCE_ROOT="$HOME/codex-dev"
+export CODEX_HOME="$HOME/.codex"
+export PROJECTS_ROOT="$HOME"
+
+git clone https://github.com/ZabulaAleksey/codex-dev.git "$DEV_SOURCE_ROOT"
+cd "$DEV_SOURCE_ROOT"
 git pull --ff-only
 
+python3 -B tools/dev_paths.py resolve --json
+python3 -B tools/dev_paths.py diagnose --json
 ./install-global.sh --dry-run
 ./install-global.sh
-# Если executable bit недоступен: bash ./install-global.sh
 
-python3 -B ~/.codex/tools/validate_project_overlay.py ~/codex-workspace/<project>
+python3 -B "$CODEX_HOME/tools/validate_project_overlay.py" "$PROJECTS_ROOT/<project>"
 ```
 
-Installer определяет source как Git root wrapper-а, использует `MANIFEST.txt` как explicit file
-allowlist, сохраняет ownership ledger в `~/.codex/.dev-install-manifest.json` и не зеркалирует весь
-repository. Runtime state, unknown files и active `config.toml` не перезаписываются. Различающийся
-unknown collision или protected runtime path в manifest завершает install до первой записи.
+Optional per-device fallback config: `~/.codex/dev-layout.toml`.
 
-`skill-sources/` остаётся только в canonical source; runtime Skills materialize-ятся существующим
-`tools/sync_global_skills.py` в `~/.agents/skills`. Recommended config устанавливается как reference:
-
-```text
-~/.codex/config.ai-dev-team.recommended.toml
+```toml
+[paths]
+dev_source_root = "~/codex-dev"
+codex_home = "~/.codex"
+projects_root = "~"
 ```
 
-При необходимости сравни его с active `~/.codex/config.toml` вручную. Installer не заменяет и не
-объединяет active config.
+Environment variables override this file; the file is not portable Git state. Full resolver and
+migration procedure are documented in [`docs/DEV_LAYOUT.md`](docs/DEV_LAYOUT.md).
 
-## Миграция старого `DEV == ~/.codex`
+## Installer boundaries
 
-Если `~/.codex/.git` ещё существует, сначала сохранить Git status/remote и перенести canonical
-repository в `~/codex-workspace/codex-dev`. Удаление или перенос `.git` — отдельное явно контролируемое
-действие: installer fail closed и не изменяет Git metadata автоматически. После этого запусти
-`-DryRun`; идентичные managed files будут приняты в ledger без перезаписи, а различающийся unknown
-file потребует ручного reconcile.
+Installer reads source and destination from the resolver, uses `MANIFEST.txt` as explicit
+allowlist, records ownership in `~/.codex/.dev-install-manifest.json`, and never mirrors `.git` or
+`skill-sources/` into `CODEX_HOME`. Runtime state, unknown files and active `config.toml` are
+preserved. Differing unknown collision or protected runtime path fails before the first write.
 
-## Проверка из product repository
+`skill-sources/` stays under `DEV_SOURCE_ROOT`; runtime Skills materialize into
+`~/.agents/skills`. Recommended config is installed only as
+`~/.codex/config.ai-dev-team.recommended.toml`.
 
-```text
-cd ~/codex-workspace/<project>
-codex mcp list
-codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов. Не изменяй файлы."
+## Legacy migration
+
+Run `tools/dev_paths.py diagnose` before moving anything. It reports legacy source/product roots,
+collisions, Git preflight and exact recommended commands. It never moves, deletes or archives a
+repository. If `~/.codex/.git` exists, reconcile that Git checkout before running installer;
+destination Git metadata is a protected collision.
+
+## Product repository check
+
+```powershell
+Set-Location "$env:PROJECTS_ROOT\<project>"
+py -3 "$env:CODEX_HOME\tools\dev_paths.py" project . --json
 ```
 
-В интерактивном Codex открой `/agent`, `/hooks`, `/skills` и `/mcp`; доверяй automation только
-после просмотра versioned source и installed ownership ledger. Для `STANDARD`/`COMPLEX` функции
-прочитай затронутую SPEC.
-
-Full staged overlay обязан иметь ровно один stable selector `- Stage ID: <id>` в
-`prompts/STAGES.md` и ровно один unfenced heading с этим ID как отдельным token в том же файле.
-Сначала запусти installed `validate_project_overlay.py`, затем загружай только exact selected
-record. `DEGRADED` warning hook требует ручного чтения полного record и запрещает completion claim
-до проверки.
+A plain Git repository should report `dev_integration: disabled`. A deliberately adopted project
+uses the existing project-local `AGENTS.md` overlay contract and exact bridge marker. Only then may
+SessionStart, `Продолжай`, Prompt Queue and full overlay validation route global DEV project policy.

@@ -83,20 +83,25 @@ Metadata/receipts сохраняются рядом с project evidence; global 
 
 ## Назначение и границы
 
-Canonical Git repository общей AI-инфраструктуры находится отдельно от runtime, обычно в
-`~/codex-workspace/codex-dev`. `~/.codex` — installed active Codex home layer: manifest-managed
+Canonical Git repository общей AI-инфраструктуры разрешается через `DEV_SOURCE_ROOT` и по
+умолчанию находится в `~/codex-dev`. `CODEX_HOME` по умолчанию равен `~/.codex` и задаёт installed active Codex home layer: manifest-managed
 `agents/`, `hooks/`, `rules/` и другие portable artifacts сосуществуют там с защищённым
 device-local runtime state. Versioned source Skills находится в `<dev-root>/skill-sources`, а
 единственная active runtime-проекция — в `~/.agents/skills/`. Project-specific контекст хранится
-только в независимых repositories под `~/codex-workspace/*`.
+только в независимых repositories `${PROJECTS_ROOT}/<project>` (current default `PROJECTS_ROOT=~`).
 
 | Слой | Путь | Роль |
 |---|---|---|
-| Canonical DEV source repository | `~/codex-workspace/codex-dev` или другой source path | Git, manifest, AGENTS, agents, hooks, rules, docs, tools, templates, specs, Skill sources |
-| Installed Codex home layer | `~/.codex` | manifest-managed projection + protected runtime/auth/cache/session/plugin state; не Git repository |
+| Canonical DEV source repository | `DEV_SOURCE_ROOT` (`~/codex-dev`) | Git, manifest, AGENTS, agents, hooks, rules, docs, tools, templates, specs, Skill sources |
+| Installed Codex home layer | `CODEX_HOME` (`~/.codex`) | manifest-managed projection + protected runtime/auth/cache/session/plugin state; не Git repository |
 | Versioned Skill source | `<dev-root>/skill-sources` | единственный редактируемый source reusable Skills |
 | Managed Skill runtime | `~/.agents/skills` | hash-verified materialization; не второй lifecycle/source |
-| Product repositories | `~/codex-workspace/<project>` | независимый Git root и project-specific overlay |
+| Product repositories | `${PROJECTS_ROOT}/<project>` | независимый Git root; overlay только с explicit local DEV bridge |
+
+`tools/dev_paths.py` — единственный resolver ролей. Filesystem discovery, Git identity и DEV policy
+inheritance являются разными фактами. Existing project-local `AGENTS.md` включает integration
+только exact marker `Global DEV bridge: enabled`; plain repository не получает SessionStart stage
+injection, Prompt Queue или global project overlay.
 
 ## Project-framework контур
 
@@ -283,7 +288,7 @@ context остаётся независимым от product `language` / `local
 
 Project-specific implementation:
 
-`~/codex-workspace/<project>/docs/FALLBACKS.md`
+`${PROJECTS_ROOT}/<project>/docs/FALLBACKS.md`
 
 Архитектура проекта определяет компоненты, границы состояния,
 idempotency/recovery interfaces и места возможной деградации,

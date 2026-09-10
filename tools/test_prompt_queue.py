@@ -9,7 +9,12 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import prompt_queue as queue
+try:
+    from tools import prompt_queue as queue
+    from tools.dev_paths import BRIDGE_MARKER
+except ImportError:
+    import prompt_queue as queue
+    from dev_paths import BRIDGE_MARKER
 
 ROOT = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 9, 7, tzinfo=timezone.utc)
@@ -188,8 +193,10 @@ class PromptQueueTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             subprocess.run(["git", "init", "-q", str(root)], check=True)
+            (root / "AGENTS.md").write_text(BRIDGE_MARKER + "\n", encoding="utf-8")
+            subprocess.run(["git", "add", "AGENTS.md"], cwd=root, check=True)
             subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
-                            "commit", "--allow-empty", "-qm", "fixture"], cwd=root, check=True)
+                            "commit", "-qm", "fixture"], cwd=root, check=True)
             self.record["project_revision"] = subprocess.check_output(["git", "rev-parse", "HEAD"],
                                                                        cwd=root, text=True).strip()
             self.before["observed_at"] = datetime.now(timezone.utc).isoformat()
@@ -210,6 +217,28 @@ class PromptQueueTests(unittest.TestCase):
             record_path.write_text(json.dumps(self.record), encoding="utf-8")
             run = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual("project_revision_changed", json.loads(run.stdout)["reason"])
+
+    def test_cli_plain_repo_is_not_enrolled_by_filesystem_location(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                            "commit", "--allow-empty", "-qm", "fixture"], cwd=root, check=True)
+            self.record["project_revision"] = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True
+            ).strip()
+            self.before["observed_at"] = datetime.now(timezone.utc).isoformat()
+            record_path, observation_path = root / "record.json", root / "observation.json"
+            record_path.write_text(json.dumps(self.record), encoding="utf-8")
+            observation_path.write_text(json.dumps(self.before), encoding="utf-8")
+            run = subprocess.run(
+                [sys.executable, "-B", str(ROOT / "tools/prompt_queue.py"), str(record_path),
+                 str(observation_path), "--project", str(root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(2, run.returncode)
+            self.assertEqual("project_not_dev_enabled", json.loads(run.stdout)["reason"])
 
 
 if __name__ == "__main__":

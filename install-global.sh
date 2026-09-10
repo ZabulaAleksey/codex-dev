@@ -2,8 +2,6 @@
 set -euo pipefail
 
 dev_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-codex_home="${HOME}/.codex"
-skill_runtime="${HOME}/.agents/skills"
 python_bin="${PYTHON_BIN:-python3}"
 dry_run=()
 
@@ -27,7 +25,4 @@ if [[ "${git_root}" != "${dev_root}" ]]; then
 fi
 
 "${python_bin}" -B "${dev_root}/tools/install_global.py" \
-  --source "${dev_root}" \
-  --codex-home "${codex_home}" \
-  --skills-destination "${skill_runtime}" \
   "${dry_run[@]}"

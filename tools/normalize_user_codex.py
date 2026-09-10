@@ -10,6 +10,11 @@ import tempfile
 import tomllib
 from pathlib import Path
 
+try:
+    from tools.dev_paths import LEGACY_WORKSPACE_NAME
+except ImportError:  # Direct execution from tools/.
+    from dev_paths import LEGACY_WORKSPACE_NAME
+
 
 MCP_TO_DISABLE = {"mcp_servers.github", "mcp_servers.atlassian"}
 PLUGINS_TO_DISABLE = {
@@ -93,7 +98,7 @@ def normalize_text(
     preamble, sections = split_sections(text)
     changes: list[str] = []
     broad_home = str(user_home.resolve()).casefold()
-    legacy_projects_root = (user_home.resolve() / "codex-workspace" / "projects").resolve()
+    legacy_projects_root = (user_home.resolve() / LEGACY_WORKSPACE_NAME / "projects").resolve()
     output: list[str] = list(preamble)
     section_names = {header for header, _ in sections}
     has_shell_policy = "shell_environment_policy" in section_names

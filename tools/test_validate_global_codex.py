@@ -244,7 +244,8 @@ class HookRegressionTests(unittest.TestCase):
     def test_session_hook_emits_utf8_under_legacy_windows_encoding(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
-            (repo / ".git").mkdir()
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            (repo / "AGENTS.md").write_text("Global DEV bridge: enabled\n", encoding="utf-8")
             (repo / "prompts").mkdir()
             (repo / "prompts/STAGES.md").write_text(
                 "- Stage ID: `STAGE-001`\n\n## STAGE-001\n\n"
@@ -258,7 +259,8 @@ class HookRegressionTests(unittest.TestCase):
     def test_session_hook_consumes_the_authorized_record_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
-            (repo / ".git").mkdir()
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            (repo / "AGENTS.md").write_text("Global DEV bridge: enabled\n", encoding="utf-8")
             (repo / "prompts").mkdir()
             stages = repo / "prompts/STAGES.md"
             stages.write_text(

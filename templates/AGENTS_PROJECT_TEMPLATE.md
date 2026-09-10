@@ -5,11 +5,13 @@
 исследовать repository, классифицировать GREENFIELD/BROWNFIELD и создать только содержательные
 недостающие contracts.
 
+Global DEV bridge: enabled
+
 ## Project facts
 
 - Назначение: <кратко>
 - Production mode: <prototype | production>
-- Canonical working directory: `~/codex-workspace/<project>`
+- Canonical working directory: `${PROJECTS_ROOT}/<project>`
 - Project-specific fragile areas: <если подтверждены>
 
 ## Canonical project context

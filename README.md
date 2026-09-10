@@ -13,9 +13,16 @@ Project наследует правило через global router и добав
 
 ## Расположение каталогов
 
-- `~/codex-workspace/codex-dev` (или другой пользовательский path) — canonical Git-managed DEV source repository.
-- `~/.codex` — installed active Codex home layer и runtime state; это не canonical Git working tree.
-- `~/codex-workspace/<project>` — рабочий Git-репозиторий конкретного проекта.
+- `DEV_SOURCE_ROOT=~/codex-dev` — canonical Git-managed DEV source repository.
+- `CODEX_HOME=~/.codex` — installed active Codex home layer и runtime state; это не Git working tree.
+- `PROJECTS_ROOT=~` — parent только для resolution/discovery; product path —
+  `${PROJECTS_ROOT}/<project>`.
+
+Физическое нахождение repository под `PROJECTS_ROOT` не включает global DEV. Existing
+project-local `AGENTS.md` overlay является explicit bridge только при exact marker
+`Global DEV bridge: enabled`. Plain repositories не получают project overlay, Prompt Queue или
+`Продолжай` bootstrap автоматически. Resolver/config/migration contract описан в
+[`docs/DEV_LAYOUT.md`](docs/DEV_LAYOUT.md).
 
 Canonical source materialize-ится в `~/.codex` по `MANIFEST.txt`; blanket mirror запрещён. В
 `~/.agents/skills` находится только проверяемая runtime-проекция Skills, а не ещё один canonical
@@ -154,7 +161,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 ### Linux / macOS
 
 ```bash
-cd ~/codex-workspace/codex-dev
+cd "$DEV_SOURCE_ROOT"
 ./install-global.sh --dry-run
 ./install-global.sh
 ```
@@ -198,18 +205,18 @@ py -3 .\tools\validate_context.py
 Затем проверь один независимый project overlay (команда ничего не изменяет):
 
 ```powershell
-py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project>
-py -3 .\tools\validate_project_overlay.py ~\codex-workspace\<project> --json
+py -3 .\tools\validate_project_overlay.py "$env:PROJECTS_ROOT\<project>"
+py -3 .\tools\validate_project_overlay.py "$env:PROJECTS_ROOT\<project>" --json
 ```
 
 Для brownfield repository default router/validator уже выполняет stage-state discovery; общий
 framework reconciliation остаётся отдельным pre-refresh gate:
 
 ```powershell
-py -3 .\tools\reconcile_project_framework.py ~\codex-workspace\<project>
+py -3 .\tools\reconcile_project_framework.py "$env:PROJECTS_ROOT\<project>"
 ```
 
-Из корня рабочего репозитория `~/codex-workspace/<project>`:
+Из корня рабочего репозитория `${PROJECTS_ROOT}/<project>`:
 
 ```powershell
 codex --ask-for-approval never "Кратко изложи активные инструкции и перечисли доступных пользовательских агентов."
@@ -251,10 +258,9 @@ $bootstrap-project-framework
 $backend-dx-audit
 ```
 
-При смене компьютера clone/pull canonical DEV source в `~/codex-workspace/codex-dev` (или другой
-source path), выполни `install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS,
-затем clone/pull нужный product repository в
-`~/codex-workspace/<project>`. Рабочее состояние восстанавливается из Git и project docs по
+При смене компьютера clone/pull canonical DEV source в `DEV_SOURCE_ROOT`, выполни
+`install-global.ps1` на Windows либо `install-global.sh` на Linux/macOS, затем clone/pull нужный
+product repository в `${PROJECTS_ROOT}/<project>`. Рабочее состояние восстанавливается из Git и project docs по
 [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md), не из истории чата или ручных копий файлов.
 
 ## Важное про расход лимита

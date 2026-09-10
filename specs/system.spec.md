@@ -5,7 +5,9 @@
 
 ## 1. Назначение
 
-AI Dev Team предоставляет один переиспользуемый пользовательский слой Codex для нескольких независимых Git-репозиториев в `~/codex-workspace/*`.
+AI Dev Team предоставляет один переиспользуемый пользовательский слой Codex для явно
+подключённых независимых Git-репозиториев `${PROJECTS_ROOT}/<project>`. Filesystem discovery не
+означает policy inheritance.
 
 ## 2. Системные требования
 
@@ -23,9 +25,11 @@ source of truth.
 
 ### FR-003 Независимые репозитории
 
-Каждый product-каталог верхнего уровня в `~/codex-workspace/` должен быть самостоятельным
-Git-репозиторием. Canonical DEV обычно находится в `~/codex-workspace/codex-dev`; installed
-`~/.codex` не должен содержать `.git` или отслеживать runtime state Codex.
+Каждый product-каталог `${PROJECTS_ROOT}/<project>` должен быть самостоятельным Git-репозиторием.
+Canonical DEV source разрешается через `DEV_SOURCE_ROOT` (default `~/codex-dev`), installed layer
+через `CODEX_HOME` (default `~/.codex`), а product discovery через `PROJECTS_ROOT` (default `~`).
+`CODEX_HOME` не должен содержать `.git` или отслеживать runtime state Codex. Product repository
+принимает global DEV только через explicit project-local `AGENTS.md` bridge marker.
 
 ### NFR-001 Минимальный контекст
 
@@ -164,6 +168,14 @@ state, выдаёт dry-run migration plan и не запускает work пр�
 с canonical projection и digests retained legacy sources. Product files не переписываются и не
 удаляются автоматически; conflicting или drifted state требует explicit migration.
 
+### FR-014 Unified path roles and explicit DEV adoption
+
+Global DEV source, active runtime layer and product discovery root разрешаются только через
+`DEV_SOURCE_ROOT`, `CODEX_HOME`, `PROJECTS_ROOT` общим resolver. Current defaults равны
+`~/codex-dev`, `~/.codex`, `~`. Environment имеет приоритет над device-local config; ambiguity
+fail closed. Product location не является inheritance signal: project DEV policy, Prompt Queue и
+resume bootstrap требуют explicit project-local `AGENTS.md` bridge marker.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -203,6 +215,9 @@ state, выдаёт dry-run migration plan и не запускает work пр�
 - AC-016 Brownfield compatibility adapter различает canonical/legacy/mixed/conflict/migrated/none,
   возвращает idempotent non-destructive migration plan, fail closed при конфликте и сохраняет
   прежнее поведение canonical repositories.
+- AC-017 Единый resolver проходит default/env/config/Windows tests; plain Git repository остаётся
+  DEV-disabled, marked overlay включается, installer сохраняет runtime, Prompt Queue/`Продолжай`
+  не зависят от legacy workspace path, diagnostics классифицирует legacy layout без mutations.
 
 ## 4. История изменений
 
@@ -217,3 +232,5 @@ state, выдаёт dry-run migration plan и не запускает work пр�
 - 2026-09-08 — добавлен portable Continuous Master Execution contract с deterministic graph,
   worktree routing, low-context handoff и verification/integration gates.
 - 2026-09-08 — добавлен контракт brownfield stage compatibility и retained-legacy manifest.
+- 2026-09-10 — добавлены unified path roles, explicit project DEV bridge и fail-closed migration
+  diagnostics для target layout `~/codex-dev`, `~/.codex`, `~/<project>`.

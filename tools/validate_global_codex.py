@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
 
 from tools.sync_global_skills import compare_skills
 from tools.install_global import InstallError, LEDGER_NAME, load_install_policy, load_ledger
+from tools.dev_paths import PathResolutionError, resolve_layout
 
 
 DOCUMENT_LAYOUT_POLICY_FILES = (
@@ -236,16 +237,33 @@ def validate_global_codex(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Read-only audit of the installed global Codex layer.")
     parser.add_argument(
-        "--workspace",
+        "--dev-source-root",
         type=Path,
-        default=ROOT,
-        help="canonical source root (legacy option name; default: repository containing this tool)",
+        help="compatibility assertion; must equal resolved DEV_SOURCE_ROOT",
     )
-    parser.add_argument("--codex-home", type=Path, default=Path.home() / ".codex")
+    parser.add_argument("--workspace", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument("--codex-home", type=Path, help="compatibility assertion; must equal resolved CODEX_HOME")
     parser.add_argument("--skip-skills", action="store_true", help="validate managed layer before Skill materialization")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
-    issues = validate_global_codex(args.workspace, args.codex_home, validate_skills=not args.skip_skills)
+    try:
+        layout = resolve_layout()
+        asserted_source = args.dev_source_root or args.workspace
+        if asserted_source is not None and asserted_source.expanduser().resolve() != layout.dev_source_root:
+            raise PathResolutionError("source argument must match resolved DEV_SOURCE_ROOT")
+        if args.codex_home is not None and args.codex_home.expanduser().resolve() != layout.codex_home:
+            raise PathResolutionError("--codex-home must match resolved CODEX_HOME")
+        issues = validate_global_codex(
+            layout.dev_source_root,
+            layout.codex_home,
+            validate_skills=not args.skip_skills,
+        )
+    except PathResolutionError as exc:
+        if args.json:
+            print(json.dumps({"ok": False, "issues": [{"code": "path-resolution", "path": "dev-layout", "detail": str(exc)}]}, ensure_ascii=False, indent=2))
+        else:
+            print(f"Global Codex validation failed:\n- [path-resolution] dev-layout: {exc}", file=sys.stderr)
+        return 1
     if args.json:
         print(json.dumps({"ok": not issues, "issues": [asdict(issue) for issue in issues]}, ensure_ascii=False, indent=2))
     elif issues:

@@ -14,7 +14,7 @@ py -3 .\tools\validate_global_codex.py --workspace . --codex-home ~/.codex
 На Linux/macOS используй симметричный wrapper:
 
 ```bash
-cd ~/codex-workspace/codex-dev
+cd "$DEV_SOURCE_ROOT"
 ./install-global.sh --dry-run
 ./install-global.sh
 ```
@@ -27,8 +27,8 @@ runtime namespaces не перезаписываются.
 Проверка подтверждает корректность source `MANIFEST.txt`, deterministic ownership ledger,
 соответствие installed managed files, отсутствие дубликатов путей без учёта регистра и Skill parity.
 
-Legacy option `validate_global_codex.py --workspace` принимает canonical source root, то есть
-`~/codex-workspace/codex-dev` или другой clone, а не installed `~/.codex`. Неверный root возвращает
+Option `validate_global_codex.py --dev-source-root` принимает только path, совпадающий с resolved
+`DEV_SOURCE_ROOT`, а не installed `CODEX_HOME`. Deprecated `--workspace` остаётся assertion alias. Неверный root возвращает
 структурированные
 `invalid-install-policy` issues и не завершается traceback.
 
@@ -61,7 +61,7 @@ codex execpolicy check --pretty --rules "$HOME\.codex\rules\ai-dev-team.rules" -
 ## Пробный запуск hook
 
 ```powershell
-'{"cwd":"~/codex-workspace/<project>","hook_event_name":"SessionStart","source":"startup"}' | py -3 "$HOME\.codex\hooks\session_context.py"
+'{"cwd":"~/<project>","hook_event_name":"SessionStart","source":"startup"}' | py -3 "$env:CODEX_HOME\hooks\session_context.py"
 ```
 
 Для canonical/migrated repository ожидается selected record без compatibility noise. Для
@@ -86,8 +86,9 @@ codex --ask-for-approval never "Перечисли пользовательск�
 Для read-only восстановления без старого чата выполни также:
 
 ```powershell
-py -3 "$HOME\.codex\tools\reconcile_project_framework.py" ~\codex-workspace\<project> --json
-py -3 "$HOME\.codex\tools\validate_project_overlay.py" ~\codex-workspace\<project> --json
+py -3 "$env:CODEX_HOME\tools\dev_paths.py" project <project> --json
+py -3 "$env:CODEX_HOME\tools\reconcile_project_framework.py" "$env:PROJECTS_ROOT\<project>" --json
+py -3 "$env:CODEX_HOME\tools\validate_project_overlay.py" "$env:PROJECTS_ROOT\<project>" --json
 ```
 
 Затем используй copy-ready запрос «Возобновить проект» из `docs/WORKFLOW.md`. Broken links,

@@ -1,8 +1,4 @@
-param(
-    [switch]$DryRun,
-    [string]$CodexHome = (Join-Path $HOME ".codex"),
-    [string]$SkillRuntime = (Join-Path $HOME ".agents\skills")
-)
+param([switch]$DryRun)
 
 $ErrorActionPreference = "Stop"
 $DevRoot = (Resolve-Path (Split-Path -Parent $MyInvocation.MyCommand.Path)).Path
@@ -16,10 +12,7 @@ if ([IO.Path]::GetFullPath($GitRoot) -ne [IO.Path]::GetFullPath($DevRoot)) {
 $Arguments = @(
     "-3",
     "-B",
-    (Join-Path $DevRoot "tools\install_global.py"),
-    "--source", $DevRoot,
-    "--codex-home", $CodexHome,
-    "--skills-destination", $SkillRuntime
+    (Join-Path $DevRoot "tools\install_global.py")
 )
 if ($DryRun) { $Arguments += "--dry-run" }
 

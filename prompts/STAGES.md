@@ -2,11 +2,55 @@
 
 - Stage ID: `DEV-BCSC-C`
 - Sequence: `DEV-CME-001 → DEV-BCSC-A → DEV-BCSC-B → DEV-BCSC-C`
-- NEXT: none — `DEV-BCSC-001` is completed and integrated into local `main`; await an explicitly
-  selected DEV prompt.
+- NEXT: the selected master remains completed. `DEV-PATHS-001` is a standalone direct-request
+  delta; physical moves, GitHub rename, remote update, merge and push remain explicit user operations.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
+
+## DEV-PATHS-001 — Unified DEV and product path roles (standalone delta)
+
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `validated locally`.
+- Branch: `feature/unified-dev-product-paths`; source: direct user request 2026-09-10.
+- Requirements: `FR-DPL-001..007`; acceptance: `AC-DPL-001..012` from
+  `specs/features/unified-dev-path-layout.spec.md`.
+
+### Dependencies and entry evidence
+
+`DEV-INSTALL-LAYER-001` is the completed source/installed separation baseline at `5051018`.
+The legacy source currently exists at `~/codex-workspace/codex-dev`; target `~/codex-dev` does not.
+No physical move, runtime install, GitHub mutation, merge or push is authorized by this slice.
+
+### Runnable slice and consumer scenario
+
+`tools/dev_paths.py resolve|diagnose|project|move-plan` resolves the three roles, reports their
+sources and builds read-only migration evidence. Installer/validator use the same resolver.
+SessionStart, `Продолжай` and Prompt Queue route project policy only after an exact Git root and
+explicit project-local `AGENTS.md` bridge marker are verified. A plain repository under
+`PROJECTS_ROOT` produces no DEV project bootstrap.
+
+### Scope, safety, fallback and PASS
+
+Scope: resolver/config, Windows normalization, product isolation, migration diagnostics/preflight,
+installer consumers, Prompt Queue/session bootstrap, repository identity docs and semantic audit.
+Out of scope: moving/deleting repositories, changing GitHub/remote, installing into real
+`CODEX_HOME`, merge and push. Invalid config, path escape, missing bridge, dirty/ambiguous source,
+additional worktree/submodule problem or collision fails closed. Rollback is Git revert; migration
+tooling performs no mutation.
+
+PASS requires targeted path/installer/queue/overlay tests, full unittest suite, context and global
+validators, isolated installer dry-run/apply/idempotency, wrapper syntax checks, semantic audit and
+`git diff --check`. After PASS this slice may be `verified/completed`; the actual filesystem and
+GitHub migration remains a separate user-controlled operation.
+
+Evidence: 104 targeted tests PASS with 1 expected platform skip; full 291 tests PASS with 6
+expected platform skips; 251-file context manifest PASS; isolated installer dry-run, rollback
+guard, apply, repeat idempotency, nine-Skill parity and global validator PASS; PowerShell and Git
+Bash syntax PASS; semantic active-reference audit and staged diff check PASS. Actual diagnostics
+detect legacy source, old remote and product roots; no repository was moved or deleted.
+
+NEXT: user-controlled physical/GitHub migration only after reported blockers are resolved. No
+additional implementation slice is inferred; merge and push remain approval-gated.
 
 ## DEV-BCSC-A — Detection + Dry-Run Compatibility Plan
 

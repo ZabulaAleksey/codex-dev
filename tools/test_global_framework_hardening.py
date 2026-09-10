@@ -79,8 +79,10 @@ class GlobalFrameworkHardeningTests(unittest.TestCase):
         for content in (powershell, bash):
             self.assertIn("tools", content)
             self.assertIn("install_global.py", content)
-            self.assertIn("--source", content)
-            self.assertIn("--codex-home", content)
+            self.assertNotIn("--source", content)
+            self.assertNotIn("--codex-home", content)
+        self.assertIn("resolve_layout()", engine)
+        self.assertIn("resolved DEV_SOURCE_ROOT", engine)
         self.assertLess(
             install_body.index("run_validators(source_root, codex_home, True"),
             install_body.index("runner(sync_skills_command"),

@@ -7,11 +7,13 @@
 
 ## 1. Канонические границы
 
-- Canonical Git-managed DEV source находится в `~/codex-workspace/codex-dev` или другом отдельном
-  пользовательском source path. `~/.codex` — только installed active Codex home layer и runtime
-  state; он не является canonical Git working tree.
-- Product repositories — независимые Git roots `~/codex-workspace/<project>`; каждый top-level
-  product-каталог является отдельным repository.
+- Global DEV source repository разрешается через `DEV_SOURCE_ROOT`; current canonical default —
+  `~/codex-dev`. Active Codex runtime/user layer разрешается через `CODEX_HOME`; current default —
+  `~/.codex`, и это не canonical Git working tree.
+- Product repositories — независимые Git roots `${PROJECTS_ROOT}/<project>`; current default
+  `PROJECTS_ROOT=~`. Filesystem location не означает global DEV policy inheritance. Product
+  принимает DEV только через project-local `AGENTS.md` bridge с exact marker
+  `Global DEV bridge: enabled`.
 - Versioned Skills: `<dev-root>/skill-sources`; `~/.agents/skills` — только hash-verified runtime
   materialization, не второй source of truth. `skill-sources` не копируется в `~/.codex`.
 - Runtime state Codex, credentials, sessions, cache, plugins и active `~/.codex/config.toml` не
@@ -247,6 +249,9 @@ checkpoint, синхронизируй overall master state/NEXT и автома
 
 Для явно запущенного queue prompt применяй `~/.codex/rules/prompt-queue-lifecycle.md`
 и read-only guard `~/.codex/tools/prompt_queue.py` до любой cleanup mutation.
+Plain repository без explicit DEV bridge не подключай к Prompt Queue и не интерпретируй команду
+`Продолжай` как global DEV resume. Project name/path разрешай через `tools/dev_paths.py`, а не через
+предполагаемый workspace path.
 
 Для идей/backlog/requirements из Notion используй connected Notion и `dev-karkas` workflow.
 Сначала найди project mapping и проверь code, AGENTS, SPEC, DESIGN, ROADMAP,

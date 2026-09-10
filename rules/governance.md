@@ -40,7 +40,9 @@ recommendation существующему runtime router и не подменя�
 3. Notion, Airtable, Eraser, Figma, презентации и чаты не переопределяют repository truth. Они
    являются derived projections, кроме узкого внешнего артефакта, которому project mapping явно
    назначил собственную роль и направление синхронизации.
-4. Product repository располагается непосредственно в `~/codex-workspace/<project>` и не зависит от абсолютного пути. Scripts определяют root через Git или эквивалентный безопасный механизм.
+4. Product repository разрешается как `${PROJECTS_ROOT}/<project>` и является независимым Git
+   root. `PROJECTS_ROOT` используется только для discovery: policy inheritance требует explicit
+   project-local `AGENTS.md` marker `Global DEV bridge: enabled`.
 5. Critical context должен восстанавливаться после clone/pull без старого чата и machine-local файлов.
 
 ### Матрица ответственности
@@ -357,9 +359,9 @@ checks и обнови current record/NEXT в `prompts/STAGES.md` только �
 перенесённым на другое устройство, а handoff получает явный blocker.
 
 На другом устройстве сначала восстанови/обнови canonical Git repository глобального ДЕВ в
-`~/codex-workspace/codex-dev` или другом source path, выполни штатные install/validation и Skill
-parity checks в отдельный installed `~/.codex`, затем clone/pull нужного
-`~/codex-workspace/<project>`. После проверки branch/status восстанови dependencies и локальные
+`DEV_SOURCE_ROOT` (default `~/codex-dev`), выполни штатные install/validation и Skill parity checks
+в отдельный installed `CODEX_HOME` (default `~/.codex`), затем clone/pull нужного
+`${PROJECTS_ROOT}/<project>`. После проверки branch/status и explicit DEV bridge восстанови dependencies и локальные
 secrets штатными механизмами проекта, прочитай context по `docs/CONTEXT_POLICY.md` и продолжай
 только после согласования локального состояния с repository evidence. История чата и ручное
 копирование отдельных файлов не являются recovery path.

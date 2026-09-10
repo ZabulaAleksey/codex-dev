@@ -182,7 +182,8 @@ class StageCompletionPolicyTests(unittest.TestCase):
         return output["hookSpecificOutput"]["additionalContext"]
 
     def create_stage_repo(self, root: Path) -> None:
-        (root / ".git").mkdir()
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        (root / "AGENTS.md").write_text("Global DEV bridge: enabled\n", encoding="utf-8")
         (root / "docs").mkdir()
         (root / "prompts").mkdir()
 

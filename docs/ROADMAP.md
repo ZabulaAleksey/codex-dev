@@ -1,5 +1,20 @@
 # Roadmap AI Dev Team
 
+## Текущий internal delta — unified DEV/product path roles
+
+`DEV-PATHS-001` переносит active architecture на единый layout
+`DEV_SOURCE_ROOT=~/codex-dev`, `CODEX_HOME=~/.codex`, `PROJECTS_ROOT=~`, сохраняя logical role
+abstraction. Один resolver владеет env/local-config/default precedence, normalization, project
+lookup, explicit `AGENTS.md` bridge и migration diagnostics. Installer, global validator,
+SessionStart/`Продолжай` и Prompt Queue потребляют resolver. Plain repositories не наследуют DEV
+project policy по filesystem location. Physical repository moves, GitHub rename, remote update,
+real runtime install, merge и push остаются отдельными approval-gated действиями. Acceptance
+принадлежит `specs/features/unified-dev-path-layout.spec.md`; current execution record —
+`prompts/STAGES.md`. Implementation locally validated: 104 targeted tests PASS (1 expected skip),
+full 291 tests PASS (6 expected skips), 251-file manifest PASS, isolated installer
+dry-run/apply/idempotency + global validator PASS, both wrapper syntax checks and diff check PASS.
+Real diagnostics report migration blockers; no source/product/runtime/remote mutation performed.
+
 ## Текущий internal delta — DEV source → installed Codex home
 
 `DEV-INSTALL-LAYER-001` разделяет canonical DEV Git source и installed `~/.codex`. Scope:
