@@ -11,7 +11,7 @@ SPEC, долговременный порядок — `docs/ROADMAP.md`, archite
 
 ## DEV-PATHS-001 — Unified DEV and product path roles (standalone delta)
 
-- Status: `partial`; Lifecycle: `in_progress`; Evidence level: `validated locally`.
+- Status: `partial`; Lifecycle: `in_progress`; Evidence level: `validated locally + physical source verified`.
 - Branch: `feature/unified-dev-product-paths`; source: direct user request 2026-09-10.
 - Requirements: `FR-DPL-001..008`; acceptance: `AC-DPL-001..013` from
   `specs/features/unified-dev-path-layout.spec.md`.
@@ -46,14 +46,20 @@ validators, isolated installer dry-run/apply/idempotency, wrapper syntax checks,
 `git diff --check`. After PASS this slice may be `verified/completed`; the actual filesystem and
 GitHub migration remains a separate user-controlled operation.
 
-Current evidence: 128 targeted tests PASS with 2 expected platform skips; full 301 tests PASS with
+Current evidence: 129 targeted tests PASS with 2 expected platform skips; full 302 tests PASS with
 6 expected platform skips; 266-file context manifest PASS; isolated installer dry-run, apply,
 repeat idempotency, nine-Skill parity and global validator PASS; PowerShell and Git Bash bootstrap
-syntax PASS; staged diff check PASS. Physical migration verification remains pending.
+syntax PASS; staged diff check PASS. An independent canonical clone now exists at `~/codex-dev` on
+the same feature HEAD; `git fsck`, fetch, exact root, clean status and remote read-back passed. The
+legacy source checkout remains retained. Product moves were skipped: `math-morph` is dirty and
+both discovered MathMorph roots have tracked legacy path references plus ambiguous legacy DEV
+signals without a structured marker. Real `CODEX_HOME` dry-run passed, but apply hit the existing
+shell-environment security validator and rolled back completely; no ledger/pending transaction or
+managed file remained.
 
-NEXT: checkpoint the verified implementation, run controlled source/product preflight and
-materialization, then record post-migration Git identity. GitHub rename, merge and push remain
-approval-gated.
+NEXT: resolve the protected active-config security blocker, explicitly classify/adopt or retain
+the MathMorph repositories, and perform the GitHub repository rename. Product move, remote update,
+merge and push remain approval-gated; legacy paths remain retained.
 
 ## DEV-BCSC-A — Detection + Dry-Run Compatibility Plan
 

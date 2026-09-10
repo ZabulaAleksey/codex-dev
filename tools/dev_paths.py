@@ -62,6 +62,8 @@ class ProjectState:
     bridge: str
     marker: str
     marker_issue: str
+    adoption_classification: str
+    legacy_dev_signals: tuple[str, ...]
     dev_source_root: str
 
 
@@ -278,6 +280,21 @@ def has_dev_bridge(project: Path) -> bool:
     return True
 
 
+def _legacy_dev_signals(project: Path) -> tuple[str, ...]:
+    signals: list[str] = []
+    agents = project / "AGENTS.md"
+    if agents.is_file():
+        try:
+            content = agents.read_text(encoding="utf-8-sig", errors="replace").casefold()
+            if "~/.codex/" in content or "global dev" in content:
+                signals.append("agents_global_dev_reference")
+        except OSError:
+            signals.append("agents_unreadable")
+    if (project / "prompts/STAGES.md").is_file() and (project / "docs/CONTEXT_COMPATIBILITY.md").is_file():
+        signals.append("full_overlay_shape")
+    return tuple(signals)
+
+
 def inspect_project(path: Path, layout: DevLayout) -> ProjectState:
     resolved = path.expanduser().resolve(strict=False)
     exists = resolved.is_dir()
@@ -299,6 +316,8 @@ def inspect_project(path: Path, layout: DevLayout) -> ProjectState:
     enabled = git_repo and bridge != "none"
     if bridge == "invalid_dev_project_marker":
         enabled = False
+    legacy_signals = _legacy_dev_signals(resolved) if exists and not is_source else ()
+    adoption = "dev-managed" if enabled else "ambiguous" if legacy_signals else "standalone"
     return ProjectState(
         path=str(resolved),
         exists=exists,
@@ -308,6 +327,8 @@ def inspect_project(path: Path, layout: DevLayout) -> ProjectState:
         bridge=bridge,
         marker=str(marker),
         marker_issue=marker_issue,
+        adoption_classification=adoption,
+        legacy_dev_signals=legacy_signals,
         dev_source_root=str(layout.dev_source_root),
     )
 

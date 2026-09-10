@@ -11,10 +11,13 @@ SessionStart/`Продолжай` и Prompt Queue потребляют resolver.
 project policy по filesystem location. Controlled physical migration follows the attached delta;
 GitHub rename, remote update, real runtime install, merge и push остаются approval-gated. Acceptance
 принадлежит `specs/features/unified-dev-path-layout.spec.md`; current execution record —
-`prompts/STAGES.md`. Bootstrap implementation locally validated: 128 targeted tests PASS (2
-expected skips), full 301 tests PASS (6 expected skips), 266-file manifest PASS, isolated installer
+`prompts/STAGES.md`. Bootstrap implementation locally validated: 129 targeted tests PASS (2
+expected skips), full 302 tests PASS (6 expected skips), 266-file manifest PASS, isolated installer
 dry-run/apply/idempotency + global validator PASS, both wrapper syntax checks and diff check PASS.
-Physical migration and its post-move verification remain the next controlled step.
+Canonical `~/codex-dev` has been materialized and Git-verified while the legacy checkout remains.
+Products remain unmoved because preflight found dirty/legacy-reference/ambiguous-adoption blockers;
+real `CODEX_HOME` apply rolled back on its pre-existing shell-environment security gate. GitHub
+rename, product decisions, runtime-config remediation, merge and push remain explicit next steps.
 
 ## Текущий internal delta — DEV source → installed Codex home
 

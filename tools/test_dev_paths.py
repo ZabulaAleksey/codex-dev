@@ -128,6 +128,7 @@ class ProjectIsolationTests(unittest.TestCase):
         self.assertTrue(state.git_repo)
         self.assertEqual("disabled", state.dev_integration)
         self.assertEqual("none", state.bridge)
+        self.assertEqual("standalone", state.adoption_classification)
 
     def test_generic_agents_file_is_not_an_explicit_bridge(self) -> None:
         root = self._repo("generic-agents")
@@ -149,7 +150,16 @@ class ProjectIsolationTests(unittest.TestCase):
         self.assertEqual("enabled", state.dev_integration)
         self.assertTrue(state.dev_managed)
         self.assertEqual("dev_project_marker", state.bridge)
+        self.assertEqual("dev-managed", state.adoption_classification)
         self.assertEqual(str(self.layout.dev_source_root), state.dev_source_root)
+
+    def test_legacy_global_reference_is_ambiguous_but_disabled(self) -> None:
+        root = self._repo("ambiguous")
+        (root / "AGENTS.md").write_text("Read ~/.codex/AGENTS.md before work.\n", encoding="utf-8")
+        state = inspect_project(root, self.layout)
+        self.assertEqual("ambiguous", state.adoption_classification)
+        self.assertFalse(state.dev_managed)
+        self.assertEqual("disabled", state.dev_integration)
 
     def test_invalid_structured_marker_fails_closed(self) -> None:
         root = self._repo("invalid-marker")

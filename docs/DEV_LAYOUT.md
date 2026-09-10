@@ -66,8 +66,10 @@ py -3 -B "$env:DEV_SOURCE_ROOT\tools\dev_paths.py" move-plan math-morph --json
 ```
 
 `move-plan` is read-only. A safe recommendation requires an exact Git root, known clean status,
-known branch, checked remotes, no nested repositories, no additional worktrees, checked clean
-submodules and no destination collision. After a user-reviewed move, verify the new Git root,
+known branch/HEAD/untracked state, checked remotes, no nested repositories, no additional
+worktrees, checked clean submodules, no unresolved tracked legacy path references and no
+destination collision. Diagnostics separately classify a project as `dev-managed`, `standalone`
+or `ambiguous`; ambiguous legacy signals never enable DEV. After a user-reviewed move, verify the new Git root,
 branch/status and remotes using the emitted commands. Keep the legacy repository until that
 verification is complete; archive/deletion always requires a separate explicit decision.
 
