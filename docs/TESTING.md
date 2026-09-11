@@ -107,6 +107,12 @@ advisory-only retirement attestations.
 совместимость workspaces без registry. Тестовые команды из metadata остаются данными и никогда не
 исполняются pipeline или validator-ом.
 
+Final `DEV-SEP-F` evidence: acceptance `AC-SEP-A..L` PASS; 54 SEP tests PASS with one expected
+Windows symlink skip; full suite 358 PASS with seven expected platform skips; context validator
+270 files PASS; direct Windows CLI help and `git diff --check` PASS. Independent correctness and
+security reviews PASS. Это local feature-branch evidence; merge и active-runtime materialization
+не выполнялись.
+
 `tools.test_install_global` использует только temporary source/home roots и проверяет separate
 source, populated runtime preservation, manifest allowlist, ledger-governed stale deletion,
 unknown/protected collisions, Skill routing, zero-write dry-run, rollback, validator order,

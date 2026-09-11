@@ -2,14 +2,16 @@
 
 ## Текущий master — Specification → Execution Pipeline
 
-`DEV-SEP-001` расширяет Continuous Master Execution stage-first capability/Skill routing,
+`DEV-SEP-001` completed locally at implementation checkpoint `a715f2e`: all slices
+`DEV-SEP-A..F` are verified. It extends Continuous Master Execution with stage-first capability/Skill routing,
 requirement/evidence trace, deterministic-first execution и evidence-driven automation promotion.
 Canonical owners не меняются: SPEC хранит behavior, architecture/ADR — boundaries/decisions,
 selected `prompts/STAGES.md` — единственное execution state, Prompt Queue — cleanup guard, profiler —
 optional observations. Progressive chain `DEV-SEP-A..F` начинает с contract/audit, затем добавляет
 один bounded stdlib-only core и metadata-only Skill registry, trace/placement validation,
 promotion lifecycle, diagnostics/retirement preflight и final compatibility audit. Product rollout,
-runtime install, automatic promotion/tuning, merge и push не входят в automatic execution.
+automatic promotion/tuning and push did not run. Merge and active-runtime materialization remain
+explicit integration actions; the retained Notion master is not cleanup-eligible.
 
 ## Текущий internal delta — unified DEV/product path roles
 

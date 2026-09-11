@@ -258,3 +258,5 @@ no destructive data rollback is required.
 ## 10. History
 
 - 2026-09-11 — v1: approved Notion master compiled into bounded requirements and progressive graph.
+- 2026-09-11 — `DEV-SEP-A..F` implemented and verified locally at checkpoint `a715f2e`;
+  integration and active-runtime materialization remain explicitly pending.
