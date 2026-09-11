@@ -17,15 +17,22 @@ project-local `.codex/dev-project.toml`. AGENTS declaration alone недоста
 
 ## Порядок загрузки
 
-1. Ближайший относящийся к задаче `AGENTS.md` / `AGENTS.override.md`.
-2. Одно правило режима и только активные фрагменты SDLC, домена и стека.
-3. Затрагиваемые требования и критерии приёмки из SPEC.
-4. Только выбранный stage record из `prompts/STAGES.md`, если задача относится к stage.
-5. Релевантные разделы `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md` и `SECURITY.md`.
-6. Целевой код, тесты и diff; current plan/status уже входят в selected STAGES record.
+1. Применимые global и ближайшие project/module `AGENTS.md` / rules.
+2. Project overlay/bootstrap/router entrypoint.
+3. Live Git state, current selector и только выбранный `prompts/STAGES.md` record.
+4. Current slice contract и его requirement IDs.
+5. Только затрагиваемые требования/acceptance из SPEC.
+6. Только относящаяся architecture/ADR boundary.
+7. Router-selected Skills из `skill-sources/registry.toml`; full Skill загружается on demand.
+8. Target/dependency code, targeted validators/tests и predecessor evidence/blockers.
 
 Не загружай по умолчанию все stages целиком, полные исторические roadmap, все fixtures/references,
 старые generated reports и общие правила, уже унаследованные проектом.
+
+Full repository/master scan допустим только с reason
+`unknown_ownership | architecture_drift | contract_conflict | final_audit |
+unknown_regression | explicit_user_request | targeted_path_failed`. Context-economy diagnostics
+фиксируют IDs/counts и route facts, но не prompt/code/output/secrets.
 
 Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `prompts/STAGES.md`;
 тот же ID должен быть отдельным token ровно одного Markdown heading в этом же файле.

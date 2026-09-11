@@ -850,6 +850,135 @@ def transition_candidate(
     return result
 
 
+def analyze_context_economy(raw: Mapping[str, Any]) -> dict[str, Any]:
+    """Diagnose a bounded slice summary without collecting prompts, code, or token estimates."""
+    keys = {
+        "context_sources", "skills_loaded", "skills_used", "full_repo_scan",
+        "full_repo_scan_reason", "full_master_load", "full_master_load_reason",
+        "automation_reused", "reasoning_fallback", "model_class", "executor_route",
+        "live_state_source", "repeated_manual_procedure",
+    }
+    data = _mapping(raw, "context_economy", allowed=keys, required=keys)
+    sources = _string_list(data["context_sources"], "context_sources", identifiers=True)
+    loaded = _string_list(data["skills_loaded"], "skills_loaded", identifiers=True)
+    used = _string_list(data["skills_used"], "skills_used", identifiers=True)
+    automation = _string_list(data["automation_reused"], "automation_reused", identifiers=True)
+    if not set(used).issubset(loaded):
+        raise SpecExecutionError("used Skill was not loaded", "invalid_skill_usage")
+    for name in ("full_repo_scan", "full_master_load", "repeated_manual_procedure"):
+        if not isinstance(data[name], bool):
+            raise SpecExecutionError(f"{name} must be boolean")
+    repo_reason = _text(data["full_repo_scan_reason"], "full_repo_scan_reason", required=False, limit=64)
+    master_reason = _text(data["full_master_load_reason"], "full_master_load_reason", required=False, limit=64)
+    if repo_reason and repo_reason not in FULL_SCAN_REASONS:
+        raise SpecExecutionError("unsupported full_repo_scan_reason")
+    if master_reason and master_reason not in FULL_SCAN_REASONS:
+        raise SpecExecutionError("unsupported full_master_load_reason")
+    fallback = _text(data["reasoning_fallback"], "reasoning_fallback", required=False, limit=MAX_OBSERVATION)
+    model_class = _text(data["model_class"], "model_class", limit=16)
+    if model_class not in {"LOW", "MEDIUM", "HIGH", "FRONTIER"}:
+        raise SpecExecutionError("unsupported model_class")
+    executor_route = _identifier(data["executor_route"], "executor_route")
+    live_state_source = _text(data["live_state_source"], "live_state_source", limit=16)
+    if live_state_source not in {"live_repo", "handoff", "chat", "unknown"}:
+        raise SpecExecutionError("unsupported live_state_source")
+    issues = [f"unused_skill:{skill}" for skill in sorted(set(loaded) - set(used))]
+    if data["full_repo_scan"] and not repo_reason:
+        issues.append("unjustified_full_repo_scan")
+    if data["full_master_load"] and not master_reason:
+        issues.append("unjustified_full_master_load")
+    if live_state_source != "live_repo":
+        issues.append("stale_or_unverified_state_source")
+    if model_class == "FRONTIER" and executor_route in {
+        "deterministic_tool", "deterministic_validator", "skill_with_deterministic_executor"
+    }:
+        issues.append("strongest_model_for_deterministic_route")
+    if data["repeated_manual_procedure"] and not automation:
+        issues.append("repeated_manual_without_automation")
+    return {
+        "schema_version": 1,
+        "status": "review" if issues else "pass",
+        "context_source_count": len(sources),
+        "skills_loaded": list(loaded),
+        "skills_used": list(used),
+        "automation_reused": list(automation),
+        "reasoning_fallback_used": bool(fallback),
+        "model_class": model_class,
+        "executor_route": executor_route,
+        "issues": sorted(issues),
+        "raw_content_recorded": False,
+    }
+
+
+def retirement_preflight(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) -> dict[str, Any]:
+    """Recommend a safe two-phase retirement; never delete source or runtime materialization."""
+    data = _mapping(
+        raw,
+        "retirement",
+        allowed={
+            "skill_id", "live_consumers", "required_capabilities", "replacement_id",
+            "replacement_verified", "source_digest", "runtime_digest",
+        },
+        required={
+            "skill_id", "live_consumers", "required_capabilities", "replacement_id",
+            "replacement_verified", "source_digest", "runtime_digest",
+        },
+    )
+    skill_id = _identifier(data["skill_id"], "retirement.skill_id")
+    by_id = {item.id: item for item in registry}
+    skill = by_id.get(skill_id)
+    if skill is None:
+        raise SpecExecutionError("unknown retirement Skill", "unknown_skill")
+    consumers = _string_list(data["live_consumers"], "retirement.live_consumers", identifiers=True)
+    required = _string_list(
+        data["required_capabilities"], "retirement.required_capabilities", identifiers=True
+    )
+    replacement_id = _text(
+        data["replacement_id"], "retirement.replacement_id", required=False, limit=128
+    )
+    replacement = None
+    if replacement_id:
+        replacement = by_id.get(_identifier(replacement_id, "retirement.replacement_id"))
+        if replacement is None:
+            raise SpecExecutionError("unknown retirement replacement", "unknown_replacement")
+    if not isinstance(data["replacement_verified"], bool):
+        raise SpecExecutionError("replacement_verified must be boolean")
+    source_digest = _text(data["source_digest"], "retirement.source_digest", limit=128)
+    runtime_digest = _text(data["runtime_digest"], "retirement.runtime_digest", limit=128)
+    issues: list[str] = []
+    action = "retirement_candidate"
+    if skill.status == "retired":
+        action = "already_retired"
+    elif skill.status == "active":
+        issues.append("deprecate_first")
+        action = "deprecate_first"
+    if consumers:
+        issues.extend(f"live_consumer:{consumer}" for consumer in consumers)
+    if source_digest != runtime_digest:
+        issues.append("source_runtime_digest_mismatch")
+    relevant = set(skill.capabilities).intersection(required)
+    if relevant:
+        if replacement is None:
+            issues.append("sole_required_capability_owner")
+        elif replacement.status != "active" or not data["replacement_verified"]:
+            issues.append("replacement_not_verified")
+        elif not relevant.issubset(set(replacement.capabilities)):
+            issues.append("replacement_missing_capability")
+    status = "already_retired" if action == "already_retired" and not issues else (
+        "eligible" if not issues else "blocked"
+    )
+    return {
+        "schema_version": 1,
+        "status": status,
+        "action": action,
+        "skill_id": skill_id,
+        "replacement_id": replacement_id or None,
+        "issues": sorted(issues),
+        "write_authorized": False,
+        "deletion_authorized": False,
+    }
+
+
 def _read_json(path: Path) -> Mapping[str, Any]:
     if not path.is_file() or path.stat().st_size > MAX_INPUT_BYTES:
         raise SpecExecutionError("input is missing or oversized")
@@ -885,6 +1014,12 @@ def build_parser() -> argparse.ArgumentParser:
     promotion.add_argument("--registry", type=Path, required=True)
     promotion.add_argument("--source-root", type=Path)
     promotion.add_argument("--input", type=Path, required=True)
+    context = commands.add_parser("context-diagnostics", help="check lightweight context economy signals")
+    context.add_argument("--input", type=Path, required=True)
+    retirement = commands.add_parser("retirement", help="preflight a two-phase Skill retirement")
+    retirement.add_argument("--registry", type=Path, required=True)
+    retirement.add_argument("--source-root", type=Path)
+    retirement.add_argument("--input", type=Path, required=True)
     return parser
 
 
@@ -913,13 +1048,19 @@ def main(argv: Iterable[str] | None = None) -> int:
             output = decide_placement(global_capabilities, _read_json(args.input))
         elif args.command == "opportunity":
             output = detect_opportunity(_read_json(args.input))
-        else:
+        elif args.command == "promotion":
             registry = load_registry(args.registry, args.source_root)
             global_capabilities = sorted({
                 capability for item in registry if item.scope == "global"
                 for capability in item.capabilities
             })
             output = decide_promotion(global_capabilities, _read_json(args.input))
+        elif args.command == "context-diagnostics":
+            output = analyze_context_economy(_read_json(args.input))
+        else:
+            output = retirement_preflight(
+                load_registry(args.registry, args.source_root), _read_json(args.input)
+            )
     except SpecExecutionError as exc:
         print(json.dumps({"ok": False, "error": str(exc), "error_code": exc.code},
                          sort_keys=True, ensure_ascii=False))

@@ -94,6 +94,26 @@ profiler.
 Эти формулировки — операционная проекция `rules/governance.md`. Они не создают новый источник
 требований и не отменяют более локальный project `AGENTS.md`.
 
+### Минимальные entrypoints
+
+```text
+Продолжай <project/master>.
+```
+
+означает `CONTINUE_EXISTING`: разрешить project через `dev_paths.py`, восстановить live Git и
+selected STAGES/CME state, затем выполнить unique safe slice через `spec_execution.py` route.
+Исторический handoff уступает live repository. Новая user constraint является delta и не требует
+повторения infrastructure prompt.
+
+```text
+Новый проект: <name>.
+Цель: <product goal>.
+```
+
+означает `NEW_PROJECT`: до КАРКАС bootstrap явно выбрать ровно один intake class — `GREENFIELD`,
+`COMPOSITION`, `FORK_EXTERNAL_REPOSITORY` или `MIGRATION_ADOPTION_EXISTING_CODEBASE`. Ambiguity
+даёт `needs_decision`; global capabilities не копируются в project overlay.
+
 ### Начать работу с проектом
 
 ```text
@@ -133,6 +153,10 @@ condition. При context overflow создай compact durable handoff. Не me
 очищай partial master. Не спрашивай о merge после внутренних slices; запрос нужен только на
 integration/finalization boundary.
 ```
+
+После live slice resolution выбери capabilities/Skills через registry, выполни trace/evidence gate
+и короткий Automation Promotion Review. Не передавай downstream полный master, весь Skill catalog
+или old chat, если targeted path достаточен.
 
 ### Завершить stage
 

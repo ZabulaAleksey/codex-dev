@@ -65,6 +65,11 @@ Execution из `rules/governance.md` и deterministic `tools/master_execution.py
 backward-complete slices. Останавливайся только по canonical stop condition; checkpoint commit сам
 по себе не stop. Invalid/stale graph, launcher или adapter facts дают visible fail-closed outcome.
 
+После разрешения live stage используй `skill-sources/registry.toml` и bounded
+`tools/spec_execution.py` для relevant-only Skill/capability route, trace/placement gates и
+Automation Promotion Review. Не загружай Skills до известного stage/scope и не превращай
+registry/decision в автоматическое исполнение commands или policy/model mutation.
+
 ## 3. Обязательные cross-cutting routes
 
 - Structure, lifecycle, source ownership, stages, documentation/evidence, tool boundaries:
@@ -79,6 +84,8 @@ backward-complete slices. Останавливайся только по canonic
   project context не определяет product language/locale.
 - Дорогие AI-policies, agent/retrieval/reuse contours, experiments и human handoff economics:
   `~/.codex/rules/ai-policy-profiling.md`; opt-in Observe предшествует tuning.
+- Stage-first capability/Skill routing, traceability, context economy и automation promotion:
+  `specs/features/specification-execution-pipeline.spec.md` и `tools/spec_execution.py`.
 - Global/project КАРКАС, audit, plans/status/roadmap/stages, Notion ideas и synchronization:
   Skill `dev-karkas` и только нужные references.
 

@@ -88,6 +88,19 @@ Evidence levels: L1 static/type/lint, L2 unit, L3 component/integration, L4 real
 concurrency, L5 browser/UI/runtime, L6 external/manual acceptance. Higher-risk claim требует
 соответствующего real level; synthetic evidence не повышается автоматически.
 
+## Specification → Execution contract
+
+`tools.test_spec_execution` проверяет compact intake, exact четыре класса нового проекта,
+metadata-only Skill routing, cheapest sufficient executor, requirement/capability/evidence trace,
+placement, automation candidate lifecycle, context-economy diagnostics и two-phase Skill
+retirement preflight. Negative fixtures покрывают duplicate/unknown/oversized input, ambiguous
+capability ownership, stale state, unjustified full scan, unused Skill и попытку убрать
+единственного владельца обязательной capability.
+
+`tools.test_validate_global_codex` дополнительно проверяет semantic registry validation и
+совместимость workspaces без registry. Тестовые команды из metadata остаются данными и никогда не
+исполняются pipeline или validator-ом.
+
 `tools.test_install_global` использует только temporary source/home roots и проверяет separate
 source, populated runtime preservation, manifest allowlist, ledger-governed stale deletion,
 unknown/protected collisions, Skill routing, zero-write dry-run, rollback, validator order,

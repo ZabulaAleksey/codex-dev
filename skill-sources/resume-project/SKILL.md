@@ -13,7 +13,9 @@ description: Возобновить работу в существующем р�
 5. Укажи текущий этап, действительно завершённую работу, блокеры и одну лучшую следующую задачу.
 6. Если selected record содержит `master-execution`, сверь embedded state revision/checkpoint с
    Git/worktree/source revision через `tools/master_execution.py`. Stale launcher, dirty/unknown
-   state или missing evidence дают reconciliation/handoff, не предполагаемый progress.
+   state или missing evidence дают reconciliation/handoff, не предполагаемый progress. После exact
+   stage/scope resolution используй `skill-sources/registry.toml` и `tools/spec_execution.py route`
+   для metadata-only выбора capabilities/Skills; не загружай весь Skill catalog при gap/ambiguity.
 7. Не приступай к реализации, если пользователь не попросил её продолжить. Один явный запуск
    master уже разрешает автоматическое продолжение его однозначных безопасных внутренних slices.
 8. Если реализация запрошена, передай работу процессу `$implement-stage`.

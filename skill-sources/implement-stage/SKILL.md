@@ -5,7 +5,7 @@ description: Полностью реализовать один заранее �
 
 1. Прочитай `AGENTS.md`, current selector и exact record из `prompts/STAGES.md`,
    `docs/ARCHITECTURE.md` и `specs/README.md`.
-2. Найди относящуюся к этапу SPEC и её критерии приёмки. Для новой существенной `STANDARD` или `COMPLEX` функциональности не начинай реализацию без SPEC.
+2. Найди относящуюся к этапу SPEC и её критерии приёмки. Для новой существенной `STANDARD` или `COMPLEX` функциональности не начинай реализацию без SPEC. После exact stage/scope resolution используй `skill-sources/registry.toml` и `tools/spec_execution.py route` для requirement → capability → required Skill/tool/validator metadata; затем полностью прочитай только выбранные Skills. Route не авторизует model, command или write action.
 3. Если ограниченного плана нет, сначала запусти процесс планирования.
 4. До кода проверь Stage contract из `~/.codex/rules/governance.md`: все DAG-prerequisites завершены, входные предпосылки доступны, primary vertical slice запускается без future stage, а concrete end-to-end scenario и PASS/evidence определены.
 5. Если обязательный future component отсутствует, не реализуй ложный completion: выбери `blocked`, `scaffolded`, `implemented_unverified` или `partial` и зафиксируй точный blocker.

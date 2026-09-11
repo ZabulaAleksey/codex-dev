@@ -16,6 +16,17 @@ CLI принимает trusted executor attestations, не инструкции 
 strings и не имеет credentials. Decision привязан к source/execution/evidence digest и Git HEAD;
 stale/ambiguous read-back блокирует cleanup. Semantic DoD проверяет executor/reviewer.
 
+## Specification → Execution boundary
+
+Pipeline принимает только bounded JSON/TOML с exact fields, не интерпретирует строки как команды и
+не загружает тела нерелевантных Skills. Context diagnostics сохраняет structural signals, но не
+prompts, code, secrets или raw handoff content. Router и promotion decision не меняют executor,
+model, Git, policy, hook, Skill source, runtime materialization или внешний backlog.
+
+Skill retirement является fail-closed preflight: active Skill сначала должен стать deprecated,
+source/runtime digest обязаны совпасть, live consumers отсутствовать, а replacement — быть active,
+проверенным и покрывать обязательные capabilities. Даже успешный preflight не разрешает удаление.
+
 
 ## Границы доверия
 

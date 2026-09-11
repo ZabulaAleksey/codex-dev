@@ -136,6 +136,24 @@ Materialization является отдельным explicit two-phase дейс�
 `prompts/STAGES.md`. Legacy files сохраняются. Успех требует canonical read-back; stale state,
 unknown lock и rollback failure возвращаются как typed non-zero outcomes.
 
+## Specification → Execution Pipeline
+
+После выбора live stage `tools/spec_execution.py` компилирует компактный
+`CONTINUE_EXISTING`/`NEW_PROJECT` intake, выбирает только релевантные capabilities и Skill metadata,
+проверяет requirement → capability → evidence trace и выдаёт read-only решения по executor,
+placement, automation promotion, context economy и Skill retirement. Он не исполняет команды,
+не меняет модель, hooks, policies, Skills, Git или внешние backlog-системы.
+
+```powershell
+py -3 -B .\tools\spec_execution.py route --registry .\skill-sources\registry.toml --input .\route.json
+py -3 -B .\tools\spec_execution.py context-diagnostics --input .\context-summary.json
+py -3 -B -m unittest tools.test_spec_execution
+```
+
+Полный contract принадлежит
+`specs/features/specification-execution-pipeline.spec.md`; stage-first порядок контекста и
+promotion/retirement gates — `rules/governance.md`.
+
 ## AI Policy Profiling / Agent Economics
 
 Opt-in profiler измеряет стоимость verified outcomes, policy/experiment overhead, reusable

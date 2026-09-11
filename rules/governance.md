@@ -30,6 +30,30 @@ relevant SPEC/ADR, touched subsystem/tests и blockers. Budget overflow озна
 durable state + compact launcher/handoff, а не silent truncation. Model/reasoning metadata является
 recommendation существующему runtime router и не подменяет выбранную пользователем модель.
 
+## Specification → Execution route
+
+После exact project/live-stage resolution используй bounded metadata route:
+
+`selected stage → requirement IDs/owners → capabilities → required Skills/tools/context →
+validators/evidence → STAGES sync → Automation Promotion Review`.
+
+`skill-sources/registry.toml` — только routing metadata versioned Skill sources. Он не копирует
+Skill procedure, SPEC или architecture. `tools/spec_execution.py` выдаёт pure decisions и не
+исполняет commands, не переключает model, не пишет Git/runtime/external state и не создаёт
+automation. Missing/ambiguous capability, contract conflict, invalid placement или insufficient
+evidence fail closed; ordinary project без нового metadata остаётся на existing Stage/CME route.
+
+Default context order: applicable global rules → project overlay → live Git/current STAGES/NEXT →
+current slice → referenced SPEC requirements → referenced architecture/ADR → selected Skills →
+touched/dependency files → targeted validators/tests → predecessor evidence/blockers. Full repo,
+master, catalogs, all Skills, old chat или handoffs требуют explicit bounded reason.
+
+Global DEV владеет generic cross-project capability; project overlay хранит только domain/project
+delta; capability для нескольких близких products может жить в shared domain layer. Equivalent
+global capability переиспользуется, а не копируется. Candidate detection/promotion и Skill
+retirement остаются recommendations: promotion проходит обычный SPEC/ADR/stage/evidence workflow,
+retirement — deprecate/reference/replacement/hash preflight и отдельную authorized mutation.
+
 
 Этот документ — канонический общий контракт для структуры контекста, project lifecycle и evidence. Project `AGENTS.md` хранит только подтверждённую delta.
 

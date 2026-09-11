@@ -12,6 +12,12 @@ Selected `prompts/STAGES.md` record хранит versioned graph/track/checkpoin
 получает isolated branch/worktree. Low-context launcher восстанавливается из repository facts;
 merge/push/cleanup остаются finalization operations с отдельным разрешением.
 
+После определения live stage capability router читает metadata из
+`skill-sources/registry.toml`, а не тела всех Skills. Project overlay может объявлять только
+проверенный project/domain delta; он не копирует global procedures и не создаёт второй scheduler,
+execution state или automation backlog. Requirement → capability → evidence trace остаётся
+привязан к canonical SPEC и selected STAGES record.
+
 ## Определения
 
 **КАРКАС проекта** — минимально достаточный living contract, который переводит идею или SPEC в состояние, пригодное для безопасной поэтапной разработки. Он связывает требования, архитектурные границы, решения, план этапов, проверки и текущее состояние.

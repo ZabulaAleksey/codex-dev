@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
 from tools.sync_global_skills import compare_skills
 from tools.install_global import InstallError, LEDGER_NAME, load_install_policy, load_ledger
 from tools.dev_paths import PathResolutionError, resolve_layout
+from tools.spec_execution import SpecExecutionError, load_registry
 
 
 DOCUMENT_LAYOUT_POLICY_FILES = (
@@ -54,6 +55,24 @@ def documentation_layout_issues(workspace: Path) -> tuple[Issue, ...]:
                 )
             )
     return tuple(sorted(issues))
+
+
+def skill_registry_issues(workspace: Path) -> tuple[Issue, ...]:
+    """Validate the optional metadata registry without loading Skill procedure bodies."""
+    registry = workspace / "skill-sources" / "registry.toml"
+    if not registry.exists():
+        return ()
+    try:
+        load_registry(registry, workspace)
+    except (OSError, SpecExecutionError) as exc:
+        return (
+            Issue(
+                "invalid-skill-registry",
+                "skill-sources/registry.toml",
+                f"Skill routing metadata is invalid: {exc}",
+            ),
+        )
+    return ()
 
 
 def managed_files(workspace: Path) -> tuple[Path, ...]:
@@ -145,6 +164,7 @@ def validate_global_codex(
     if (codex_home / ".git").exists():
         issues.append(Issue("installed-home-is-git", ".git", "installed Codex home must not be a Git working tree"))
     issues.extend(documentation_layout_issues(workspace))
+    issues.extend(skill_registry_issues(workspace))
     issues.extend(installed_layer_issues(workspace, codex_home))
     if validate_skills:
         for skill_issue in compare_skills(workspace / "skill-sources", codex_home.parent / ".agents" / "skills"):

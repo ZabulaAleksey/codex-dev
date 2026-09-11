@@ -17,7 +17,12 @@ from unittest.mock import patch
 from tools.stage_compatibility import stage_routing_snapshot
 
 from tools.normalize_user_codex import ConcurrentConfigUpdateError, normalize_text, write_atomic
-from tools.validate_global_codex import documentation_layout_issues, managed_files, validate_global_codex
+from tools.validate_global_codex import (
+    documentation_layout_issues,
+    managed_files,
+    skill_registry_issues,
+    validate_global_codex,
+)
 from tools.install_global import LEDGER_NAME, ledger_bytes, load_install_policy
 
 
@@ -169,6 +174,19 @@ trust_level = "trusted"
             (workspace / "AGENTS.md").write_text("docs/notes/<topic>.md\n", encoding="utf-8")
             issues = documentation_layout_issues(workspace)
             self.assertIn("missing-document-layout-policy", {issue.code for issue in issues})
+
+    def test_optional_skill_registry_is_validated_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            registry = workspace / "skill-sources" / "registry.toml"
+            registry.parent.mkdir(parents=True)
+            registry.write_text("schema_version = 99\nskills = []\n", encoding="utf-8")
+            issues = skill_registry_issues(workspace)
+            self.assertEqual({"invalid-skill-registry"}, {issue.code for issue in issues})
+
+    def test_absent_skill_registry_preserves_legacy_workspace_compatibility(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual((), skill_registry_issues(Path(temporary)))
 
     def test_drift_is_reported(self) -> None:
         (self.codex_home / "hooks/session_context.py").write_text("drift\n", encoding="utf-8")

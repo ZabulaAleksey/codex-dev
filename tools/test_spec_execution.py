@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from dataclasses import replace
 from io import StringIO
 import json
 from pathlib import Path
@@ -73,7 +74,17 @@ class CompactIntakeTests(unittest.TestCase):
             self.assertTrue(json.loads(output.getvalue())["ok"])
 
 
-def skill_block(skill_id: str, capability: str, trigger: str, *, status: str = "active") -> str:
+def skill_block(
+    skill_id: str,
+    capability: str,
+    trigger: str,
+    *,
+    status: str = "active",
+    required_tools: tuple[str, ...] = (),
+    validation: tuple[str, ...] = ("targeted_test",),
+) -> str:
+    tools = json.dumps(list(required_tools))
+    validators = json.dumps(list(validation))
     return f'''\n[[skills]]
 id = "{skill_id}"
 source = "skill-sources/{skill_id}/SKILL.md"
@@ -83,10 +94,10 @@ capabilities = ["{capability}"]
 triggers = ["{trigger}"]
 inputs = ["selected_stage"]
 outputs = ["verified_result"]
-required_tools = []
+required_tools = {tools}
 required_context = ["selected_stage"]
 stop_conditions = ["missing_contract"]
-validation = ["targeted_test"]
+validation = {validators}
 version = "1"
 maturity = "documented_skill"
 executor_kind = "skill_only"
@@ -100,9 +111,14 @@ class RegistryAndRouterTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        ids = ("api-contract", "backend-integration", "frontend-ui", "old-seo")
+        ids = ("api-contract", "backend-integration", "database-migration", "frontend-ui", "old-seo")
         blocks = [skill_block("api-contract", "api.contract", "api"),
                   skill_block("backend-integration", "backend.integration", "backend"),
+                  skill_block(
+                      "database-migration", "database.migration", "migration",
+                      required_tools=("migration_head", "real_database"),
+                      validation=("downgrade_test", "real_database_gate", "upgrade_test"),
+                  ),
                   skill_block("frontend-ui", "frontend.ui", "frontend"),
                   skill_block("old-seo", "seo.audit", "seo", status="retired")]
         for skill_id in ids:
@@ -136,10 +152,22 @@ class RegistryAndRouterTests(unittest.TestCase):
     def test_missing_capability_is_typed_blocked_route(self):
         route = pipeline.route_skills(self.registry(), {
             "stage_id": "DEV-SEP-B", "scope": "global",
-            "required_capabilities": ["database.migration"],
+            "required_capabilities": ["search.index"],
         })
         self.assertEqual("blocked", route["status"])
-        self.assertEqual(["missing_capability:database.migration"], route["issues"])
+        self.assertEqual(["missing_capability:search.index"], route["issues"])
+
+    def test_database_migration_requires_bidirectional_and_real_database_gates(self):
+        route = pipeline.route_skills(self.registry(), {
+            "stage_id": "DEV-SEP-F", "scope": "project", "risk": "high",
+            "required_capabilities": ["database.migration"], "triggers": ["migration"],
+            "available_tools": ["migration_head"],
+        })
+        self.assertEqual("blocked", route["status"])
+        self.assertEqual(["missing_tool:real_database"], route["issues"])
+        self.assertEqual(
+            ["downgrade_test", "real_database_gate", "upgrade_test"], route["validators"]
+        )
 
     def test_incompatible_capability_owner_fails_registry(self):
         directory = self.root / "skill-sources" / "other-api"
@@ -387,6 +415,102 @@ class AutomationPromotionTests(unittest.TestCase):
         self.assertNotIn("prompt", serialized)
         self.assertNotIn("source_payload", serialized)
         self.assertFalse(candidate["write_authorized"])
+
+
+class ContextEconomyAndRetirementTests(unittest.TestCase):
+    def test_clean_bounded_route_is_clean(self):
+        result = pipeline.analyze_context_economy({
+            "context_sources": ["global_rules", "selected_stage", "SEP_SPEC"],
+            "skills_loaded": ["backend_api"], "skills_used": ["backend_api"],
+            "full_repo_scan": False, "full_repo_scan_reason": "",
+            "full_master_load": False, "full_master_load_reason": "",
+            "automation_reused": ["stage_selector"], "reasoning_fallback": "",
+            "model_class": "LOW", "executor_route": "deterministic_tool",
+            "live_state_source": "live_repo", "repeated_manual_procedure": False,
+        })
+        self.assertEqual("pass", result["status"])
+        self.assertEqual([], result["issues"])
+
+    def test_economy_reports_unused_skill_and_unjustified_scans(self):
+        result = pipeline.analyze_context_economy({
+            "context_sources": ["global_rules", "full_repository", "full_master"],
+            "skills_loaded": ["backend_api", "frontend_ui"], "skills_used": ["backend_api"],
+            "full_repo_scan": True, "full_repo_scan_reason": "",
+            "full_master_load": True, "full_master_load_reason": "",
+            "automation_reused": [], "reasoning_fallback": "", "model_class": "LOW",
+            "executor_route": "deterministic_tool", "live_state_source": "live_repo",
+            "repeated_manual_procedure": False,
+        })
+        self.assertIn("unused_skill:frontend_ui", result["issues"])
+        self.assertIn("unjustified_full_repo_scan", result["issues"])
+        self.assertIn("unjustified_full_master_load", result["issues"])
+
+    def test_economy_reports_stale_handoff_strong_model_and_repeated_manual(self):
+        result = pipeline.analyze_context_economy({
+            "context_sources": ["stale_handoff", "selected_stage"],
+            "skills_loaded": [], "skills_used": [], "full_repo_scan": False,
+            "full_repo_scan_reason": "", "full_master_load": False,
+            "full_master_load_reason": "", "automation_reused": [], "reasoning_fallback": "",
+            "model_class": "FRONTIER", "executor_route": "deterministic_tool",
+            "live_state_source": "handoff", "repeated_manual_procedure": True,
+        })
+        self.assertIn("stale_or_unverified_state_source", result["issues"])
+        self.assertIn("strongest_model_for_deterministic_route", result["issues"])
+        self.assertIn("repeated_manual_without_automation", result["issues"])
+
+    def test_retirement_blocks_live_consumers_sole_capability_and_hash_drift(self):
+        registry = self._retirement_registry()
+        base = {"skill_id": "skill-a", "live_consumers": [],
+                "required_capabilities": ["cap.one"], "replacement_id": "",
+                "replacement_verified": False, "source_digest": "same", "runtime_digest": "same"}
+        consumer = pipeline.retirement_preflight(registry, {**base, "live_consumers": ["route_1"]})
+        self.assertIn("live_consumer:route_1", consumer["issues"])
+        sole = pipeline.retirement_preflight(registry, base)
+        self.assertIn("sole_required_capability_owner", sole["issues"])
+        drift = pipeline.retirement_preflight(registry, {**base, "runtime_digest": "other"})
+        self.assertIn("source_runtime_digest_mismatch", drift["issues"])
+
+    def test_retirement_requires_deprecate_first_and_verified_replacement(self):
+        registry = self._retirement_registry(active_target=True)
+        request = {"skill_id": "skill-a", "live_consumers": [],
+                   "required_capabilities": ["cap.one"], "replacement_id": "skill-b",
+                   "replacement_verified": True, "source_digest": "same", "runtime_digest": "same"}
+        result = pipeline.retirement_preflight(registry, request)
+        self.assertEqual("blocked", result["status"])
+        self.assertIn("deprecate_first", result["issues"])
+        result = pipeline.retirement_preflight(self._retirement_registry(), request)
+        self.assertEqual("eligible", result["status"])
+        self.assertFalse(result["write_authorized"])
+
+    def test_retirement_is_idempotent_for_already_retired_skill(self):
+        registry = list(self._retirement_registry())
+        registry[0] = replace(registry[0], status="retired")
+        result = pipeline.retirement_preflight(registry, {
+            "skill_id": "skill-a", "live_consumers": [], "required_capabilities": [],
+            "replacement_id": "", "replacement_verified": False,
+            "source_digest": "same", "runtime_digest": "same"})
+        self.assertEqual("already_retired", result["status"])
+        self.assertFalse(result["write_authorized"])
+
+    @staticmethod
+    def _retirement_registry(active_target=False):
+        source = pipeline.SkillMetadata(
+            id="skill-a", source="skill-sources/skill-a/SKILL.md", scope="global",
+            status="active" if active_target else "deprecated", capabilities=("cap.one",),
+            triggers=(), inputs=(), outputs=(), required_tools=(), required_context=(),
+            stop_conditions=(), validation=(), version="1", maturity="documented_skill",
+            executor_kind="skill_only", owner="global_dev", replacement="skill-b")
+        replacement = replace(source, id="skill-b", source="skill-sources/skill-b/SKILL.md",
+                              status="active", replacement="")
+        return (source, replacement)
+
+    def test_real_registry_loads_current_skills_when_present(self):
+        path = Path(__file__).resolve().parents[1] / "skill-sources" / "registry.toml"
+        if not path.exists():
+            self.skipTest("repository registry is not present in this checkout")
+        registry = pipeline.load_registry(path, path.parent.parent)
+        self.assertGreaterEqual(len(registry), 1)
+        self.assertEqual(len(registry), len({item.id for item in registry}))
 
 
 if __name__ == "__main__":

@@ -13,6 +13,15 @@
 
 Используй минимально достаточную модель:
 
+До model route проверь deterministic-first ladder:
+
+`tool/script → validator/parser/compiler/query → Skill + deterministic executor → bounded cheap
+model → normal implementation → high reasoning → strongest available only after evidenced failure`.
+
+`tools/spec_execution.py executor` выдаёт recommendation и escalation reason, но не меняет
+выбранную пользователем модель. Failure deterministic path сохраняется как input Automation
+Promotion Review; неизвестный root cause остаётся reasoning/debugging route.
+
 | Класс задачи | Предпочтительная модель | Reasoning по умолчанию |
 |---|---|---|
 | Поиск файлов и символов, чтение документации, классификация, извлечение данных, простые преобразования, запуск и первичный анализ тестов | `gpt-5.6-luna` | `low` |
