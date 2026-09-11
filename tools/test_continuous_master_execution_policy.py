@@ -25,7 +25,8 @@ class ContinuousMasterPolicyTests(unittest.TestCase):
             self.assertIn(marker, feature)
         self.assertIn("FR-012 Continuous Master Execution", system)
         self.assertIn("AC-015", system)
-        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertEqual(schema["properties"]["schema_version"]["enum"], [1, 2])
+        self.assertIn("allOf", schema)
 
     def test_governance_and_router_define_continuous_stop_and_isolation_contract(self) -> None:
         governance = read("rules/governance.md")

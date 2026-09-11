@@ -57,6 +57,8 @@ FULL_SCAN_REASONS = {
     "explicit_user_request",
     "targeted_path_failed",
 }
+TRACE_STATUSES = {"planned", "running", "implemented_unverified", "verified", "completed"}
+EVIDENCE_LEVELS = {"L1", "L2", "L3", "L4", "L5", "L6"}
 
 SKILL_KEYS = {
     "id",
@@ -500,6 +502,171 @@ def choose_executor(raw: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _artifact_refs(value: Any, label: str) -> tuple[str, ...]:
+    refs = _string_list(value, label, required=True)
+    for ref in refs:
+        path = Path(ref)
+        if path.is_absolute() or ".." in path.parts or ref.startswith(("~", "/", "\\")):
+            raise SpecExecutionError(f"{label} contains unsafe path", "unsafe_artifact_path")
+    return refs
+
+
+def validate_trace(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate compact requirement→capability→artifact→evidence links without running checks."""
+    data = _mapping(
+        raw,
+        "trace",
+        allowed={"schema_version", "stage_id", "stage_status", "requirements"},
+        required={"schema_version", "stage_id", "stage_status", "requirements"},
+    )
+    if data["schema_version"] != 1:
+        raise SpecExecutionError("unsupported trace schema_version")
+    stage_id = _identifier(data["stage_id"], "trace.stage_id")
+    stage_status = _text(data["stage_status"], "trace.stage_status", limit=32)
+    if stage_status not in TRACE_STATUSES:
+        raise SpecExecutionError("unsupported trace stage_status")
+    rows = data["requirements"]
+    if not isinstance(rows, list) or not rows or len(rows) > MAX_ITEMS:
+        raise SpecExecutionError("trace requirements must be a non-empty bounded list")
+    capability_ids = {
+        capability
+        for item in registry
+        if item.status == "active"
+        for capability in item.capabilities
+    }
+    seen: set[str] = set()
+    issues: list[str] = []
+    normalized: list[dict[str, Any]] = []
+    row_keys = {
+        "id", "owner_component", "stage_id", "capability_ids", "implementation_files",
+        "validator_ids", "test_commands", "required_evidence", "evidence",
+    }
+    for index, raw_row in enumerate(rows):
+        row = _mapping(raw_row, f"requirements[{index}]", allowed=row_keys, required=row_keys)
+        requirement_id = _identifier(row["id"], f"requirements[{index}].id")
+        if requirement_id in seen:
+            raise SpecExecutionError(f"duplicate requirement id: {requirement_id}", "duplicate_requirement")
+        seen.add(requirement_id)
+        owner = _identifier(row["owner_component"], f"requirements[{index}].owner_component")
+        row_stage = _identifier(row["stage_id"], f"requirements[{index}].stage_id")
+        capabilities = _string_list(
+            row["capability_ids"], f"requirements[{index}].capability_ids", identifiers=True, required=True
+        )
+        files = _artifact_refs(row["implementation_files"], f"requirements[{index}].implementation_files")
+        validators = _string_list(
+            row["validator_ids"], f"requirements[{index}].validator_ids", identifiers=True
+        )
+        commands = _string_list(row["test_commands"], f"requirements[{index}].test_commands")
+        required_evidence = _string_list(
+            row["required_evidence"], f"requirements[{index}].required_evidence", required=True
+        )
+        evidence = _string_list(row["evidence"], f"requirements[{index}].evidence")
+        if any(level not in EVIDENCE_LEVELS for level in required_evidence + evidence):
+            raise SpecExecutionError("unsupported trace evidence level")
+        if row_stage != stage_id:
+            issues.append(f"stage_mismatch:{requirement_id}")
+        for capability in sorted(set(capabilities) - capability_ids):
+            issues.append(f"missing_capability:{requirement_id}:{capability}")
+        if not validators and not commands:
+            issues.append(f"missing_validator_or_test:{requirement_id}")
+        missing_evidence = sorted(set(required_evidence) - set(evidence))
+        if missing_evidence:
+            issues.append(f"missing_evidence:{requirement_id}:{','.join(missing_evidence)}")
+        if stage_status in {"verified", "completed"} and any(
+            issue.split(":")[1] == requirement_id for issue in issues if ":" in issue
+        ):
+            issues.append(f"unsupported_completion:{requirement_id}")
+        normalized.append({
+            "id": requirement_id,
+            "owner_component": owner,
+            "stage_id": row_stage,
+            "capability_ids": list(capabilities),
+            "implementation_files": list(files),
+            "validator_ids": list(validators),
+            "test_commands": list(commands),
+            "required_evidence": list(required_evidence),
+            "evidence": list(evidence),
+        })
+    return {
+        "schema_version": 1,
+        "status": "blocked" if issues else "valid",
+        "stage_id": stage_id,
+        "stage_status": stage_status,
+        "requirements": normalized,
+        "coverage_count": len(normalized),
+        "issues": sorted(set(issues)),
+        "commands_executed": False,
+    }
+
+
+def decide_placement(global_capabilities: Sequence[str], raw: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a placement/reuse decision; never materialize the capability."""
+    data = _mapping(
+        raw,
+        "placement",
+        allowed={
+            "capability_id", "semantics", "consumer_projects", "requested_scope",
+            "equivalent_global", "adapter_delta", "exception",
+        },
+        required={"capability_id", "semantics", "consumer_projects", "requested_scope"},
+    )
+    capability_id = _identifier(data["capability_id"], "placement.capability_id")
+    semantics = _text(data["semantics"], "placement.semantics", limit=16)
+    requested_scope = _text(data["requested_scope"], "placement.requested_scope", limit=16)
+    consumers = data["consumer_projects"]
+    if type(consumers) is not int or consumers < 1 or consumers > MAX_ITEMS:
+        raise SpecExecutionError("consumer_projects must be a bounded positive integer")
+    if requested_scope not in SCOPES:
+        raise SpecExecutionError("unsupported placement scope", "unknown_scope")
+    if semantics not in {"generic", "domain", "project", "unknown"}:
+        raise SpecExecutionError("unsupported capability semantics")
+    equivalent_global = _text(
+        data.get("equivalent_global", ""), "placement.equivalent_global", required=False, limit=128
+    )
+    adapter_delta = data.get("adapter_delta", False)
+    if not isinstance(adapter_delta, bool):
+        raise SpecExecutionError("adapter_delta must be boolean")
+    exception = _text(data.get("exception", ""), "placement.exception", required=False, limit=MAX_OBSERVATION)
+    known_global = {_identifier(value, "global_capability") for value in global_capabilities}
+    if equivalent_global:
+        _identifier(equivalent_global, "placement.equivalent_global")
+    duplicate = bool(equivalent_global) or (capability_id in known_global and requested_scope != "global")
+    if duplicate and not (adapter_delta and exception):
+        return {
+            "status": "blocked", "action": "reuse_global", "reason": "duplicate_global_capability",
+            "capability_id": capability_id, "recommended_scope": "global",
+            "equivalent_global": equivalent_global or capability_id, "write_authorized": False,
+        }
+    if semantics == "unknown":
+        return {
+            "status": "needs_decision", "action": "user_decision", "reason": "unknown_semantics",
+            "capability_id": capability_id, "recommended_scope": None,
+            "equivalent_global": equivalent_global or None, "write_authorized": False,
+        }
+    if duplicate and adapter_delta and exception:
+        recommended = requested_scope
+    elif semantics == "generic" and consumers >= 2:
+        recommended = "global"
+    elif semantics == "domain" and consumers >= 2:
+        recommended = "domain"
+    else:
+        recommended = "project"
+    if requested_scope != recommended and not exception:
+        status, action, reason = "blocked", "change_scope", "scope_mismatch"
+    else:
+        status, action = "ready", "place"
+        reason = "explicit_adapter_delta" if duplicate else "scope_matches_semantics"
+    return {
+        "status": status,
+        "action": action,
+        "reason": reason,
+        "capability_id": capability_id,
+        "recommended_scope": recommended,
+        "equivalent_global": equivalent_global or None,
+        "write_authorized": False,
+    }
+
+
 def _read_json(path: Path) -> Mapping[str, Any]:
     if not path.is_file() or path.stat().st_size > MAX_INPUT_BYTES:
         raise SpecExecutionError("input is missing or oversized")
@@ -521,6 +688,14 @@ def build_parser() -> argparse.ArgumentParser:
     route.add_argument("--input", type=Path, required=True)
     executor = commands.add_parser("executor", help="choose cheapest sufficient executor class")
     executor.add_argument("--input", type=Path, required=True)
+    trace = commands.add_parser("trace", help="validate requirement/capability/evidence links")
+    trace.add_argument("--registry", type=Path, required=True)
+    trace.add_argument("--source-root", type=Path)
+    trace.add_argument("--input", type=Path, required=True)
+    placement = commands.add_parser("placement", help="decide global/domain/project placement")
+    placement.add_argument("--registry", type=Path, required=True)
+    placement.add_argument("--source-root", type=Path)
+    placement.add_argument("--input", type=Path, required=True)
     return parser
 
 
@@ -534,8 +709,19 @@ def main(argv: Iterable[str] | None = None) -> int:
                 load_registry(args.registry, args.source_root),
                 _read_json(args.input),
             )
-        else:
+        elif args.command == "executor":
             output = choose_executor(_read_json(args.input))
+        elif args.command == "trace":
+            output = validate_trace(
+                load_registry(args.registry, args.source_root), _read_json(args.input)
+            )
+        else:
+            registry = load_registry(args.registry, args.source_root)
+            global_capabilities = sorted({
+                capability for item in registry if item.scope == "global"
+                for capability in item.capabilities
+            })
+            output = decide_placement(global_capabilities, _read_json(args.input))
     except SpecExecutionError as exc:
         print(json.dumps({"ok": False, "error": str(exc), "error_code": exc.code},
                          sort_keys=True, ensure_ascii=False))

@@ -42,11 +42,12 @@ TOP_KEYS = {
 MASTER_KEYS = {"id", "status", "source"}
 SOURCE_KEYS = {"backend", "queue_id", "item_id", "revision", "prompt_type", "retention"}
 TRACK_KEYS = {"id", "repository", "worktree", "branch", "checkpoint", "ownership", "status"}
-SLICE_KEYS = {
+SLICE_KEYS_V1 = {
     "id", "master_id", "title", "status", "predecessors", "dependencies", "worktree_track",
     "checkpoint_before", "checkpoint_after", "required_evidence", "evidence", "context_scope",
     "model_class", "reasoning_effort", "stop_after",
 }
+SLICE_KEYS_V2 = SLICE_KEYS_V1 | {"requirements", "capabilities"}
 BLOCKER_KEYS = {"id", "class", "status", "blocking", "owner", "evidence"}
 BUDGET_KEYS = {"max_chars", "max_items", "max_contours", "max_decisions", "max_evidence_threads"}
 INTEGRATION_KEYS = {"required", "reason"}
@@ -129,7 +130,7 @@ def _lexical_path_key(path: str | Path) -> str:
 
 def validate_state(state: Any) -> dict[str, Any]:
     state = _exact(state, TOP_KEYS, "state")
-    if type(state["schema_version"]) is not int or state["schema_version"] != 1:
+    if type(state["schema_version"]) is not int or state["schema_version"] not in {1, 2}:
         raise MasterExecutionError("unsupported schema_version")
     if type(state["state_revision"]) is not int or state["state_revision"] < 1:
         raise MasterExecutionError("invalid state_revision")
@@ -174,7 +175,7 @@ def validate_state(state: Any) -> dict[str, Any]:
         raise MasterExecutionError("invalid slices")
     slice_ids: set[str] = set()
     for raw in slices:
-        item = _exact(raw, SLICE_KEYS, "slice")
+        item = _exact(raw, SLICE_KEYS_V2 if state["schema_version"] == 2 else SLICE_KEYS_V1, "slice")
         slice_id = _identifier(item["id"], "slice id")
         if slice_id in slice_ids:
             raise MasterExecutionError("duplicate slice id")
@@ -193,6 +194,9 @@ def validate_state(state: Any) -> dict[str, Any]:
         _strings(item["required_evidence"], "required evidence", allowed=EVIDENCE)
         _strings(item["evidence"], "evidence", allowed=EVIDENCE)
         _strings(item["context_scope"], "context scope")
+        if state["schema_version"] == 2:
+            _strings(item["requirements"], "slice requirements")
+            _strings(item["capabilities"], "slice capabilities")
         if item["model_class"] not in MODEL_CLASS or item["reasoning_effort"] not in REASONING:
             raise MasterExecutionError("invalid model routing")
         if type(item["stop_after"]) is not bool:
@@ -413,7 +417,10 @@ def required_evidence_for(risk: str) -> tuple[str, ...]:
 
 
 def evidence_decision(item: dict[str, Any]) -> ExecutionDecision:
-    _exact(item, SLICE_KEYS, "slice")
+    if set(item) == SLICE_KEYS_V1:
+        _exact(item, SLICE_KEYS_V1, "slice")
+    else:
+        _exact(item, SLICE_KEYS_V2, "slice")
     if _evidence_satisfies(item):
         return ExecutionDecision("pass", "required_evidence_present", item["id"])
     missing = sorted(set(item["required_evidence"]) - set(item["evidence"]),

@@ -9,8 +9,10 @@ from pathlib import Path
 
 try:
     from tools import spec_execution as pipeline
+    from tools import master_execution as cme
 except ImportError:  # pragma: no cover
     import spec_execution as pipeline
+    import master_execution as cme
 
 
 class CompactIntakeTests(unittest.TestCase):
@@ -149,6 +151,88 @@ class RegistryAndRouterTests(unittest.TestCase):
         with self.assertRaisesRegex(pipeline.SpecExecutionError, "ambiguous capability owner"):
             self.registry()
 
+    def test_valid_critical_trace_requires_all_links_and_evidence(self):
+        result = pipeline.validate_trace(self.registry(), {
+            "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "verified",
+            "requirements": [{
+                "id": "SEP-005", "owner_component": "spec_execution", "stage_id": "DEV-SEP-C",
+                "capability_ids": ["api.contract", "backend.integration"],
+                "implementation_files": ["tools/spec_execution.py"],
+                "validator_ids": ["targeted_tests"],
+                "test_commands": ["python -m unittest tools.test_spec_execution"],
+                "required_evidence": ["L1", "L2"], "evidence": ["L1", "L2"],
+            }],
+        })
+        self.assertEqual("valid", result["status"])
+
+    def test_trace_blocks_missing_capability_evidence_and_completion(self):
+        result = pipeline.validate_trace(self.registry(), {
+            "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "completed",
+            "requirements": [{
+                "id": "SEP-005", "owner_component": "spec_execution", "stage_id": "DEV-SEP-C",
+                "capability_ids": ["missing.capability"],
+                "implementation_files": ["tools/spec_execution.py"],
+                "validator_ids": [], "test_commands": [],
+                "required_evidence": ["L1", "L2"], "evidence": ["L1"],
+            }],
+        })
+        self.assertEqual("blocked", result["status"])
+        self.assertTrue(any(item.startswith("missing_capability:") for item in result["issues"]))
+        self.assertTrue(any(item.startswith("missing_evidence:") for item in result["issues"]))
+        self.assertIn("unsupported_completion:SEP-005", result["issues"])
+
+    def test_trace_duplicate_requirement_fails_closed(self):
+        row = {
+            "id": "SEP-005", "owner_component": "spec_execution", "stage_id": "DEV-SEP-C",
+            "capability_ids": ["api.contract"], "implementation_files": ["tools/spec_execution.py"],
+            "validator_ids": ["targeted_tests"], "test_commands": [],
+            "required_evidence": ["L1"], "evidence": ["L1"],
+        }
+        with self.assertRaisesRegex(pipeline.SpecExecutionError, "duplicate requirement"):
+            pipeline.validate_trace(self.registry(), {
+                "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "verified",
+                "requirements": [row, dict(row)],
+            })
+
+    def test_placement_reuses_generic_global_capability(self):
+        result = pipeline.decide_placement(["git.evidence", "context.bounded"], {
+            "capability_id": "git.evidence", "semantics": "generic", "consumer_projects": 2,
+            "requested_scope": "project",
+        })
+        self.assertEqual("reuse_global", result["action"])
+        self.assertEqual("duplicate_global_capability", result["reason"])
+
+    def test_placement_keeps_project_semantics_out_of_global(self):
+        result = pipeline.decide_placement([], {
+            "capability_id": "billing.invoice_format", "semantics": "project",
+            "consumer_projects": 1, "requested_scope": "project",
+        })
+        self.assertEqual("project", result["recommended_scope"])
+        self.assertEqual("ready", result["status"])
+
+    def test_placement_selects_shared_domain_for_multiple_related_projects(self):
+        result = pipeline.decide_placement([], {
+            "capability_id": "payments.eu_compliance", "semantics": "domain",
+            "consumer_projects": 2, "requested_scope": "domain",
+        })
+        self.assertEqual("domain", result["recommended_scope"])
+
+    def test_global_duplicate_requires_explicit_adapter_delta(self):
+        request = {"capability_id": "git.evidence", "semantics": "generic",
+                   "consumer_projects": 2, "requested_scope": "project"}
+        rejected = pipeline.decide_placement(["git.evidence"], request)
+        self.assertEqual("blocked", rejected["status"])
+        accepted = pipeline.decide_placement(["git.evidence"], {
+            **request, "adapter_delta": True, "exception": "billing path mapping"})
+        self.assertEqual("ready", accepted["status"])
+        self.assertEqual("project", accepted["recommended_scope"])
+
+    def test_unknown_semantics_needs_decision(self):
+        result = pipeline.decide_placement([], {
+            "capability_id": "new.behavior", "semantics": "unknown",
+            "consumer_projects": 1, "requested_scope": "project"})
+        self.assertEqual("needs_decision", result["status"])
+
 
 class CheapestSufficientExecutorTests(unittest.TestCase):
     def test_deterministic_route_is_cheapest_sufficient(self):
@@ -175,6 +259,41 @@ class CheapestSufficientExecutorTests(unittest.TestCase):
             "risk": "medium", "novelty": "bounded", "contract_conflict": True})
         self.assertEqual("user_decision", decision["route"])
         self.assertFalse(decision["model_change_authorized"])
+
+
+def cme_state(schema_version=1):
+    source = {"backend": "test", "queue_id": "q", "item_id": "m", "revision": "r",
+              "prompt_type": "master_prompt", "retention": "keep"}
+    common = {"id": "DEV-SEP-B", "master_id": "DEV-SEP-001", "title": "router", "status": "running",
+              "predecessors": [], "dependencies": [], "worktree_track": "track", "checkpoint_before": "x",
+              "checkpoint_after": "", "required_evidence": ["L1"], "evidence": [], "context_scope": ["SEP"],
+              "model_class": "MEDIUM", "reasoning_effort": "medium", "stop_after": False}
+    if schema_version == 2:
+        common.update(requirements=["SEP-003"], capabilities=["cap.router"])
+    return {"schema_version": schema_version, "state_revision": 1,
+            "master": {"id": "DEV-SEP-001", "status": "running", "source": source},
+            "tracks": [{"id": "track", "repository": "~/codex-dev", "worktree": "~/work/sep",
+                        "branch": "feature/sep", "checkpoint": "x", "ownership": ["router"], "status": "active"}],
+            "slices": [common], "blockers": [], "decisions": ["extend-cme"],
+            "context_budget": {"max_chars": 1000, "max_items": 4, "max_contours": 2,
+                                "max_decisions": 2, "max_evidence_threads": 2},
+            "next_action": "continue", "integration": {"required": False, "reason": ""}}
+
+
+class MasterExecutionCompatibilityTests(unittest.TestCase):
+    def test_v1_state_remains_valid(self):
+        self.assertEqual(1, cme.validate_state(cme_state(1))["schema_version"])
+
+    def test_v2_slice_requires_and_retains_requirements_and_capabilities(self):
+        state = cme.validate_state(cme_state(2))
+        self.assertEqual(["SEP-003"], state["slices"][0]["requirements"])
+        self.assertEqual(["cap.router"], state["slices"][0]["capabilities"])
+
+    def test_v2_missing_per_slice_fields_fails_closed(self):
+        state = cme_state(2)
+        state["slices"][0].pop("capabilities")
+        with self.assertRaises(cme.MasterExecutionError):
+            cme.validate_state(state)
 
 
 if __name__ == "__main__":

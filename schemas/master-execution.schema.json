@@ -8,8 +8,14 @@
     "schema_version", "state_revision", "master", "tracks", "slices", "blockers",
     "decisions", "context_budget", "next_action", "integration"
   ],
+  "allOf": [{
+    "if": {"properties": {"schema_version": {"const": 2}}},
+    "then": {"properties": {"slices": {"items": {
+      "required": ["requirements", "capabilities"]
+    }}}}
+  }],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"enum": [1, 2]},
     "state_revision": {"type": "integer", "minimum": 1},
     "master": {
       "type": "object",
@@ -75,6 +81,8 @@
         "required_evidence": {"type": "array", "items": {"enum": ["L1", "L2", "L3", "L4", "L5", "L6"]}},
         "evidence": {"type": "array", "items": {"enum": ["L1", "L2", "L3", "L4", "L5", "L6"]}},
         "context_scope": {"type": "array", "items": {"type": "string"}},
+        "requirements": {"type": "array", "items": {"type": "string"}},
+        "capabilities": {"type": "array", "items": {"type": "string"}},
         "model_class": {"enum": ["LOW", "MEDIUM", "HIGH", "FRONTIER"]},
         "reasoning_effort": {"enum": ["low", "medium", "high", "xhigh", "max"]},
         "stop_after": {"type": "boolean"}
