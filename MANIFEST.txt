@@ -199,6 +199,7 @@ specs/features/global-codex-normalization.spec.md
 specs/features/global-framework-hardening.spec.md
 specs/features/project-overlay-rollout.spec.md
 specs/features/source-installed-layer.spec.md
+specs/features/specification-execution-pipeline.spec.md
 specs/features/unified-dev-path-layout.spec.md
 specs/README.md
 specs/system.spec.md

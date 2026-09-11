@@ -1,14 +1,88 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-BCSC-C`
-- Sequence: `DEV-CME-001 → DEV-BCSC-A → DEV-BCSC-B → DEV-BCSC-C`
-- NEXT: the selected master and standalone `DEV-PATHS-001` delta are completed. Canonical source
-  and product paths are physically materialized and verified; legacy recovery copies remain until
-  an explicit cleanup decision. The GitHub repository is renamed to `codex-dev`, and this checkpoint
-  is explicitly authorized for merge and push. Runtime `CODEX_HOME` remediation remains separate.
+- Stage ID: `DEV-SEP-A`
+- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F`
+- NEXT: complete `DEV-SEP-A` contract/evidence checkpoint, then automatically select the unique
+  dependency-ready `DEV-SEP-B`. A checkpoint is not a stop condition; merge/push/runtime install
+  remain outside automatic execution.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
+
+## DEV-SEP-A — Canonical Contract + Compatibility Audit
+
+- Status: `running`; Lifecycle: `implementation`; Evidence level: `baseline only`.
+- Master: `DEV-SEP-001`; master status: `running`; track: `spec-execution-pipeline`.
+- Worktree/branch: `~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/spec-execution-pipeline` /
+  `feature/spec-execution-pipeline`; checkpoint before:
+  `89539840725ad57655a1f6e6ffe45ced874ce055`.
+- Source: Notion master `3d561ed8-f246-81c0-b8c6-d06c1819bb4a`, revision
+  `2026-09-08T19:51:49.477Z`, type `master_prompt`, retention `keep`.
+- Requirements: `SEP-001..012`; acceptance: `AC-SEP-A..L` from
+  `specs/features/specification-execution-pipeline.spec.md`.
+
+```master-execution
+{"schema_version":1,"state_revision":1,"master":{"id":"DEV-SEP-001","status":"running","source":{"backend":"notion","queue_id":"3d061ed8f2468163b502d1829668063c","item_id":"3d561ed8f24681c0b8c6d06c1819bb4a","revision":"2026-09-08T19:51:49.477Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"spec-execution-pipeline","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/spec-execution-pipeline","branch":"feature/spec-execution-pipeline","checkpoint":"89539840725ad57655a1f6e6ffe45ced874ce055","ownership":["specification-execution-pipeline","tools/spec_execution.py","skill-sources/registry.toml"],"status":"active"}],"slices":[{"id":"DEV-SEP-A","master_id":"DEV-SEP-001","title":"Canonical contract and compatibility audit","status":"running","predecessors":[],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"89539840725ad57655a1f6e6ffe45ced874ce055","checkpoint_after":"","required_evidence":["L1"],"evidence":[],"context_scope":["SEP SPEC","CME SPEC","global architecture","gap map"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-B","master_id":"DEV-SEP-001","title":"Intake and capability router core","status":"queued","predecessors":["DEV-SEP-A"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SEP-001..006","stage selector","dev paths","model routing"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-SEP-C","master_id":"DEV-SEP-001","title":"Traceability and placement validation","status":"queued","predecessors":["DEV-SEP-B"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP-005","SEP-008","CME state","project overlay validator"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-D","master_id":"DEV-SEP-001","title":"Automation detector and promotion lifecycle","status":"queued","predecessors":["DEV-SEP-C"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP-007..010","AEP policy","Prompt Queue boundary"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-E","master_id":"DEV-SEP-001","title":"Context metrics and gradual integration","status":"queued","predecessors":["DEV-SEP-D"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP-009..012","Skills","hooks","validators","workflow"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-SEP-F","master_id":"DEV-SEP-001","title":"Acceptance and compatibility audit","status":"queued","predecessors":["DEV-SEP-E"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP acceptance","security","full regression","documentation sync"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false}],"blockers":[],"decisions":["extend-cme-not-replace","single-pure-stdlib-router","skill-source-registry-metadata-only","no-automatic-promotion"],"context_budget":{"max_chars":8000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"verify DEV-SEP-A contract checkpoint, then select DEV-SEP-B","integration":{"required":false,"reason":""}}
+```
+
+### Scope / exclusions
+
+In scope: approved feature SPEC, existing-primitive gap map, responsibility/architecture boundary,
+progressive master graph and executable structural validation. Out of scope: tool implementation,
+product rollout, runtime install/config, external queue mutation, merge, push and cleanup.
+
+### Tasks / PASS
+
+- [x] Exact Notion source and retention fetched; existing live state restored.
+- [x] Existing CME/router/selector/Skill/profiler/queue/overlay primitives mapped to bounded gaps.
+- [x] Approved behavior compiled into a feature SPEC with acceptance and rollback.
+- [x] Architecture/ADR and six dependency-safe slices preserve existing canonical owners.
+- [x] Master graph parses from the selected record and routes uniquely after checkpoint sync.
+- [x] Context validator, 74 policy regressions and `git diff --check` PASS.
+
+### Fallback / rollback
+
+Invalid graph, source drift or documentation conflict blocks Slice B. Rollback is a Git revert of
+this isolated contract checkpoint; no runtime, product or external state is mutated.
+
+## DEV-SEP-B — Intake + Capability Router Core
+
+- Status: `queued`; Lifecycle: `planned`; predecessor: `DEV-SEP-A`.
+- Goal: add one bounded stdlib-only `spec_execution.py` core, Skill metadata registry, compact
+  `CONTINUE_EXISTING`/`NEW_PROJECT` intake and relevant-only deterministic/model route.
+- PASS: exact four new-project classes, mandatory stage/scope before Skill selection, minimal
+  relevant route, typed ambiguity/failure and old-project compatibility tests.
+
+## DEV-SEP-C — Traceability + Placement Validation
+
+- Status: `queued`; Lifecycle: `planned`; predecessor: `DEV-SEP-B`.
+- Goal: add machine-enforced critical requirement/capability/evidence links and global/domain/project
+  placement validation without a second execution owner.
+- PASS: positive/negative trace, missing evidence and overlay-duplication scenarios; CME v1 remains
+  readable if its schema receives additive v2 metadata.
+
+## DEV-SEP-D — Automation Detector + Promotion Lifecycle
+
+- Status: `queued`; Lifecycle: `planned`; predecessor: `DEV-SEP-C`.
+- Goal: detect only qualified repeatable opportunities and return deterministic target, placement,
+  lifecycle/dedup decision; no auto-write/tuning.
+- PASS: one-off/unknown rejection, repeated-validator promotion, dedup/closure and sanitized optional
+  profiler/learning observations.
+
+## DEV-SEP-E — Context Metrics + Gradual Integration
+
+- Status: `queued`; Lifecycle: `planned`; predecessor: `DEV-SEP-D`.
+- Goal: add lightweight diagnostics, safe Skill-retirement preflight and wire the router into existing
+  validators/workflow with two proven deterministic promotion paths.
+- PASS: unjustified scan/unused Skill/stale handoff detection, no sole-contract retirement, Skill
+  parity and ordinary project compatibility.
+
+## DEV-SEP-F — Acceptance + Compatibility Audit
+
+- Status: `queued`; Lifecycle: `planned`; predecessor: `DEV-SEP-E`.
+- Goal: exercise acceptance A–H and terminal documentation/security/regression gates.
+- PASS: targeted/full suites, context/global/project validators, final reviewer and clean diff; master
+  becomes completed locally while Notion source is retained.
 
 ## DEV-PATHS-001 — Unified DEV and product path roles (standalone delta)
 

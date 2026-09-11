@@ -1,5 +1,28 @@
 # Существенные решения
 
+## 2026-09-11 — Specification pipeline расширяет CME одним pure router core
+
+**Контекст:** approved master требует stage-first context, capability/Skill routing, traceability и
+automation promotion. Existing CME уже владеет graph/evidence/context/worktree decisions; selector
+и compatibility adapter владеют live stage; Prompt Queue и profiler имеют отдельные bounded roles.
+Новый state store, scheduler или hook service дублировал бы эти owners.
+
+**Решение:** сохранить CME/controller и selected `prompts/STAGES.md` без второго execution owner.
+Добавить один stdlib-only pure core `tools/spec_execution.py`, который принимает bounded structured
+facts и выдаёт intake/route/trace/promotion/placement/retirement decisions без side effects.
+Skill routing metadata хранить в source-only `skill-sources/registry.toml`; полная procedure остаётся
+в соответствующем `SKILL.md`, runtime projection — у existing Skill sync. Project/domain metadata
+допустима только как delta. Promotion остаётся recommendation/state transition и не авторизует write.
+
+**Альтернативы:** отдельный workflow engine/state database, RAG/vector Skill search, ML intake
+classifier, background watcher, новый telemetry store, automatic Skill deletion и automatic policy
+tuning отклонены как дублирование, недетерминированность или преждевременная сложность.
+
+**Последствия:** existing v1 CME и ordinary stages остаются compatible. Context pruning никогда не
+удаляет global invariants или selected stage. Ambiguity/conflict/missing evidence fail closed;
+retirement сначала проходит reference/replacement/parity preflight и требует отдельной обычной
+code-change authorization. Prompt Queue lifecycle и Notion master retention `keep` не меняются.
+
 ## 2026-09-08 — Brownfield state adapter остаётся внутри CME
 
 **Контекст:** canonical STAGES policy намеренно отклоняет competing AI_PLAN/AI_STATUS, однако

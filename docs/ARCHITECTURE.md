@@ -1,5 +1,51 @@
 # Архитектура AI Dev Team
 
+## Specification → Execution Pipeline contour
+
+Новый contour расширяет existing Continuous Master Execution и не создаёт второй orchestrator:
+
+```text
+short user intent
+  → dev_paths + stage compatibility/selector (live project and selected record)
+  → CME dependency/evidence/context decision
+  → spec_execution pure router
+       selected requirement IDs + owner/change/risk metadata
+       global Skill capability registry + optional domain/project delta
+       → minimal Skills/tools/context/validators + executor recommendation
+  → existing implementation/test/documentation workflow
+  → selected STAGES evidence/checkpoint update
+  → pure automation opportunity/promotion review
+```
+
+`tools/spec_execution.py` является bounded standard-library pure application core/CLI. Он принимает
+explicit structured input и уже проверенный live routing snapshot; не сканирует весь repository без
+reason, не исполняет commands, не пишет Git/Notion/runtime и не меняет model автоматически. Existing
+`master_execution.py` остаётся единственным graph/context/evidence/worktree controller.
+
+`skill-sources/registry.toml` хранит только routing metadata: Skill source identity, capability IDs,
+triggers, scope/placement, maturity/status и replacement. Full `SKILL.md` остаётся единственным
+procedure owner и загружается после stage/scope matching. `sync_global_skills.py` продолжает владеть
+hash-verified runtime projection; registry не является вторым Skill source.
+
+Critical requirement trace остаётся compact reference graph, а не копией SPEC: requirement ID,
+owner component, current slice, capability, implementation artifact, validator/test и evidence.
+Если additive CME schema metadata потребуется, v1 records остаются valid и не мигрируются массово.
+Project/domain registry является optional delta: generic global capability нельзя копировать без
+explicit adapter/exception. Placement validator только диагностирует; detector/promotion decision
+не создаёт и не удаляет automation.
+
+Prompt lifecycle, telemetry и durable state сохраняют существующих владельцев:
+
+- `prompts/STAGES.md` — selected execution state, blockers, evidence and NEXT;
+- `prompt_queue.py` — exact cleanup guard/receipt; master retention `keep`;
+- `ai_policy_profiler.py` — opt-in sanitized observations/economics, no auto-tuning;
+- `docs/LEARNING_LOG.md` — только подтверждённая reusable diagnosis, не raw reasoning/backlog;
+- Git/SPEC/ADR/tests — authority для facts, requirements, decisions и evidence.
+
+Unknown/ambiguous intake, contract conflict, missing capability/context/evidence, stale live facts,
+unsafe placement or retirement and deterministic executor failure return a typed stop/escalation.
+Fallback to reasoning remains visible and never promotes evidence or silently loads every Skill.
+
 ## Brownfield stage compatibility adapter
 
 Новый adapter расширяет existing Continuous Master Execution, не заменяя selector/controller:

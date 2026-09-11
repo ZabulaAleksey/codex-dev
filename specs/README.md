@@ -1,5 +1,8 @@
 # Индекс спецификаций AI Dev Team
 
+- [`features/specification-execution-pipeline.spec.md`](features/specification-execution-pipeline.spec.md) —
+  stage-first capability/Skill routing, requirement/evidence trace, deterministic-first execution,
+  automation promotion, placement и context-economy contract поверх Continuous Master Execution.
 - [`features/brownfield-stage-compatibility.spec.md`](features/brownfield-stage-compatibility.spec.md) —
   deterministic legacy AI_PLAN/AI_STATUS adapter, same-file compatibility manifest и safe dry-run
   migration planning для brownfield repositories.
