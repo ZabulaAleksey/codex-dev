@@ -185,6 +185,7 @@ skill-sources/explain-change/SKILL.md
 skill-sources/fix-bug/SKILL.md
 skill-sources/implement-stage/SKILL.md
 skill-sources/plan-stage/SKILL.md
+skill-sources/registry.toml
 skill-sources/resume-project/SKILL.md
 skill-sources/review-change/SKILL.md
 specs/features/ai-policy-profiling.spec.md
@@ -238,6 +239,7 @@ tools/master_execution.py
 tools/normalize_user_codex.py
 tools/reconcile_project_framework.py
 tools/stage_compatibility.py
+tools/spec_execution.py
 tools/sync_global_skills.py
 tools/test_ai_policy_profiler.py
 tools/test_backend_dx_policy.py
@@ -251,6 +253,7 @@ tools/test_master_execution.py
 tools/test_reconcile_project_framework.py
 tools/test_stage_compatibility.py
 tools/test_stage_completion_policy.py
+tools/test_spec_execution.py
 tools/test_sync_global_skills.py
 tools/test_unified_project_workflow_policy.py
 tools/test_validate_global_codex.py

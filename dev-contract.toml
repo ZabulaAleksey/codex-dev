@@ -6,6 +6,7 @@ capabilities = [
   "path-resolver-v1",
   "project-bootstrap-v1",
   "prompt-queue-v1",
+  "spec-execution-router-v1",
   "stage-router-v1",
 ]
 

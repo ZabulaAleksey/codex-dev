@@ -1,17 +1,17 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-SEP-A`
+- Stage ID: `DEV-SEP-B`
 - Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F`
-- NEXT: complete `DEV-SEP-A` contract/evidence checkpoint, then automatically select the unique
-  dependency-ready `DEV-SEP-B`. A checkpoint is not a stop condition; merge/push/runtime install
-  remain outside automatic execution.
+- NEXT: implement and verify `DEV-SEP-B` intake/capability router core, then automatically select
+  the unique dependency-ready `DEV-SEP-C`. A checkpoint is not a stop condition; merge/push/runtime
+  install remain outside automatic execution.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
 
 ## DEV-SEP-A — Canonical Contract + Compatibility Audit
 
-- Status: `running`; Lifecycle: `implementation`; Evidence level: `baseline only`.
+- Status: `verified`; Lifecycle: `completed`; Evidence level: `validated locally`.
 - Master: `DEV-SEP-001`; master status: `running`; track: `spec-execution-pipeline`.
 - Worktree/branch: `~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/spec-execution-pipeline` /
   `feature/spec-execution-pipeline`; checkpoint before:
@@ -45,13 +45,22 @@ product rollout, runtime install/config, external queue mutation, merge, push an
 Invalid graph, source drift or documentation conflict blocks Slice B. Rollback is a Git revert of
 this isolated contract checkpoint; no runtime, product or external state is mutated.
 
+Completion evidence: checkpoint `87edde1`; selected master graph parsed as canonical/runnable;
+74 CME/documentation/stage policy tests PASS; context validator 267 files PASS;
+`git diff --cached --check` PASS. Architecture and gap-map reviews converged on the same bounded
+stdlib core and no-second-owner design.
+
 ## DEV-SEP-B — Intake + Capability Router Core
 
-- Status: `queued`; Lifecycle: `planned`; predecessor: `DEV-SEP-A`.
+- Status: `running`; Lifecycle: `implementation`; predecessor `DEV-SEP-A` verified at `87edde1`.
 - Goal: add one bounded stdlib-only `spec_execution.py` core, Skill metadata registry, compact
   `CONTINUE_EXISTING`/`NEW_PROJECT` intake and relevant-only deterministic/model route.
 - PASS: exact four new-project classes, mandatory stage/scope before Skill selection, minimal
   relevant route, typed ambiguity/failure and old-project compatibility tests.
+
+```master-execution
+{"schema_version":1,"state_revision":2,"master":{"id":"DEV-SEP-001","status":"running","source":{"backend":"notion","queue_id":"3d061ed8f2468163b502d1829668063c","item_id":"3d561ed8f24681c0b8c6d06c1819bb4a","revision":"2026-09-08T19:51:49.477Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"spec-execution-pipeline","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/spec-execution-pipeline","branch":"feature/spec-execution-pipeline","checkpoint":"87edde1ac222c692a96f1a1ebd418a840ded09a8","ownership":["specification-execution-pipeline","tools/spec_execution.py","skill-sources/registry.toml"],"status":"active"}],"slices":[{"id":"DEV-SEP-A","master_id":"DEV-SEP-001","title":"Canonical contract and compatibility audit","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"89539840725ad57655a1f6e6ffe45ced874ce055","checkpoint_after":"87edde1ac222c692a96f1a1ebd418a840ded09a8","required_evidence":["L1"],"evidence":["L1"],"context_scope":["SEP SPEC","CME SPEC","global architecture","gap map"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-B","master_id":"DEV-SEP-001","title":"Intake and capability router core","status":"running","predecessors":["DEV-SEP-A"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"87edde1ac222c692a96f1a1ebd418a840ded09a8","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":[],"context_scope":["SEP-001..006","stage selector","dev paths","model routing"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-SEP-C","master_id":"DEV-SEP-001","title":"Traceability and placement validation","status":"queued","predecessors":["DEV-SEP-B"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP-005","SEP-008","CME state","project overlay validator"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-D","master_id":"DEV-SEP-001","title":"Automation detector and promotion lifecycle","status":"queued","predecessors":["DEV-SEP-C"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP-007..010","AEP policy","Prompt Queue boundary"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-E","master_id":"DEV-SEP-001","title":"Context metrics and gradual integration","status":"queued","predecessors":["DEV-SEP-D"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP-009..012","Skills","hooks","validators","workflow"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-SEP-F","master_id":"DEV-SEP-001","title":"Acceptance and compatibility audit","status":"queued","predecessors":["DEV-SEP-E"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["SEP acceptance","security","full regression","documentation sync"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false}],"blockers":[],"decisions":["extend-cme-not-replace","single-pure-stdlib-router","skill-source-registry-metadata-only","no-automatic-promotion"],"context_budget":{"max_chars":8000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"implement and verify DEV-SEP-B intake and capability router core","integration":{"required":false,"reason":""}}
+```
 
 ## DEV-SEP-C — Traceability + Placement Validation
 

@@ -1,0 +1,172 @@
+schema_version = 1
+
+[[skills]]
+id = "backend-dx-audit"
+source = "skill-sources/backend-dx-audit/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["backend.dx.audit"]
+triggers = ["backend_dx", "ci_parity", "doctor", "setup_reproducibility"]
+inputs = ["project_root", "backend_dx_delta"]
+outputs = ["audit_findings", "verification_plan"]
+required_tools = []
+required_context = ["backend_dx_policy", "project_context", "selected_stage"]
+stop_conditions = ["destructive_database_action", "production_action", "unknown_command_surface"]
+validation = ["backend_dx_policy_tests"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "bootstrap-project-framework"
+source = "skill-sources/bootstrap-project-framework/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["project.framework.bootstrap"]
+triggers = ["context_automation", "create_karkas", "new_project", "project_overlay_bootstrap"]
+inputs = ["project_root", "project_class", "product_goal"]
+outputs = ["project_overlay", "initial_spec", "stages_graph"]
+required_tools = ["reconcile_project_framework", "validate_project_overlay"]
+required_context = ["context_policy", "project_framework", "selected_stage"]
+stop_conditions = ["brownfield_conflict", "forbidden_overwrite", "invalid_dev_bridge"]
+validation = ["project_bootstrap_tests", "project_overlay_validator"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_with_tool"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "dev-karkas"
+source = "skill-sources/dev-karkas/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["project.framework.governance"]
+triggers = ["architecture_policy", "idea_intake", "karkas", "prompt_build", "state_sync"]
+inputs = ["project_root", "lifecycle_intent"]
+outputs = ["canonical_delta", "routing_decision"]
+required_tools = []
+required_context = ["global_governance", "selected_stage"]
+stop_conditions = ["canonical_conflict", "missing_project_mapping"]
+validation = ["documentation_sync_policy_tests"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "explain-change"
+source = "skill-sources/explain-change/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["change.explain"]
+triggers = ["explain_change", "learning_handoff"]
+inputs = ["diff", "verification_evidence"]
+outputs = ["learning_explanation"]
+required_tools = []
+required_context = ["changed_files", "selected_stage"]
+stop_conditions = ["missing_diff"]
+validation = []
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "fix-bug"
+source = "skill-sources/fix-bug/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["software.bugfix"]
+triggers = ["bug", "regression", "reproduce_failure"]
+inputs = ["failure_observation", "project_root"]
+outputs = ["minimal_fix", "regression_evidence"]
+required_tools = []
+required_context = ["affected_spec", "failure_path", "selected_stage"]
+stop_conditions = ["contract_change_required", "unknown_root_cause"]
+validation = ["targeted_regression_test"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "implement-stage"
+source = "skill-sources/implement-stage/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["stage.implement"]
+triggers = ["implement_stage", "stage_execution"]
+inputs = ["selected_stage", "spec_requirements"]
+outputs = ["implementation", "evidence", "state_update"]
+required_tools = []
+required_context = ["architecture_boundary", "selected_spec", "selected_stage"]
+stop_conditions = ["missing_spec", "missing_required_evidence", "user_decision"]
+validation = ["stage_completion_policy_tests"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "plan-stage"
+source = "skill-sources/plan-stage/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["stage.plan"]
+triggers = ["plan_stage", "stage_decomposition"]
+inputs = ["approved_spec", "project_root"]
+outputs = ["bounded_stage_contract"]
+required_tools = []
+required_context = ["architecture_boundary", "selected_spec", "selected_stage"]
+stop_conditions = ["architecture_decision_required", "missing_spec"]
+validation = ["stage_completion_policy_tests"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "resume-project"
+source = "skill-sources/resume-project/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["project.resume"]
+triggers = ["continue_existing", "resume_project"]
+inputs = ["project_reference"]
+outputs = ["live_route", "selected_stage", "next_action"]
+required_tools = ["dev_paths", "master_execution"]
+required_context = ["live_repo_state", "selected_stage"]
+stop_conditions = ["ambiguous_project", "invalid_dev_bridge", "invalid_stage_selector"]
+validation = ["master_execution_tests", "project_overlay_validator"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_with_tool"
+owner = "global_dev"
+replacement = ""
+
+[[skills]]
+id = "review-change"
+source = "skill-sources/review-change/SKILL.md"
+scope = "global"
+status = "active"
+capabilities = ["change.review"]
+triggers = ["final_review", "review_change"]
+inputs = ["diff", "spec_requirements"]
+outputs = ["review_findings"]
+required_tools = []
+required_context = ["affected_spec", "diff", "selected_stage"]
+stop_conditions = ["missing_diff", "missing_requirement_mapping"]
+validation = ["reviewer_gate"]
+version = "1"
+maturity = "documented_skill"
+executor_kind = "skill_only"
+owner = "global_dev"
+replacement = ""
