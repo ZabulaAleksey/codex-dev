@@ -119,7 +119,10 @@ Critical route поддерживает structured link:
 `requirement_id → owner_component → selected_stage → capability_ids → implementation_files →
 validator_ids/test_commands → evidence`. Validator проверяет uniqueness, registry references,
 stage requirement references, owner compatibility, required evidence и absence of unsupported
-completion claim. Trace не заменяет accepted test contract и не исполняет commands.
+completion claim. Claims проверяются против отдельного contained/versioned contract: live selector,
+exact CME v2 slice requirements/status/required evidence и existing Git-root file inventory.
+`test_commands` являются stable command IDs, а не shell strings. Trace не заменяет accepted test
+contract и не исполняет commands.
 
 ### SEP-006 — Compact intake and durable constraints
 
@@ -187,8 +190,11 @@ overlay/SPEC/STAGES, не копируя global rules. User prompt сообща�
 - Registry/state не содержит commands для исполнения; test command является declarative evidence
   reference и запускается только existing authorized workflow.
 - Project paths resolve inside exact Git root; symlink/junction escape и unknown scope fail closed.
-- Contract conflict, ambiguous route, missing owner/capability, deterministic failure и stale input
-  имеют typed outcome; silent fallback запрещён.
+- Contract conflict, ambiguous route, missing owner/capability, stale input и typed security,
+  authorization, resource-limit или contract-validation failure имеют fail-closed outcome;
+  silent/raw-text fallback запрещён.
+- CLI отвергает UNC/device inputs до filesystem probe; trace artifacts являются canonical
+  project-relative paths под exact Git root и не проходят через symlink/junction.
 - Registry/provider outage оставляет manual reasoning route visible; completion evidence не
   повышается.
 - New capability/Skill/hook/CI creation остаётся ordinary reviewed code change. Candidate/decision
@@ -238,7 +244,7 @@ overlay/SPEC/STAGES, не копируя global rules. User prompt сообща�
 4. `DEV-SEP-D`: automation detector/promotion/lifecycle plus two deterministic promotion paths.
 5. `DEV-SEP-E`: context metrics, Skill-retirement audit, hook/validator/workflow integration and
    gradual migration of duplicated procedures.
-6. `DEV-SEP-F`: acceptance A–H, compatibility/security review, full verification and master sync.
+6. `DEV-SEP-F`: acceptance A–L, compatibility/security review, full verification and master sync.
 
 Each slice is backward-complete and may stop only on CME canonical stop conditions. A checkpoint is
 not a stop. The Notion master has retention `keep` and is not cleanup-eligible on completion.

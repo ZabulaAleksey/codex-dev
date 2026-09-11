@@ -11,11 +11,20 @@ import argparse
 from dataclasses import asdict, dataclass
 import hashlib
 import json
-from pathlib import Path
+import os
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
+import subprocess
 import sys
 import tomllib
 from typing import Any, Iterable, Mapping, Sequence
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from hooks.stage_selector import find_stage_record, parse_stage_id
+from tools.master_execution import MasterExecutionError, extract_master_state
 
 
 MAX_INPUT_BYTES = 512 * 1024
@@ -25,7 +34,13 @@ MAX_LIST_ITEMS = 32
 MAX_TEXT = 4096
 MAX_OBSERVATION = 2048
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+ARTIFACT_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,511}$")
 SKILL_NAME = re.compile(r"^name:\s*([^\r\n]+)\s*$", re.MULTILINE)
+SKILL_FRONTMATTER = re.compile(r"\A---\r?\n(?P<body>.*?)\r?\n---(?:\r?\n|\Z)", re.DOTALL)
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
+SECRET_LIKE = re.compile(
+    r"(?i)(?:api[_-]?key|password|secret|token)\s*[:=]\s*\S+|-----BEGIN [A-Z ]*PRIVATE KEY-----"
+)
 
 ENTRYPOINTS = {"CONTINUE_EXISTING", "NEW_PROJECT"}
 PROJECT_CLASSES = {
@@ -58,6 +73,11 @@ FULL_SCAN_REASONS = {
     "explicit_user_request",
     "targeted_path_failed",
 }
+CONTEXT_PRECEDENCE = (
+    "current_slice", "selected_spec", "affected_spec", "architecture_boundary",
+    "architecture_decisions", "changed_files", "dependency_files", "targeted_tests",
+    "predecessor_evidence", "failure_path", "diff",
+)
 TRACE_STATUSES = {"planned", "running", "implemented_unverified", "verified", "completed"}
 EVIDENCE_LEVELS = {"L1", "L2", "L3", "L4", "L5", "L6"}
 OPPORTUNITY_SIGNALS = {
@@ -77,6 +97,18 @@ PROMOTION_TARGETS = {
     "routing_decision": "router_rule_table",
     "validation": "validator_test",
     "invariant": "hook_ci_gate",
+}
+DETERMINISTIC_FAILURE_CLASSES = {
+    "unsupported_input", "tool_unavailable", "unknown_result", "security_integrity",
+    "authorization", "resource_limit", "contract_validation",
+}
+FAIL_CLOSED_FAILURE_CLASSES = {
+    "security_integrity", "authorization", "resource_limit", "contract_validation",
+}
+CANDIDATE_KEYS = {
+    "schema_version", "id", "fingerprint", "version", "scope", "status", "action",
+    "reason", "qualified", "occurrences", "projects", "signals", "disqualifiers",
+    "source_kind", "priority", "evidence_refs", "provenance_refs", "write_authorized",
 }
 
 SKILL_KEYS = {
@@ -138,6 +170,18 @@ class SkillMetadata:
     replacement: str
 
 
+@dataclass(frozen=True)
+class TraceContract:
+    repository_root: Path
+    stage_id: str
+    stage_status: str
+    requirement_owners: tuple[tuple[str, str], ...]
+    known_implementation_files: tuple[str, ...]
+    known_validator_ids: tuple[str, ...]
+    known_test_commands: tuple[str, ...]
+    required_evidence: tuple[str, ...]
+
+
 def _mapping(value: Any, label: str, *, allowed: set[str], required: set[str] = frozenset()) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
         raise SpecExecutionError(f"{label} must be an object")
@@ -168,6 +212,11 @@ def _identifier(value: Any, label: str) -> str:
     return value
 
 
+def _reject_secret_like(values: Iterable[str], label: str) -> None:
+    if any(SECRET_LIKE.search(value) for value in values):
+        raise SpecExecutionError(f"{label} contains secret-like input", "secret_like_input")
+
+
 def _string_list(
     value: Any,
     label: str,
@@ -195,7 +244,13 @@ def _contained(root: Path, relative: str, label: str) -> Path:
     path = Path(_text(relative, label, limit=512))
     if path.is_absolute() or ".." in path.parts:
         raise SpecExecutionError(f"{label} must be a contained relative path")
-    target = (root / path).resolve(strict=False)
+    lexical = root / path
+    current = root
+    for part in path.parts:
+        current = current / part
+        if current.exists() and _is_link_like(current):
+            raise SpecExecutionError(f"{label} contains link-like path", "unsafe_source_path")
+    target = lexical.resolve(strict=False)
     try:
         target.relative_to(root.resolve())
     except ValueError as exc:
@@ -203,11 +258,25 @@ def _contained(root: Path, relative: str, label: str) -> Path:
     return target
 
 
+def _is_link_like(path: Path) -> bool:
+    is_junction = getattr(os.path, "isjunction", None)
+    return path.is_symlink() or bool(is_junction and is_junction(path))
+
+
+def _local_path(value: str | os.PathLike[str], label: str) -> Path:
+    raw = str(value)
+    windows = raw.replace("/", "\\")
+    if windows.startswith(("\\\\", "\\?\\", "\\.\\")):
+        raise SpecExecutionError(f"{label} must be a local non-device path", "unsafe_local_path")
+    return Path(raw).expanduser()
+
+
 def _skill_name(path: Path) -> str:
-    if not path.is_file() or path.stat().st_size > MAX_REGISTRY_BYTES:
+    if _is_link_like(path) or not path.is_file() or path.stat().st_size > MAX_REGISTRY_BYTES:
         raise SpecExecutionError(f"Skill source is missing or oversized: {path}")
-    text = path.read_text(encoding="utf-8")
-    match = SKILL_NAME.search(text[:8192])
+    text = path.read_text(encoding="utf-8")[:8192].lstrip("\ufeff")
+    frontmatter = SKILL_FRONTMATTER.match(text)
+    match = SKILL_NAME.search(frontmatter.group("body")) if frontmatter else None
     if not match:
         raise SpecExecutionError(f"Skill source has no frontmatter name: {path}")
     return match.group(1).strip().strip('"\'')
@@ -215,7 +284,18 @@ def _skill_name(path: Path) -> str:
 
 def load_registry(path: Path, source_root: Path | None = None) -> tuple[SkillMetadata, ...]:
     """Load and validate metadata without loading Skill procedure bodies into the route output."""
-    path = path.resolve()
+    raw_path = _local_path(path, "registry").absolute()
+    root = _local_path(
+        source_root if source_root is not None else raw_path.parent.parent,
+        "source_root",
+    ).resolve()
+    if _is_link_like(raw_path):
+        raise SpecExecutionError("registry must not be link-like", "unsafe_registry_path")
+    path = raw_path.resolve()
+    try:
+        path.relative_to(root)
+    except ValueError as exc:
+        raise SpecExecutionError("registry escapes source root", "unsafe_registry_path") from exc
     if not path.is_file() or path.stat().st_size > MAX_REGISTRY_BYTES:
         raise SpecExecutionError("registry is missing or oversized")
     try:
@@ -228,7 +308,6 @@ def load_registry(path: Path, source_root: Path | None = None) -> tuple[SkillMet
     items = data["skills"]
     if not isinstance(items, list) or not items or len(items) > MAX_ITEMS:
         raise SpecExecutionError("registry skills must be a non-empty bounded list")
-    root = (source_root or path.parent.parent).resolve()
     parsed: list[SkillMetadata] = []
     ids: set[str] = set()
     capability_owners: dict[str, str] = {}
@@ -304,6 +383,35 @@ def load_registry(path: Path, source_root: Path | None = None) -> tuple[SkillMet
     return tuple(sorted(parsed, key=lambda candidate: candidate.id))
 
 
+def compose_registries(
+    global_registry: Sequence[SkillMetadata],
+    delta_registry: Sequence[SkillMetadata] = (),
+) -> tuple[SkillMetadata, ...]:
+    """Compose a global registry with a project/domain-only delta, rejecting shadow owners."""
+    combined: list[SkillMetadata] = []
+    ids: set[str] = set()
+    capability_owners: dict[str, str] = {}
+    for source_name, items in (("global", global_registry), ("delta", delta_registry)):
+        for item in items:
+            if source_name == "global" and item.scope != "global":
+                raise SpecExecutionError("global registry contains non-global Skill", "invalid_registry_scope")
+            if source_name == "delta" and item.scope not in {"domain", "project"}:
+                raise SpecExecutionError("registry delta must be domain or project scoped", "invalid_registry_scope")
+            if item.id in ids:
+                raise SpecExecutionError(f"duplicate composed Skill id: {item.id}", "duplicate_skill_id")
+            ids.add(item.id)
+            for capability in item.capabilities:
+                previous = capability_owners.get(capability)
+                if previous is not None:
+                    raise SpecExecutionError(
+                        f"ambiguous composed capability owner: {capability}:{previous},{item.id}",
+                        "ambiguous_capability_owner",
+                    )
+                capability_owners[capability] = item.id
+            combined.append(item)
+    return tuple(sorted(combined, key=lambda item: item.id))
+
+
 def normalize_intake(raw: Mapping[str, Any]) -> dict[str, Any]:
     """Compile explicit intake facts without guessing repository or project class."""
     allowed = {
@@ -336,6 +444,10 @@ def normalize_intake(raw: Mapping[str, Any]) -> dict[str, Any]:
     non_goals = _string_list(data["explicit_non_goals"], "explicit_non_goals", preserve=True)
     decisions = _string_list(data["user_decisions"], "user_decisions", preserve=True)
     project_class = _text(data.get("project_class", ""), "project_class", required=False, limit=64)
+    _reject_secret_like(
+        [project, master_or_goal, requested_change, write_permissions, *constraints, *non_goals, *decisions],
+        "intake",
+    )
     status = "ready"
     reason = "resolve_live_state"
     if entrypoint == "CONTINUE_EXISTING":
@@ -435,13 +547,20 @@ def route_skills(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) -> d
     issues.extend(f"missing_tool:{value}" for value in missing_tools)
     status = "blocked" if issues else "ready"
     selected.sort(key=lambda item: item.id)
-    contexts = {
+    contexts = [
         "global_invariants",
         "project_overlay",
         "live_repo_state",
         f"stage.{stage_id}",
+    ]
+    context_aliases = {"selected_stage", "live_repo_state", "global_invariants", "project_overlay"}
+    extras = {
+        value for item in selected for value in item.required_context
+        if value not in context_aliases
     }
-    contexts.update(value for item in selected for value in item.required_context)
+    precedence = {value: index for index, value in enumerate(CONTEXT_PRECEDENCE)}
+    ordered_extras = sorted(extras, key=lambda value: (precedence.get(value, len(precedence)), value))
+    contexts.extend(ordered_extras)
     return {
         "schema_version": 1,
         "status": status,
@@ -457,7 +576,7 @@ def route_skills(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) -> d
         "selected_skill_sources": [item.source for item in selected],
         "selected_capabilities": sorted(provided),
         "required_tools": sorted({tool for item in selected for tool in item.required_tools}),
-        "required_context": sorted(contexts),
+        "required_context": contexts,
         "validators": sorted({value for item in selected for value in item.validation}),
         "stop_conditions": sorted({value for item in selected for value in item.stop_conditions}),
         "issues": issues,
@@ -475,7 +594,7 @@ def choose_executor(raw: Mapping[str, Any]) -> dict[str, Any]:
         "mechanical",
         "novelty",
         "risk",
-        "deterministic_failure",
+        "deterministic_failure_class",
         "contract_conflict",
         "prior_high_reasoning_failed",
     }
@@ -490,10 +609,15 @@ def choose_executor(raw: Mapping[str, Any]) -> dict[str, Any]:
     if novelty not in {"known", "bounded", "unknown"} or risk not in {"low", "medium", "high", "critical"}:
         raise SpecExecutionError("unsupported executor novelty/risk")
     failure = _text(
-        data.get("deterministic_failure", ""), "deterministic_failure", required=False, limit=MAX_OBSERVATION
+        data.get("deterministic_failure_class", ""),
+        "deterministic_failure_class", required=False, limit=32,
     )
+    if failure and failure not in DETERMINISTIC_FAILURE_CLASSES:
+        raise SpecExecutionError("unsupported deterministic failure class")
     conflict = bool(data.get("contract_conflict", False))
-    if conflict:
+    if failure in FAIL_CLOSED_FAILURE_CLASSES:
+        route, reason = "blocked", f"fail_closed_{failure}"
+    elif conflict:
         route, reason = "user_decision", "contract_conflict"
     elif tools and not failure:
         route, reason = "deterministic_tool", "available_deterministic_tool"
@@ -515,22 +639,169 @@ def choose_executor(raw: Mapping[str, Any]) -> dict[str, Any]:
         "schema_version": 1,
         "route": route,
         "reason": reason,
-        "deterministic_failure": failure or None,
+        "deterministic_failure_class": failure or None,
         "promotion_review_required": bool(failure) or (bool(data.get("mechanical", False)) and not tools),
         "model_change_authorized": False,
     }
 
 
-def _artifact_refs(value: Any, label: str) -> tuple[str, ...]:
+def _repository_root(value: Any) -> Path:
+    raw = str(value) if isinstance(value, os.PathLike) else _text(
+        value, "trace.repository_root", limit=1024
+    )
+    root = _local_path(raw, "trace.repository_root").resolve()
+    if not root.is_dir() or not (root / ".git").exists():
+        raise SpecExecutionError("trace repository_root is not an exact Git root", "invalid_repository_root")
+    return root
+
+
+def _artifact_refs(
+    value: Any,
+    label: str,
+    *,
+    repository_root: Path | None = None,
+    require_existing: bool = False,
+) -> tuple[str, ...]:
     refs = _string_list(value, label, required=True)
     for ref in refs:
         path = Path(ref)
-        if path.is_absolute() or ".." in path.parts or ref.startswith(("~", "/", "\\")):
+        windows = PureWindowsPath(ref)
+        posix = PurePosixPath(ref)
+        if (
+            path.is_absolute() or windows.is_absolute() or bool(windows.drive)
+            or posix.is_absolute() or ".." in windows.parts or ".." in posix.parts
+            or ref.startswith(("~", "/", "\\")) or ":" in ref or "\\" in ref
+            or not ARTIFACT_REF.fullmatch(ref)
+        ):
             raise SpecExecutionError(f"{label} contains unsafe path", "unsafe_artifact_path")
+        if repository_root is not None:
+            lexical = repository_root.joinpath(*posix.parts)
+            current = repository_root
+            for part in posix.parts:
+                current = current / part
+                if current.exists() and _is_link_like(current):
+                    raise SpecExecutionError(f"{label} contains link-like path", "unsafe_artifact_path")
+            resolved = lexical.resolve(strict=False)
+            try:
+                resolved.relative_to(repository_root)
+            except ValueError as exc:
+                raise SpecExecutionError(f"{label} escapes repository root", "unsafe_artifact_path") from exc
+            if require_existing and not resolved.is_file():
+                raise SpecExecutionError(f"{label} references a missing file", "missing_known_artifact")
     return refs
 
 
-def validate_trace(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) -> dict[str, Any]:
+def build_trace_contract(repository_root: Path, contract_path: Path) -> TraceContract:
+    """Build trusted trace facts after verifying the live repository selector and file inventory."""
+    root = _repository_root(repository_root)
+    canonical_contract = str(contract_path).replace("\\", "/")
+    _artifact_refs(
+        [canonical_contract], "trace.contract_path", repository_root=root, require_existing=True
+    )
+    try:
+        tracked = subprocess.run(
+            [
+                "git", "-c", f"safe.directory={root}", "-C", str(root),
+                "ls-files", "--error-unmatch", "--", canonical_contract,
+            ],
+            check=False, capture_output=True, text=True, encoding="utf-8",
+        )
+    except OSError as exc:
+        raise SpecExecutionError("cannot verify trace contract tracking", "invalid_trace_contract") from exc
+    if tracked.returncode != 0:
+        raise SpecExecutionError("trace contract must be Git-tracked", "untracked_trace_contract")
+    contract_file = root.joinpath(*PurePosixPath(canonical_contract).parts)
+    committed = subprocess.run(
+        [
+            "git", "-c", f"safe.directory={root}", "-C", str(root),
+            "show", f"HEAD:{canonical_contract}",
+        ],
+        check=False, capture_output=True,
+    )
+    if committed.returncode != 0 or committed.stdout != contract_file.read_bytes():
+        raise SpecExecutionError(
+            "trace contract must match its committed Git version", "stale_trace_contract"
+        )
+    raw = _read_json(contract_file)
+    data = _mapping(
+        raw,
+        "trace_contract",
+        allowed={
+            "stage_id", "requirement_owners", "known_implementation_files",
+            "known_validator_ids", "known_test_commands",
+        },
+        required={
+            "stage_id", "requirement_owners", "known_implementation_files",
+            "known_validator_ids", "known_test_commands",
+        },
+    )
+    stage_id = _identifier(data["stage_id"], "trace_contract.stage_id")
+    stages_path = root / "prompts" / "STAGES.md"
+    if not stages_path.is_file() or stages_path.stat().st_size > MAX_INPUT_BYTES:
+        raise SpecExecutionError("canonical STAGES is missing or oversized", "invalid_stage_contract")
+    try:
+        stages_text = stages_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise SpecExecutionError("canonical STAGES is unreadable", "invalid_stage_contract") from exc
+    selector = parse_stage_id(stages_text)
+    if selector.stage_id != stage_id or selector.issue_code:
+        raise SpecExecutionError("trace contract does not match live stage selector", "stale_stage_contract")
+    record = find_stage_record(stages_text, stage_id)
+    if record.issue_code:
+        raise SpecExecutionError("trace contract stage record is missing or ambiguous", "invalid_stage_contract")
+    try:
+        master_state = extract_master_state(record.record or "")
+    except MasterExecutionError as exc:
+        raise SpecExecutionError(
+            "trace contract requires canonical master-execution state", "invalid_stage_contract"
+        ) from exc
+    if master_state.get("schema_version") != 2:
+        raise SpecExecutionError("trace contract requires CME schema v2", "invalid_stage_contract")
+    selected_slices = [item for item in master_state["slices"] if item["id"] == stage_id]
+    if len(selected_slices) != 1:
+        raise SpecExecutionError("trace contract selected slice is missing", "invalid_stage_contract")
+    canonical_requirements = set(selected_slices[0]["requirements"])
+    canonical_evidence = tuple(selected_slices[0]["required_evidence"])
+    raw_owners = data["requirement_owners"]
+    if not isinstance(raw_owners, Mapping) or not raw_owners or len(raw_owners) > MAX_ITEMS:
+        raise SpecExecutionError("trace contract owners must be a bounded mapping")
+    owners: list[tuple[str, str]] = []
+    for requirement_id, owner in raw_owners.items():
+        owners.append((
+            _identifier(requirement_id, "trace_contract.requirement_id"),
+            _identifier(owner, f"trace_contract.requirement_owners.{requirement_id}"),
+        ))
+    if len({item[0] for item in owners}) != len(owners):
+        raise SpecExecutionError("trace contract has duplicate requirement owners")
+    if {item[0] for item in owners} != canonical_requirements:
+        raise SpecExecutionError(
+            "trace contract owners must exactly cover selected slice requirements",
+            "requirement_contract_mismatch",
+        )
+    return TraceContract(
+        repository_root=root,
+        stage_id=stage_id,
+        stage_status=selected_slices[0]["status"],
+        requirement_owners=tuple(sorted(owners)),
+        known_implementation_files=_artifact_refs(
+            data["known_implementation_files"], "trace_contract.known_implementation_files",
+            repository_root=root, require_existing=True,
+        ),
+        known_validator_ids=_string_list(
+            data["known_validator_ids"], "trace_contract.known_validator_ids",
+            identifiers=True, required=True,
+        ),
+        known_test_commands=_string_list(
+            data["known_test_commands"], "trace_contract.known_test_commands",
+            identifiers=True, required=True,
+        ),
+        required_evidence=canonical_evidence,
+    )
+
+
+def validate_trace(
+    registry: Sequence[SkillMetadata], raw: Mapping[str, Any], contract: TraceContract
+) -> dict[str, Any]:
     """Validate compact requirement→capability→artifact→evidence links without running checks."""
     data = _mapping(
         raw,
@@ -541,9 +812,18 @@ def validate_trace(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) ->
     if data["schema_version"] != 1:
         raise SpecExecutionError("unsupported trace schema_version")
     stage_id = _identifier(data["stage_id"], "trace.stage_id")
+    if stage_id != contract.stage_id:
+        raise SpecExecutionError("trace claim does not match trusted stage contract", "stale_trace_claim")
     stage_status = _text(data["stage_status"], "trace.stage_status", limit=32)
     if stage_status not in TRACE_STATUSES:
         raise SpecExecutionError("unsupported trace stage_status")
+    if stage_status != contract.stage_status:
+        raise SpecExecutionError("trace status does not match trusted stage contract", "stale_trace_claim")
+    requirement_owners = dict(contract.requirement_owners)
+    stage_requirements = set(requirement_owners)
+    known_files = set(contract.known_implementation_files)
+    known_validators = set(contract.known_validator_ids)
+    known_commands = set(contract.known_test_commands)
     rows = data["requirements"]
     if not isinstance(rows, list) or not rows or len(rows) > MAX_ITEMS:
         raise SpecExecutionError("trace requirements must be a non-empty bounded list")
@@ -571,24 +851,41 @@ def validate_trace(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) ->
         capabilities = _string_list(
             row["capability_ids"], f"requirements[{index}].capability_ids", identifiers=True, required=True
         )
-        files = _artifact_refs(row["implementation_files"], f"requirements[{index}].implementation_files")
+        files = _artifact_refs(
+            row["implementation_files"], f"requirements[{index}].implementation_files",
+            repository_root=contract.repository_root,
+        )
         validators = _string_list(
             row["validator_ids"], f"requirements[{index}].validator_ids", identifiers=True
         )
-        commands = _string_list(row["test_commands"], f"requirements[{index}].test_commands")
+        commands = _string_list(
+            row["test_commands"], f"requirements[{index}].test_commands", identifiers=True
+        )
         required_evidence = _string_list(
             row["required_evidence"], f"requirements[{index}].required_evidence", required=True
         )
         evidence = _string_list(row["evidence"], f"requirements[{index}].evidence")
         if any(level not in EVIDENCE_LEVELS for level in required_evidence + evidence):
             raise SpecExecutionError("unsupported trace evidence level")
+        if set(required_evidence) != set(contract.required_evidence):
+            issues.append(f"evidence_contract_mismatch:{requirement_id}")
         if row_stage != stage_id:
             issues.append(f"stage_mismatch:{requirement_id}")
+        if requirement_id not in stage_requirements:
+            issues.append(f"missing_stage_requirement:{requirement_id}")
+        elif requirement_owners[requirement_id] != owner:
+            issues.append(f"owner_mismatch:{requirement_id}")
         for capability in sorted(set(capabilities) - capability_ids):
             issues.append(f"missing_capability:{requirement_id}:{capability}")
+        for file_ref in sorted(set(files) - known_files):
+            issues.append(f"missing_implementation_file:{requirement_id}:{file_ref}")
+        for validator in sorted(set(validators) - known_validators):
+            issues.append(f"missing_validator_reference:{requirement_id}:{validator}")
+        for command in sorted(set(commands) - known_commands):
+            issues.append(f"missing_test_command_reference:{requirement_id}:{command}")
         if not validators and not commands:
             issues.append(f"missing_validator_or_test:{requirement_id}")
-        missing_evidence = sorted(set(required_evidence) - set(evidence))
+        missing_evidence = sorted(set(contract.required_evidence) - set(evidence))
         if missing_evidence:
             issues.append(f"missing_evidence:{requirement_id}:{','.join(missing_evidence)}")
         if stage_status in {"verified", "completed"} and any(
@@ -603,9 +900,13 @@ def validate_trace(registry: Sequence[SkillMetadata], raw: Mapping[str, Any]) ->
             "implementation_files": list(files),
             "validator_ids": list(validators),
             "test_commands": list(commands),
-            "required_evidence": list(required_evidence),
+            "required_evidence": list(contract.required_evidence),
             "evidence": list(evidence),
         })
+    for requirement_id in sorted(stage_requirements - seen):
+        issues.append(f"missing_requirement_trace:{requirement_id}")
+        if stage_status in {"verified", "completed"}:
+            issues.append(f"unsupported_completion:{requirement_id}")
     return {
         "schema_version": 1,
         "status": "blocked" if issues else "valid",
@@ -670,7 +971,7 @@ def decide_placement(global_capabilities: Sequence[str], raw: Mapping[str, Any])
         recommended = "domain"
     else:
         recommended = "project"
-    if requested_scope != recommended and not exception:
+    if requested_scope != recommended:
         status, action, reason = "blocked", "change_scope", "scope_mismatch"
     else:
         status, action = "ready", "place"
@@ -695,7 +996,8 @@ def detect_opportunity(
         "opportunity",
         allowed={
             "procedure_id", "scope", "occurrences", "projects", "stable_contract", "signals",
-            "disqualifiers", "source_kind", "version", "reopen_reason",
+            "disqualifiers", "source_kind", "version", "reopen_reason", "priority",
+            "evidence_refs", "provenance_refs",
         },
         required={
             "procedure_id", "scope", "occurrences", "projects", "stable_contract", "signals",
@@ -722,6 +1024,16 @@ def detect_opportunity(
     if source_kind not in {"task", "review", "learning", "profiler"}:
         raise SpecExecutionError("unsupported opportunity source_kind")
     version = _identifier(data["version"], "opportunity.version")
+    priority = _text(data.get("priority", ""), "opportunity.priority", required=False, limit=16)
+    if priority and priority not in {"low", "medium", "high", "critical"}:
+        raise SpecExecutionError("unsupported opportunity priority")
+    evidence_refs = _string_list(
+        data.get("evidence_refs", list(signals)), "opportunity.evidence_refs", identifiers=True
+    )
+    provenance_refs = _string_list(
+        data.get("provenance_refs", [source_kind, *projects]),
+        "opportunity.provenance_refs", identifiers=True,
+    )
     reopen_reason = _text(
         data.get("reopen_reason", ""), "opportunity.reopen_reason", required=False, limit=MAX_OBSERVATION
     )
@@ -735,13 +1047,15 @@ def detect_opportunity(
         occurrences >= 2
         or bool(set(signals).intersection({"expressible_manual_gate", "stable_mapping", "stable_io_contract"}))
     ) and bool(data["stable_contract"])
+    if not priority:
+        priority = "high" if qualified and occurrences >= 3 else ("medium" if qualified else "low")
     reason = "qualified_repeatable_procedure" if qualified else "not_a_stable_automation_candidate"
     status = "open" if qualified else "not_candidate"
     action = "create_candidate" if qualified else "keep_manual"
     for index, raw_item in enumerate(existing):
         item = _mapping(
             raw_item, f"existing[{index}]",
-            allowed={"id", "fingerprint", "status", "version"},
+            allowed=CANDIDATE_KEYS | {"transition_evidence"},
             required={"id", "fingerprint", "status", "version"},
         )
         existing_fingerprint = _text(item["fingerprint"], f"existing[{index}].fingerprint", limit=64)
@@ -773,6 +1087,9 @@ def detect_opportunity(
         "signals": list(signals),
         "disqualifiers": list(disqualifiers),
         "source_kind": source_kind,
+        "priority": priority,
+        "evidence_refs": list(evidence_refs),
+        "provenance_refs": list(provenance_refs),
         "write_authorized": False,
     }
 
@@ -827,7 +1144,13 @@ def transition_candidate(
     candidate: Mapping[str, Any], target_status: str, evidence: str = ""
 ) -> dict[str, Any]:
     """Apply a pure candidate lifecycle transition; terminal states never reopen implicitly."""
-    current = _text(candidate.get("status"), "candidate.status", limit=24)
+    data = _mapping(
+        candidate,
+        "candidate",
+        allowed=CANDIDATE_KEYS | {"transition_evidence"},
+        required={"status"},
+    )
+    current = _text(data["status"], "candidate.status", limit=24)
     target = _text(target_status, "candidate.target_status", limit=24)
     transitions = {
         "open": {"approved", "rejected", "blocked"},
@@ -841,10 +1164,53 @@ def transition_candidate(
     if current not in transitions or target not in transitions[current]:
         raise SpecExecutionError(f"invalid candidate transition: {current}->{target}", "invalid_transition")
     evidence = _text(evidence, "candidate.evidence", required=False, limit=MAX_OBSERVATION)
+    _reject_secret_like([evidence], "candidate.evidence")
     if target in {"implemented", "verified", "closed"} and not evidence:
         raise SpecExecutionError("candidate transition requires evidence", "evidence_required")
-    result = dict(candidate)
-    result["status"] = target
+    result: dict[str, Any] = {"status": target}
+    if "schema_version" in data:
+        if data["schema_version"] != 1:
+            raise SpecExecutionError("unsupported candidate schema_version")
+        result["schema_version"] = 1
+    if "id" in data:
+        result["id"] = _identifier(data["id"], "candidate.id")
+    if "fingerprint" in data:
+        fingerprint = _text(data["fingerprint"], "candidate.fingerprint", limit=64)
+        if not SHA256.fullmatch(fingerprint):
+            raise SpecExecutionError("candidate fingerprint must be SHA-256")
+        result["fingerprint"] = fingerprint
+    if "version" in data:
+        result["version"] = _identifier(data["version"], "candidate.version")
+    if "scope" in data:
+        scope = _text(data["scope"], "candidate.scope", limit=16)
+        if scope not in SCOPES:
+            raise SpecExecutionError("unsupported candidate scope")
+        result["scope"] = scope
+    for key in ("action", "reason"):
+        if key in data:
+            result[key] = _identifier(data[key], f"candidate.{key}")
+    if "qualified" in data:
+        if not isinstance(data["qualified"], bool):
+            raise SpecExecutionError("candidate.qualified must be boolean")
+        result["qualified"] = data["qualified"]
+    if "occurrences" in data:
+        occurrences = data["occurrences"]
+        if type(occurrences) is not int or occurrences < 1 or occurrences > 1_000_000:
+            raise SpecExecutionError("candidate.occurrences must be bounded")
+        result["occurrences"] = occurrences
+    for key in ("projects", "signals", "disqualifiers", "evidence_refs", "provenance_refs"):
+        if key in data:
+            result[key] = list(_string_list(data[key], f"candidate.{key}", identifiers=True))
+    if "source_kind" in data:
+        source_kind = _text(data["source_kind"], "candidate.source_kind", limit=16)
+        if source_kind not in {"task", "review", "learning", "profiler"}:
+            raise SpecExecutionError("unsupported candidate source_kind")
+        result["source_kind"] = source_kind
+    if "priority" in data:
+        priority = _text(data["priority"], "candidate.priority", limit=16)
+        if priority not in {"low", "medium", "high", "critical"}:
+            raise SpecExecutionError("unsupported candidate priority")
+        result["priority"] = priority
     result["transition_evidence"] = evidence or None
     result["write_authorized"] = False
     return result
@@ -945,6 +1311,8 @@ def retirement_preflight(registry: Sequence[SkillMetadata], raw: Mapping[str, An
         raise SpecExecutionError("replacement_verified must be boolean")
     source_digest = _text(data["source_digest"], "retirement.source_digest", limit=128)
     runtime_digest = _text(data["runtime_digest"], "retirement.runtime_digest", limit=128)
+    if not SHA256.fullmatch(source_digest) or not SHA256.fullmatch(runtime_digest):
+        raise SpecExecutionError("retirement digests must be lowercase SHA-256", "invalid_digest")
     issues: list[str] = []
     action = "retirement_candidate"
     if skill.status == "retired":
@@ -956,7 +1324,12 @@ def retirement_preflight(registry: Sequence[SkillMetadata], raw: Mapping[str, An
         issues.extend(f"live_consumer:{consumer}" for consumer in consumers)
     if source_digest != runtime_digest:
         issues.append("source_runtime_digest_mismatch")
-    relevant = set(skill.capabilities).intersection(required)
+    if skill.status != "retired":
+        issues.extend(
+            f"capability_inventory_incomplete:{capability}"
+            for capability in sorted(set(skill.capabilities) - set(required))
+        )
+    relevant = set() if skill.status == "retired" else set(skill.capabilities)
     if relevant:
         if replacement is None:
             issues.append("sole_required_capability_owner")
@@ -965,7 +1338,7 @@ def retirement_preflight(registry: Sequence[SkillMetadata], raw: Mapping[str, An
         elif not relevant.issubset(set(replacement.capabilities)):
             issues.append("replacement_missing_capability")
     status = "already_retired" if action == "already_retired" and not issues else (
-        "eligible" if not issues else "blocked"
+        "review_required" if not issues else "blocked"
     )
     return {
         "schema_version": 1,
@@ -974,12 +1347,14 @@ def retirement_preflight(registry: Sequence[SkillMetadata], raw: Mapping[str, An
         "skill_id": skill_id,
         "replacement_id": replacement_id or None,
         "issues": sorted(issues),
+        "attestation_trusted": False,
         "write_authorized": False,
         "deletion_authorized": False,
     }
 
 
 def _read_json(path: Path) -> Mapping[str, Any]:
+    path = _local_path(path, "input")
     if not path.is_file() or path.stat().st_size > MAX_INPUT_BYTES:
         raise SpecExecutionError("input is missing or oversized")
     try:
@@ -989,36 +1364,50 @@ def _read_json(path: Path) -> Mapping[str, Any]:
     return _mapping(raw, "input", allowed=set(raw) if isinstance(raw, Mapping) else set())
 
 
+def _add_registry_arguments(command: argparse.ArgumentParser) -> None:
+    command.add_argument("--registry", type=Path, required=True)
+    command.add_argument("--source-root", type=Path)
+    command.add_argument("--delta-registry", type=Path)
+    command.add_argument("--delta-source-root", type=Path)
+
+
+def _load_composed_registry(args: argparse.Namespace) -> tuple[SkillMetadata, ...]:
+    global_registry = load_registry(args.registry, args.source_root)
+    if args.delta_registry is None:
+        return compose_registries(global_registry)
+    return compose_registries(
+        global_registry,
+        load_registry(args.delta_registry, args.delta_source_root),
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pure Specification → Execution decisions")
+    parser = argparse.ArgumentParser(description="Pure Specification-to-Execution decisions")
     commands = parser.add_subparsers(dest="command", required=True)
     intake = commands.add_parser("intake", help="normalize explicit compact intake")
     intake.add_argument("--input", type=Path, required=True)
     route = commands.add_parser("route", help="select relevant Skill metadata")
-    route.add_argument("--registry", type=Path, required=True)
-    route.add_argument("--source-root", type=Path)
+    _add_registry_arguments(route)
     route.add_argument("--input", type=Path, required=True)
     executor = commands.add_parser("executor", help="choose cheapest sufficient executor class")
     executor.add_argument("--input", type=Path, required=True)
     trace = commands.add_parser("trace", help="validate requirement/capability/evidence links")
-    trace.add_argument("--registry", type=Path, required=True)
-    trace.add_argument("--source-root", type=Path)
+    _add_registry_arguments(trace)
+    trace.add_argument("--contract", type=Path, required=True)
+    trace.add_argument("--repository-root", type=Path, required=True)
     trace.add_argument("--input", type=Path, required=True)
     placement = commands.add_parser("placement", help="decide global/domain/project placement")
-    placement.add_argument("--registry", type=Path, required=True)
-    placement.add_argument("--source-root", type=Path)
+    _add_registry_arguments(placement)
     placement.add_argument("--input", type=Path, required=True)
     opportunity = commands.add_parser("opportunity", help="detect a repeatable automation candidate")
     opportunity.add_argument("--input", type=Path, required=True)
     promotion = commands.add_parser("promotion", help="choose a promotion target and placement")
-    promotion.add_argument("--registry", type=Path, required=True)
-    promotion.add_argument("--source-root", type=Path)
+    _add_registry_arguments(promotion)
     promotion.add_argument("--input", type=Path, required=True)
     context = commands.add_parser("context-diagnostics", help="check lightweight context economy signals")
     context.add_argument("--input", type=Path, required=True)
     retirement = commands.add_parser("retirement", help="preflight a two-phase Skill retirement")
-    retirement.add_argument("--registry", type=Path, required=True)
-    retirement.add_argument("--source-root", type=Path)
+    _add_registry_arguments(retirement)
     retirement.add_argument("--input", type=Path, required=True)
     return parser
 
@@ -1030,17 +1419,19 @@ def main(argv: Iterable[str] | None = None) -> int:
             output = normalize_intake(_read_json(args.input))
         elif args.command == "route":
             output = route_skills(
-                load_registry(args.registry, args.source_root),
+                _load_composed_registry(args),
                 _read_json(args.input),
             )
         elif args.command == "executor":
             output = choose_executor(_read_json(args.input))
         elif args.command == "trace":
             output = validate_trace(
-                load_registry(args.registry, args.source_root), _read_json(args.input)
+                _load_composed_registry(args),
+                _read_json(args.input),
+                build_trace_contract(args.repository_root, args.contract),
             )
         elif args.command == "placement":
-            registry = load_registry(args.registry, args.source_root)
+            registry = _load_composed_registry(args)
             global_capabilities = sorted({
                 capability for item in registry if item.scope == "global"
                 for capability in item.capabilities
@@ -1049,7 +1440,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         elif args.command == "opportunity":
             output = detect_opportunity(_read_json(args.input))
         elif args.command == "promotion":
-            registry = load_registry(args.registry, args.source_root)
+            registry = _load_composed_registry(args)
             global_capabilities = sorted({
                 capability for item in registry if item.scope == "global"
                 for capability in item.capabilities
@@ -1059,13 +1450,13 @@ def main(argv: Iterable[str] | None = None) -> int:
             output = analyze_context_economy(_read_json(args.input))
         else:
             output = retirement_preflight(
-                load_registry(args.registry, args.source_root), _read_json(args.input)
+                _load_composed_registry(args), _read_json(args.input)
             )
     except SpecExecutionError as exc:
         print(json.dumps({"ok": False, "error": str(exc), "error_code": exc.code},
-                         sort_keys=True, ensure_ascii=False))
+                         sort_keys=True, ensure_ascii=True))
         return 2
-    print(json.dumps({"ok": True, "result": output}, sort_keys=True, ensure_ascii=False))
+    print(json.dumps({"ok": True, "result": output}, sort_keys=True, ensure_ascii=True))
     return 0
 
 

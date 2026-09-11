@@ -63,7 +63,7 @@ def skill_registry_issues(workspace: Path) -> tuple[Issue, ...]:
     if not registry.exists():
         return ()
     try:
-        load_registry(registry, workspace)
+        entries = load_registry(registry, workspace)
     except (OSError, SpecExecutionError) as exc:
         return (
             Issue(
@@ -72,6 +72,16 @@ def skill_registry_issues(workspace: Path) -> tuple[Issue, ...]:
                 f"Skill routing metadata is invalid: {exc}",
             ),
         )
+    for entry in entries:
+        expected = f"skill-sources/{entry.id}/SKILL.md"
+        if entry.scope != "global" or entry.source != expected:
+            return (
+                Issue(
+                    "invalid-skill-registry",
+                    "skill-sources/registry.toml",
+                    f"global Skill entry must use global scope and canonical source: {entry.id}",
+                ),
+            )
     return ()
 
 

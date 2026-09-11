@@ -7,6 +7,8 @@ from dataclasses import replace
 from io import StringIO
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 try:
     from tools import spec_execution as pipeline
@@ -17,6 +19,15 @@ except ImportError:  # pragma: no cover
 
 
 class CompactIntakeTests(unittest.TestCase):
+    def test_direct_cli_help_runs_from_repository_root(self):
+        root = Path(__file__).resolve().parents[1]
+        completed = subprocess.run(
+            [sys.executable, "-B", "tools/spec_execution.py", "--help"],
+            cwd=root, capture_output=True, text=True, encoding="utf-8", check=False,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertIn("Specification", completed.stdout)
+
     def test_continue_existing_preserves_explicit_user_constraints(self):
         result = pipeline.normalize_intake({
             "entrypoint": "CONTINUE_EXISTING", "project": "codex-dev",
@@ -73,6 +84,16 @@ class CompactIntakeTests(unittest.TestCase):
             self.assertEqual(0, code)
             self.assertTrue(json.loads(output.getvalue())["ok"])
 
+    def test_intake_rejects_secret_like_value_without_echo(self):
+        with self.assertRaises(pipeline.SpecExecutionError) as caught:
+            pipeline.normalize_intake({
+                "entrypoint": "CONTINUE_EXISTING", "project": "codex-dev",
+                "explicit_constraints": ["api_key=synthetic-sensitive-value"],
+                "explicit_non_goals": [], "user_decisions": [],
+            })
+        self.assertEqual("secret_like_input", caught.exception.code)
+        self.assertNotIn("synthetic-sensitive-value", str(caught.exception))
+
 
 def skill_block(
     skill_id: str,
@@ -111,6 +132,23 @@ class RegistryAndRouterTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        implementation = self.root / "tools" / "spec_execution.py"
+        implementation.parent.mkdir()
+        implementation.write_text("# trace fixture\n", encoding="utf-8")
+        stages = self.root / "prompts" / "STAGES.md"
+        stages.parent.mkdir()
+        state = cme_state(2)
+        state["slices"][0]["id"] = "DEV-SEP-C"
+        state["slices"][0]["requirements"] = ["SEP-005"]
+        state["slices"][0]["status"] = "completed"
+        state["slices"][0]["required_evidence"] = ["L1", "L2"]
+        state["slices"][0]["evidence"] = ["L1", "L2"]
+        stages.write_text(
+            "# Stages\n\n- Stage ID: `DEV-SEP-C`\n\n## DEV-SEP-C — Trace fixture\n\n"
+            f"```master-execution\n{json.dumps(state)}\n```\n",
+            encoding="utf-8",
+        )
         ids = ("api-contract", "backend-integration", "database-migration", "frontend-ui", "old-seo")
         blocks = [skill_block("api-contract", "api.contract", "api"),
                   skill_block("backend-integration", "backend.integration", "backend"),
@@ -128,9 +166,27 @@ class RegistryAndRouterTests(unittest.TestCase):
                 f"---\nname: {skill_id}\ndescription: test\n---\n", encoding="utf-8")
         self.path = self.root / "skill-sources" / "registry.toml"
         self.path.write_text("schema_version = 1\n" + "".join(blocks), encoding="utf-8")
+        contract = self.root / "specs" / "trace-contract.json"
+        contract.parent.mkdir()
+        contract.write_text(json.dumps({
+            "stage_id": "DEV-SEP-C",
+            "requirement_owners": {"SEP-005": "spec_execution"},
+            "known_implementation_files": ["tools/spec_execution.py"],
+            "known_validator_ids": ["targeted_tests"],
+            "known_test_commands": ["spec_execution_tests"],
+        }), encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.root), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(self.root), "config", "user.name", "Codex Test"], check=True)
+        subprocess.run(["git", "-C", str(self.root), "config", "user.email", "test@example.invalid"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.root), "commit", "-q", "-m", "trace fixture"], check=True
+        )
 
     def registry(self):
         return pipeline.load_registry(self.path, self.root)
+
+    def trace_contract(self):
+        return pipeline.build_trace_contract(self.root, Path("specs/trace-contract.json"))
 
     def test_router_requires_known_stage_and_scope(self):
         registry = self.registry()
@@ -148,6 +204,10 @@ class RegistryAndRouterTests(unittest.TestCase):
         self.assertEqual(["api-contract", "backend-integration"], route["selected_skill_ids"])
         self.assertNotIn("frontend-ui", route["selected_skill_ids"])
         self.assertNotIn("old-seo", route["selected_skill_ids"])
+        self.assertEqual(
+            ["global_invariants", "project_overlay", "live_repo_state", "stage.DEV-SEP-B"],
+            route["required_context"][:4],
+        )
 
     def test_missing_capability_is_typed_blocked_route(self):
         route = pipeline.route_skills(self.registry(), {
@@ -179,23 +239,57 @@ class RegistryAndRouterTests(unittest.TestCase):
         with self.assertRaisesRegex(pipeline.SpecExecutionError, "ambiguous capability owner"):
             self.registry()
 
+    def test_registry_requires_real_leading_skill_frontmatter_and_contained_path(self):
+        source = self.root / "skill-sources" / "api-contract" / "SKILL.md"
+        source.write_text("prose before marker\nname: api-contract\n", encoding="utf-8")
+        with self.assertRaisesRegex(pipeline.SpecExecutionError, "frontmatter"):
+            self.registry()
+        with self.assertRaises(pipeline.SpecExecutionError) as outside:
+            pipeline.load_registry(self.path, self.root / "different-root")
+        self.assertEqual("unsafe_registry_path", outside.exception.code)
+        with self.assertRaises(pipeline.SpecExecutionError) as network:
+            pipeline.load_registry(self.path, Path("//example.invalid/share"))
+        self.assertEqual("unsafe_local_path", network.exception.code)
+
+    def test_global_and_project_registry_delta_compose_without_shadowing(self):
+        global_registry = self.registry()
+        project_skill = replace(
+            global_registry[0], id="billing-format", scope="project",
+            source=".codex/skills/billing-format/SKILL.md",
+            capabilities=("billing.format",), triggers=("billing",),
+        )
+        combined = pipeline.compose_registries(global_registry, (project_skill,))
+        route = pipeline.route_skills(combined, {
+            "stage_id": "DEV-SEP-F", "scope": "project", "triggers": ["billing"],
+            "required_capabilities": ["billing.format"],
+        })
+        self.assertEqual(["billing-format"], route["selected_skill_ids"])
+        with self.assertRaises(pipeline.SpecExecutionError) as duplicate:
+            pipeline.compose_registries(
+                global_registry,
+                (replace(project_skill, capabilities=(global_registry[0].capabilities[0],)),),
+            )
+        self.assertEqual("ambiguous_capability_owner", duplicate.exception.code)
+
     def test_valid_critical_trace_requires_all_links_and_evidence(self):
         result = pipeline.validate_trace(self.registry(), {
-            "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "verified",
+            "schema_version": 1,
+            "stage_id": "DEV-SEP-C", "stage_status": "completed",
             "requirements": [{
                 "id": "SEP-005", "owner_component": "spec_execution", "stage_id": "DEV-SEP-C",
                 "capability_ids": ["api.contract", "backend.integration"],
                 "implementation_files": ["tools/spec_execution.py"],
                 "validator_ids": ["targeted_tests"],
-                "test_commands": ["python -m unittest tools.test_spec_execution"],
+                "test_commands": ["spec_execution_tests"],
                 "required_evidence": ["L1", "L2"], "evidence": ["L1", "L2"],
             }],
-        })
+        }, self.trace_contract())
         self.assertEqual("valid", result["status"])
 
     def test_trace_blocks_missing_capability_evidence_and_completion(self):
         result = pipeline.validate_trace(self.registry(), {
-            "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "completed",
+            "schema_version": 1,
+            "stage_id": "DEV-SEP-C", "stage_status": "completed",
             "requirements": [{
                 "id": "SEP-005", "owner_component": "spec_execution", "stage_id": "DEV-SEP-C",
                 "capability_ids": ["missing.capability"],
@@ -203,7 +297,7 @@ class RegistryAndRouterTests(unittest.TestCase):
                 "validator_ids": [], "test_commands": [],
                 "required_evidence": ["L1", "L2"], "evidence": ["L1"],
             }],
-        })
+        }, self.trace_contract())
         self.assertEqual("blocked", result["status"])
         self.assertTrue(any(item.startswith("missing_capability:") for item in result["issues"]))
         self.assertTrue(any(item.startswith("missing_evidence:") for item in result["issues"]))
@@ -218,9 +312,113 @@ class RegistryAndRouterTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(pipeline.SpecExecutionError, "duplicate requirement"):
             pipeline.validate_trace(self.registry(), {
-                "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "verified",
+                "schema_version": 1,
+                "stage_id": "DEV-SEP-C", "stage_status": "completed",
                 "requirements": [row, dict(row)],
-            })
+            }, self.trace_contract())
+
+    def test_trace_rejects_unknown_requirement_owner_file_validator_and_command(self):
+        result = pipeline.validate_trace(self.registry(), {
+            "schema_version": 1,
+            "stage_id": "DEV-SEP-C", "stage_status": "completed",
+            "requirements": [{
+                "id": "NO-SUCH-REQ", "owner_component": "bogus_owner",
+                "stage_id": "DEV-SEP-C", "capability_ids": ["api.contract"],
+                "implementation_files": ["missing.py"], "validator_ids": ["bogus_validator"],
+                "test_commands": ["bogus_command"], "required_evidence": ["L1"],
+                "evidence": ["L1"],
+            }],
+        }, self.trace_contract())
+        self.assertEqual("blocked", result["status"])
+        self.assertIn("missing_stage_requirement:NO-SUCH-REQ", result["issues"])
+        self.assertIn("missing_implementation_file:NO-SUCH-REQ:missing.py", result["issues"])
+        self.assertIn("missing_validator_reference:NO-SUCH-REQ:bogus_validator", result["issues"])
+        self.assertIn("missing_test_command_reference:NO-SUCH-REQ:bogus_command", result["issues"])
+        self.assertIn("unsupported_completion:NO-SUCH-REQ", result["issues"])
+
+    def test_trace_rejects_windows_drive_and_link_like_artifact_paths(self):
+        with self.assertRaises(pipeline.SpecExecutionError) as drive_error:
+            pipeline._artifact_refs(
+                ["C:relative.py"], "files", repository_root=self.root
+            )
+        self.assertEqual("unsafe_artifact_path", drive_error.exception.code)
+
+        outside = self.root.parent / f"{self.root.name}-outside.py"
+        outside.write_text("outside\n", encoding="utf-8")
+        self.addCleanup(lambda: outside.unlink(missing_ok=True))
+        link = self.root / "tools" / "outside-link.py"
+        try:
+            link.symlink_to(outside)
+        except OSError:
+            self.skipTest("symlink creation is unavailable")
+        with self.assertRaises(pipeline.SpecExecutionError) as link_error:
+            pipeline._artifact_refs(
+                ["tools/outside-link.py"], "files", repository_root=self.root
+            )
+        self.assertEqual("unsafe_artifact_path", link_error.exception.code)
+
+        with self.assertRaises(pipeline.SpecExecutionError):
+            pipeline._artifact_refs(
+                ["tools/test.py && destructive"], "files", repository_root=self.root
+            )
+
+    def test_trace_contract_must_match_canonical_slice_requirements(self):
+        contract = self.root / "specs" / "trace-contract.json"
+        contract.write_text(json.dumps({
+            "stage_id": "DEV-SEP-C", "requirement_owners": {"FAKE-REQ": "fake_owner"},
+            "known_implementation_files": ["tools/spec_execution.py"],
+            "known_validator_ids": ["targeted_tests"],
+            "known_test_commands": ["spec_execution_tests"],
+        }), encoding="utf-8")
+        subprocess.run(["git", "-C", str(self.root), "add", "specs/trace-contract.json"], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.root), "commit", "-q", "-m", "invalid trace fixture"], check=True
+        )
+        with self.assertRaises(pipeline.SpecExecutionError) as mismatch:
+            pipeline.build_trace_contract(self.root, Path("specs/trace-contract.json"))
+        self.assertEqual("requirement_contract_mismatch", mismatch.exception.code)
+
+    def test_trace_contract_must_be_git_tracked(self):
+        untracked = self.root / "specs" / "untracked-contract.json"
+        untracked.write_text((self.root / "specs" / "trace-contract.json").read_text(), encoding="utf-8")
+        with self.assertRaises(pipeline.SpecExecutionError) as caught:
+            pipeline.build_trace_contract(self.root, Path("specs/untracked-contract.json"))
+        self.assertEqual("untracked_trace_contract", caught.exception.code)
+
+    def test_trace_contract_must_match_committed_bytes(self):
+        contract = self.root / "specs" / "trace-contract.json"
+        contract.write_text(contract.read_text() + "\n", encoding="utf-8")
+        with self.assertRaises(pipeline.SpecExecutionError) as caught:
+            pipeline.build_trace_contract(self.root, Path("specs/trace-contract.json"))
+        self.assertEqual("stale_trace_contract", caught.exception.code)
+
+    def test_trace_requires_full_canonical_coverage_evidence_and_fresh_status(self):
+        contract = self.trace_contract()
+        expanded = replace(
+            contract,
+            requirement_owners=contract.requirement_owners + (("SEP-006", "spec_execution"),),
+        )
+        row = {
+            "id": "SEP-005", "owner_component": "spec_execution", "stage_id": "DEV-SEP-C",
+            "capability_ids": ["api.contract"],
+            "implementation_files": ["tools/spec_execution.py"],
+            "validator_ids": ["targeted_tests"],
+            "test_commands": ["spec_execution_tests"],
+            "required_evidence": ["L1"], "evidence": ["L1"],
+        }
+        result = pipeline.validate_trace(self.registry(), {
+            "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "completed",
+            "requirements": [row],
+        }, expanded)
+        self.assertIn("evidence_contract_mismatch:SEP-005", result["issues"])
+        self.assertIn("missing_evidence:SEP-005:L2", result["issues"])
+        self.assertIn("missing_requirement_trace:SEP-006", result["issues"])
+        with self.assertRaises(pipeline.SpecExecutionError) as stale:
+            pipeline.validate_trace(self.registry(), {
+                "schema_version": 1, "stage_id": "DEV-SEP-C", "stage_status": "running",
+                "requirements": [row],
+            }, contract)
+        self.assertEqual("stale_trace_claim", stale.exception.code)
 
     def test_placement_reuses_generic_global_capability(self):
         result = pipeline.decide_placement(["git.evidence", "context.bounded"], {
@@ -261,6 +459,15 @@ class RegistryAndRouterTests(unittest.TestCase):
             "consumer_projects": 1, "requested_scope": "project"})
         self.assertEqual("needs_decision", result["status"])
 
+    def test_exception_cannot_place_project_semantics_in_global_dev(self):
+        result = pipeline.decide_placement([], {
+            "capability_id": "billing.format", "semantics": "project",
+            "consumer_projects": 1, "requested_scope": "global",
+            "exception": "put product semantics globally",
+        })
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("scope_mismatch", result["reason"])
+
 
 class CheapestSufficientExecutorTests(unittest.TestCase):
     def test_deterministic_route_is_cheapest_sufficient(self):
@@ -272,7 +479,7 @@ class CheapestSufficientExecutorTests(unittest.TestCase):
     def test_deterministic_failure_escalates_with_stable_reason(self):
         decision = pipeline.choose_executor({
             "risk": "low", "novelty": "bounded", "deterministic_tools": ["stage_selector"],
-            "deterministic_failure": "unsupported record"})
+            "deterministic_failure_class": "unsupported_input"})
         self.assertEqual("cheap_bounded_model", decision["route"])
         self.assertTrue(decision["reason"].endswith(":deterministic_failure"))
         self.assertTrue(decision["promotion_review_required"])
@@ -287,6 +494,19 @@ class CheapestSufficientExecutorTests(unittest.TestCase):
             "risk": "medium", "novelty": "bounded", "contract_conflict": True})
         self.assertEqual("user_decision", decision["route"])
         self.assertFalse(decision["model_change_authorized"])
+
+    def test_security_integrity_failure_never_falls_back_to_model(self):
+        decision = pipeline.choose_executor({
+            "risk": "low", "novelty": "known", "deterministic_tools": ["signature_check"],
+            "deterministic_failure_class": "security_integrity",
+        })
+        self.assertEqual("blocked", decision["route"])
+        self.assertNotIn("signature", json.dumps(decision))
+
+    def test_unc_input_path_is_rejected_before_io(self):
+        with self.assertRaises(pipeline.SpecExecutionError) as caught:
+            pipeline._read_json(Path("//example.invalid/share/input.json"))
+        self.assertEqual("unsafe_local_path", caught.exception.code)
 
 
 def cme_state(schema_version=1):
@@ -336,8 +556,18 @@ class AutomationPromotionTests(unittest.TestCase):
         self.assertEqual("open", candidate["status"])
         self.assertTrue(candidate["fingerprint"])
         self.assertEqual("global", candidate["scope"])
+        self.assertEqual("high", candidate["priority"])
+        self.assertEqual(
+            ["expressible_manual_gate", "repeated_mechanical_sequence"],
+            candidate["evidence_refs"],
+        )
+        self.assertEqual(["billing", "checkout", "task"], candidate["provenance_refs"])
         self.assertNotIn("procedure_id", candidate)
         self.assertFalse(candidate["write_authorized"])
+        transitioned = pipeline.transition_candidate(candidate, "approved")
+        for key in ("occurrences", "projects", "signals", "source_kind", "priority",
+                    "evidence_refs", "provenance_refs"):
+            self.assertEqual(candidate[key], transitioned[key])
 
     def test_one_off_unknown_unstable_or_negative_observation_is_refused(self):
         base = {"procedure_id": "investigate_defect", "scope": "global", "occurrences": 1,
@@ -365,6 +595,8 @@ class AutomationPromotionTests(unittest.TestCase):
         existing = {key: first[key] for key in ("id", "fingerprint", "status", "version")}
         duplicate = pipeline.detect_opportunity(observation, existing=[existing])
         self.assertEqual("reuse_candidate", duplicate["action"])
+        full_duplicate = pipeline.detect_opportunity(observation, existing=[first])
+        self.assertEqual("reuse_candidate", full_duplicate["action"])
         closed = {**first, "status": "closed"}
         closed = {key: closed[key] for key in ("id", "fingerprint", "status", "version")}
         still_closed = pipeline.detect_opportunity(observation, existing=[closed])
@@ -416,6 +648,19 @@ class AutomationPromotionTests(unittest.TestCase):
         self.assertNotIn("source_payload", serialized)
         self.assertFalse(candidate["write_authorized"])
 
+    def test_lifecycle_rejects_unknown_payload_fields_and_emits_allowlisted_state(self):
+        with self.assertRaises(pipeline.SpecExecutionError):
+            pipeline.transition_candidate({"status": "open", "secret": "do-not-echo"}, "approved")
+        transitioned = pipeline.transition_candidate({
+            "schema_version": 1, "id": "AUTO-123", "fingerprint": "a" * 64,
+            "version": "1", "scope": "global", "status": "open",
+        }, "approved")
+        self.assertEqual(
+            {"schema_version", "id", "fingerprint", "version", "scope", "status",
+             "transition_evidence", "write_authorized"},
+            set(transitioned),
+        )
+
 
 class ContextEconomyAndRetirementTests(unittest.TestCase):
     def test_clean_bounded_route_is_clean(self):
@@ -462,24 +707,27 @@ class ContextEconomyAndRetirementTests(unittest.TestCase):
         registry = self._retirement_registry()
         base = {"skill_id": "skill-a", "live_consumers": [],
                 "required_capabilities": ["cap.one"], "replacement_id": "",
-                "replacement_verified": False, "source_digest": "same", "runtime_digest": "same"}
+                "replacement_verified": False, "source_digest": "a" * 64,
+                "runtime_digest": "a" * 64}
         consumer = pipeline.retirement_preflight(registry, {**base, "live_consumers": ["route_1"]})
         self.assertIn("live_consumer:route_1", consumer["issues"])
         sole = pipeline.retirement_preflight(registry, base)
         self.assertIn("sole_required_capability_owner", sole["issues"])
-        drift = pipeline.retirement_preflight(registry, {**base, "runtime_digest": "other"})
+        drift = pipeline.retirement_preflight(registry, {**base, "runtime_digest": "b" * 64})
         self.assertIn("source_runtime_digest_mismatch", drift["issues"])
 
     def test_retirement_requires_deprecate_first_and_verified_replacement(self):
         registry = self._retirement_registry(active_target=True)
         request = {"skill_id": "skill-a", "live_consumers": [],
                    "required_capabilities": ["cap.one"], "replacement_id": "skill-b",
-                   "replacement_verified": True, "source_digest": "same", "runtime_digest": "same"}
+                   "replacement_verified": True, "source_digest": "a" * 64,
+                   "runtime_digest": "a" * 64}
         result = pipeline.retirement_preflight(registry, request)
         self.assertEqual("blocked", result["status"])
         self.assertIn("deprecate_first", result["issues"])
         result = pipeline.retirement_preflight(self._retirement_registry(), request)
-        self.assertEqual("eligible", result["status"])
+        self.assertEqual("review_required", result["status"])
+        self.assertFalse(result["attestation_trusted"])
         self.assertFalse(result["write_authorized"])
 
     def test_retirement_is_idempotent_for_already_retired_skill(self):
@@ -488,9 +736,23 @@ class ContextEconomyAndRetirementTests(unittest.TestCase):
         result = pipeline.retirement_preflight(registry, {
             "skill_id": "skill-a", "live_consumers": [], "required_capabilities": [],
             "replacement_id": "", "replacement_verified": False,
-            "source_digest": "same", "runtime_digest": "same"})
+            "source_digest": "a" * 64, "runtime_digest": "a" * 64})
         self.assertEqual("already_retired", result["status"])
         self.assertFalse(result["write_authorized"])
+
+    def test_retirement_rejects_incomplete_inventory_and_invalid_digest(self):
+        request = {
+            "skill_id": "skill-a", "live_consumers": [], "required_capabilities": [],
+            "replacement_id": "skill-b", "replacement_verified": True,
+            "source_digest": "a" * 64, "runtime_digest": "a" * 64,
+        }
+        result = pipeline.retirement_preflight(self._retirement_registry(), request)
+        self.assertIn("capability_inventory_incomplete:cap.one", result["issues"])
+        with self.assertRaises(pipeline.SpecExecutionError) as digest:
+            pipeline.retirement_preflight(
+                self._retirement_registry(), {**request, "source_digest": "same", "runtime_digest": "same"}
+            )
+        self.assertEqual("invalid_digest", digest.exception.code)
 
     @staticmethod
     def _retirement_registry(active_target=False):
@@ -511,6 +773,15 @@ class ContextEconomyAndRetirementTests(unittest.TestCase):
         registry = pipeline.load_registry(path, path.parent.parent)
         self.assertGreaterEqual(len(registry), 1)
         self.assertEqual(len(registry), len({item.id for item in registry}))
+        route = pipeline.route_skills(registry, {
+            "stage_id": "DEV-SEP-F", "scope": "global",
+            "required_capabilities": ["stage.implement"],
+        })
+        self.assertLess(
+            route["required_context"].index("selected_spec"),
+            route["required_context"].index("architecture_boundary"),
+        )
+        self.assertNotIn("selected_stage", route["required_context"])
 
 
 if __name__ == "__main__":

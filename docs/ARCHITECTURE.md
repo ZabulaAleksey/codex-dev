@@ -29,9 +29,13 @@ hash-verified runtime projection; registry не является вторым Sk
 
 Critical requirement trace остаётся compact reference graph, а не копией SPEC: requirement ID,
 owner component, current slice, capability, implementation artifact, validator/test и evidence.
-Если additive CME schema metadata потребуется, v1 records остаются valid и не мигрируются массово.
+Claims отделены от trusted contract: live selected CME v2 slice задаёт exact requirements, status и
+required evidence; contained versioned contract связывает owners, existing Git-root files,
+validator IDs и command IDs. Raw shell command не является trace reference. Если additive CME
+schema metadata потребуется, v1 records остаются valid и не мигрируются массово.
 Project/domain registry является optional delta: generic global capability нельзя копировать без
-explicit adapter/exception. Placement validator только диагностирует; detector/promotion decision
+explicit adapter/exception. `compose_registries` объединяет global registry с project/domain delta
+и fail-closed отклоняет shadow ID/capability owner. Placement validator только диагностирует; detector/promotion decision
 не создаёт и не удаляет automation.
 
 Prompt lifecycle, telemetry и durable state сохраняют существующих владельцев:

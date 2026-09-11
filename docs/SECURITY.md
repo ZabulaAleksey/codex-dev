@@ -23,9 +23,18 @@ Pipeline принимает только bounded JSON/TOML с exact fields, не
 prompts, code, secrets или raw handoff content. Router и promotion decision не меняют executor,
 model, Git, policy, hook, Skill source, runtime materialization или внешний backlog.
 
+UNC/device paths отклоняются до filesystem access. Trace contract должен находиться внутри exact
+Git root; live selector и CME v2 slice являются владельцами requirements/status/evidence threshold,
+artifact paths проходят containment/link checks, validators и tests представлены identifier refs.
+Typed security/integrity, authorization, resource-limit и contract-validation failures блокируют
+execution и не передают raw failure text модели или stdout. High-confidence secret-like intake и
+lifecycle evidence отвергаются без echo.
+
 Skill retirement является fail-closed preflight: active Skill сначала должен стать deprecated,
 source/runtime digest обязаны совпасть, live consumers отсутствовать, а replacement — быть active,
 проверенным и покрывать обязательные capabilities. Даже успешный preflight не разрешает удаление.
+Caller consumer/parity attestations не повышаются до trusted evidence: clean preflight возвращает
+`review_required`, `attestation_trusted=false`, `deletion_authorized=false`.
 
 
 ## Границы доверия

@@ -97,6 +97,12 @@ retirement preflight. Negative fixtures покрывают duplicate/unknown/ove
 capability ownership, stale state, unjustified full scan, unused Skill и попытку убрать
 единственного владельца обязательной capability.
 
+Security/correctness regressions дополнительно покрывают global+project/domain registry composition,
+strict Skill frontmatter/path containment, canonical context order, full candidate dedup,
+priority/evidence/provenance retention, allowlisted lifecycle fields, live CME-bound trace coverage,
+status/evidence thresholds, Windows/UNC/link-like paths, command IDs, fail-closed security failures и
+advisory-only retirement attestations.
+
 `tools.test_validate_global_codex` дополнительно проверяет semantic registry validation и
 совместимость workspaces без registry. Тестовые команды из metadata остаются данными и никогда не
 исполняются pipeline или validator-ом.

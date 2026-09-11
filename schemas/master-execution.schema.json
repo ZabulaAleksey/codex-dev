@@ -12,6 +12,12 @@
     "if": {"properties": {"schema_version": {"const": 2}}},
     "then": {"properties": {"slices": {"items": {
       "required": ["requirements", "capabilities"]
+    }}}},
+    "else": {"properties": {"slices": {"items": {
+      "not": {"anyOf": [
+        {"required": ["requirements"]},
+        {"required": ["capabilities"]}
+      ]}
     }}}}
   }],
   "properties": {
