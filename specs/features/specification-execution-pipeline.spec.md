@@ -252,11 +252,13 @@ not a stop. The Notion master has retention `keep` and is not cleanup-eligible o
 ## 9. Rollback
 
 Feature artifacts are versioned and can be reverted atomically. Optional registry/contract absence
-preserves prior CME behavior. Product overlays and active runtime are not migrated by this master;
-no destructive data rollback is required.
+preserves prior CME behavior. Product overlays are not migrated by this master; active runtime is
+materialized only through the manifest/ledger installer with protected runtime paths preserved.
+No destructive data rollback is required.
 
 ## 10. History
 
 - 2026-09-11 — v1: approved Notion master compiled into bounded requirements and progressive graph.
-- 2026-09-11 — `DEV-SEP-A..F` implemented and verified locally at checkpoint `a715f2e`;
-  integration and active-runtime materialization remain explicitly pending.
+- 2026-09-11 — `DEV-SEP-A..F` implemented and verified locally at checkpoint `a715f2e`.
+- 2026-09-12 — feature fast-forward integrated into local `main`; manifest-driven active-runtime
+  materialization, global validation and idempotent no-change dry-run PASS; push not performed.

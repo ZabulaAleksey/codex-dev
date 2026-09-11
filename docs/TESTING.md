@@ -110,8 +110,8 @@ advisory-only retirement attestations.
 Final `DEV-SEP-F` evidence: acceptance `AC-SEP-A..L` PASS; 54 SEP tests PASS with one expected
 Windows symlink skip; full suite 358 PASS with seven expected platform skips; context validator
 270 files PASS; direct Windows CLI help and `git diff --check` PASS. Independent correctness and
-security reviews PASS. Это local feature-branch evidence; merge и active-runtime materialization
-не выполнялись.
+security reviews PASS. Fast-forward local integration, manifest-driven active-runtime
+materialization, global validation and repeat no-change dry-run also PASS; push не выполнялся.
 
 `tools.test_install_global` использует только temporary source/home roots и проверяет separate
 source, populated runtime preservation, manifest allowlist, ledger-governed stale deletion,
