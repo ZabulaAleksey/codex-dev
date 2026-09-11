@@ -296,5 +296,98 @@ class MasterExecutionCompatibilityTests(unittest.TestCase):
             cme.validate_state(state)
 
 
+class AutomationPromotionTests(unittest.TestCase):
+    def test_repeated_stable_manual_validator_qualifies_and_fingerprints(self):
+        observation = {
+            "procedure_id": "check_migration_head", "scope": "global", "occurrences": 3,
+            "projects": ["billing", "checkout"], "stable_contract": True,
+            "signals": ["expressible_manual_gate", "repeated_mechanical_sequence"],
+            "disqualifiers": [], "source_kind": "task", "version": "1",
+        }
+        candidate = pipeline.detect_opportunity(observation)
+        self.assertEqual("open", candidate["status"])
+        self.assertTrue(candidate["fingerprint"])
+        self.assertEqual("global", candidate["scope"])
+        self.assertNotIn("procedure_id", candidate)
+        self.assertFalse(candidate["write_authorized"])
+
+    def test_one_off_unknown_unstable_or_negative_observation_is_refused(self):
+        base = {"procedure_id": "investigate_defect", "scope": "global", "occurrences": 1,
+                "projects": ["billing"], "stable_contract": False,
+                "signals": ["repeated_instruction"], "disqualifiers": [],
+                "source_kind": "review", "version": "1"}
+        cases = (
+            {},
+            {"stable_contract": True, "occurrences": 4, "disqualifiers": ["unknown_research"]},
+            {"stable_contract": True, "occurrences": 4, "disqualifiers": ["unstable_procedure"]},
+            {"stable_contract": True, "occurrences": 4, "disqualifiers": ["negative_risk_benefit"]},
+        )
+        for extra in cases:
+            with self.subTest(extra=extra):
+                result = pipeline.detect_opportunity({**base, **extra})
+                self.assertEqual("not_candidate", result["status"])
+                self.assertEqual("keep_manual", result["action"])
+
+    def test_same_fingerprint_deduplicates_and_closed_stays_closed(self):
+        observation = {"procedure_id": "run_migration_check", "scope": "global", "occurrences": 3,
+                       "projects": ["billing"], "stable_contract": True,
+                       "signals": ["expressible_manual_gate"], "disqualifiers": [],
+                       "source_kind": "task", "version": "1"}
+        first = pipeline.detect_opportunity(observation)
+        existing = {key: first[key] for key in ("id", "fingerprint", "status", "version")}
+        duplicate = pipeline.detect_opportunity(observation, existing=[existing])
+        self.assertEqual("reuse_candidate", duplicate["action"])
+        closed = {**first, "status": "closed"}
+        closed = {key: closed[key] for key in ("id", "fingerprint", "status", "version")}
+        still_closed = pipeline.detect_opportunity(observation, existing=[closed])
+        self.assertEqual("closed", still_closed["status"])
+        reopened = pipeline.detect_opportunity({**observation, "reopen_reason": "new evidence"}, existing=[closed])
+        self.assertEqual("open", reopened["status"])
+
+    def test_promotion_selects_exact_durable_targets_and_preserves_placement(self):
+        for pattern, target in pipeline.PROMOTION_TARGETS.items():
+            with self.subTest(pattern=pattern):
+                result = pipeline.decide_promotion(["generic.capability"], {
+                    "candidate_status": "open", "pattern": pattern,
+                    "capability_id": "new.generic", "semantics": "generic",
+                    "consumer_projects": 2, "requested_scope": "global",
+                    "stable_contract": True, "risk_acceptable": True,
+                })
+                self.assertEqual(target, result["target"])
+                self.assertFalse(result["write_authorized"])
+
+        project = pipeline.decide_promotion([], {
+            "candidate_status": "approved", "pattern": "validation",
+            "capability_id": "billing.format", "semantics": "project",
+            "consumer_projects": 1, "requested_scope": "project",
+            "stable_contract": True, "risk_acceptable": True})
+        self.assertEqual("project", project["placement"]["recommended_scope"])
+
+    def test_invalid_lifecycle_transition_fails_typed(self):
+        with self.assertRaises(pipeline.SpecExecutionError) as caught:
+            pipeline.transition_candidate({"status": "open", "fingerprint": "f"}, "closed")
+        self.assertEqual("invalid_transition", caught.exception.code)
+
+    def test_candidate_lifecycle_requires_evidence_before_verification(self):
+        approved = pipeline.transition_candidate({"status": "open"}, "approved")
+        implemented = pipeline.transition_candidate(approved, "implemented", "checkpoint:abc")
+        verified = pipeline.transition_candidate(implemented, "verified", "tests:pass")
+        closed = pipeline.transition_candidate(verified, "closed", "retention:recorded")
+        self.assertEqual("closed", closed["status"])
+        self.assertFalse(closed["write_authorized"])
+
+    def test_detector_output_is_sanitized_and_never_authorizes_writes(self):
+        candidate = pipeline.detect_opportunity({
+            "procedure_id": "safe_identifier", "scope": "global", "occurrences": 3,
+            "projects": ["billing"], "stable_contract": True,
+            "signals": ["stable_io_contract"], "disqualifiers": [],
+            "source_kind": "learning", "version": "1",
+        })
+        serialized = json.dumps(candidate, ensure_ascii=False)
+        self.assertNotIn("prompt", serialized)
+        self.assertNotIn("source_payload", serialized)
+        self.assertFalse(candidate["write_authorized"])
+
+
 if __name__ == "__main__":
     unittest.main()

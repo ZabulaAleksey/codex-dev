@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict, dataclass
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -59,6 +60,24 @@ FULL_SCAN_REASONS = {
 }
 TRACE_STATUSES = {"planned", "running", "implemented_unverified", "verified", "completed"}
 EVIDENCE_LEVELS = {"L1", "L2", "L3", "L4", "L5", "L6"}
+OPPORTUNITY_SIGNALS = {
+    "repeated_instruction", "repeated_mechanical_sequence", "repeated_user_reminder",
+    "repeated_reasoning_cost", "repeated_review_defect", "expressible_manual_gate",
+    "stable_mapping", "stable_io_contract",
+}
+OPPORTUNITY_DISQUALIFIERS = {
+    "one_off_product_decision", "unknown_research", "unstable_procedure", "negative_risk_benefit",
+}
+CANDIDATE_STATUSES = {"open", "approved", "rejected", "implemented", "verified", "blocked", "closed"}
+PROMOTION_TARGETS = {
+    "repeated_explanation": "documentation_contract",
+    "repeated_procedure": "skill_recipe",
+    "mechanical_sequence": "script_tool",
+    "stable_transformation": "library_module",
+    "routing_decision": "router_rule_table",
+    "validation": "validator_test",
+    "invariant": "hook_ci_gate",
+}
 
 SKILL_KEYS = {
     "id",
@@ -667,6 +686,170 @@ def decide_placement(global_capabilities: Sequence[str], raw: Mapping[str, Any])
     }
 
 
+def detect_opportunity(
+    raw: Mapping[str, Any], existing: Sequence[Mapping[str, Any]] = ()
+) -> dict[str, Any]:
+    """Classify one sanitized observation and deduplicate it by stable structural identity."""
+    data = _mapping(
+        raw,
+        "opportunity",
+        allowed={
+            "procedure_id", "scope", "occurrences", "projects", "stable_contract", "signals",
+            "disqualifiers", "source_kind", "version", "reopen_reason",
+        },
+        required={
+            "procedure_id", "scope", "occurrences", "projects", "stable_contract", "signals",
+            "disqualifiers", "source_kind", "version",
+        },
+    )
+    procedure_id = _identifier(data["procedure_id"], "opportunity.procedure_id")
+    scope = _text(data["scope"], "opportunity.scope", limit=16)
+    if scope not in SCOPES:
+        raise SpecExecutionError("unsupported opportunity scope", "unknown_scope")
+    occurrences = data["occurrences"]
+    if type(occurrences) is not int or occurrences < 1 or occurrences > 1_000_000:
+        raise SpecExecutionError("opportunity occurrences must be a bounded positive integer")
+    projects = _string_list(data["projects"], "opportunity.projects", identifiers=True)
+    if not isinstance(data["stable_contract"], bool):
+        raise SpecExecutionError("stable_contract must be boolean")
+    signals = _string_list(data["signals"], "opportunity.signals", identifiers=True)
+    disqualifiers = _string_list(data["disqualifiers"], "opportunity.disqualifiers", identifiers=True)
+    if any(value not in OPPORTUNITY_SIGNALS for value in signals):
+        raise SpecExecutionError("unsupported opportunity signal")
+    if any(value not in OPPORTUNITY_DISQUALIFIERS for value in disqualifiers):
+        raise SpecExecutionError("unsupported opportunity disqualifier")
+    source_kind = _text(data["source_kind"], "opportunity.source_kind", limit=16)
+    if source_kind not in {"task", "review", "learning", "profiler"}:
+        raise SpecExecutionError("unsupported opportunity source_kind")
+    version = _identifier(data["version"], "opportunity.version")
+    reopen_reason = _text(
+        data.get("reopen_reason", ""), "opportunity.reopen_reason", required=False, limit=MAX_OBSERVATION
+    )
+    fingerprint_source = json.dumps(
+        {"procedure_id": procedure_id, "scope": scope, "projects": list(projects), "version": version},
+        ensure_ascii=True, sort_keys=True, separators=(",", ":"),
+    )
+    fingerprint = hashlib.sha256(fingerprint_source.encode("utf-8")).hexdigest()
+    candidate_id = f"AUTO-{fingerprint[:12].upper()}"
+    qualified = bool(signals) and not disqualifiers and (
+        occurrences >= 2
+        or bool(set(signals).intersection({"expressible_manual_gate", "stable_mapping", "stable_io_contract"}))
+    ) and bool(data["stable_contract"])
+    reason = "qualified_repeatable_procedure" if qualified else "not_a_stable_automation_candidate"
+    status = "open" if qualified else "not_candidate"
+    action = "create_candidate" if qualified else "keep_manual"
+    for index, raw_item in enumerate(existing):
+        item = _mapping(
+            raw_item, f"existing[{index}]",
+            allowed={"id", "fingerprint", "status", "version"},
+            required={"id", "fingerprint", "status", "version"},
+        )
+        existing_fingerprint = _text(item["fingerprint"], f"existing[{index}].fingerprint", limit=64)
+        existing_status = _text(item["status"], f"existing[{index}].status", limit=24)
+        if existing_status not in CANDIDATE_STATUSES:
+            raise SpecExecutionError("unsupported existing candidate status")
+        if existing_fingerprint != fingerprint:
+            continue
+        candidate_id = _identifier(item["id"], f"existing[{index}].id")
+        if existing_status in {"verified", "closed", "rejected"} and not reopen_reason:
+            status, action, reason = existing_status, "closed_duplicate", "terminal_candidate_already_exists"
+        elif existing_status in {"verified", "closed", "rejected"}:
+            status, action, reason = "open", "reopen_candidate", "explicit_reopen_reason"
+        else:
+            status, action, reason = existing_status, "reuse_candidate", "open_candidate_already_exists"
+        break
+    return {
+        "schema_version": 1,
+        "id": candidate_id,
+        "fingerprint": fingerprint,
+        "version": version,
+        "scope": scope,
+        "status": status,
+        "action": action,
+        "reason": reason,
+        "qualified": qualified,
+        "occurrences": occurrences,
+        "projects": list(projects),
+        "signals": list(signals),
+        "disqualifiers": list(disqualifiers),
+        "source_kind": source_kind,
+        "write_authorized": False,
+    }
+
+
+def decide_promotion(global_capabilities: Sequence[str], raw: Mapping[str, Any]) -> dict[str, Any]:
+    """Choose one durable target and placement for a qualified candidate, without applying it."""
+    data = _mapping(
+        raw,
+        "promotion",
+        allowed={
+            "candidate_status", "pattern", "capability_id", "semantics", "consumer_projects",
+            "requested_scope", "equivalent_global", "adapter_delta", "exception",
+            "stable_contract", "risk_acceptable",
+        },
+        required={
+            "candidate_status", "pattern", "capability_id", "semantics", "consumer_projects",
+            "requested_scope", "stable_contract", "risk_acceptable",
+        },
+    )
+    candidate_status = _text(data["candidate_status"], "promotion.candidate_status", limit=24)
+    if candidate_status not in CANDIDATE_STATUSES | {"not_candidate"}:
+        raise SpecExecutionError("unsupported candidate_status")
+    pattern = _text(data["pattern"], "promotion.pattern", limit=32)
+    if pattern not in PROMOTION_TARGETS:
+        raise SpecExecutionError("unsupported promotion pattern")
+    if not isinstance(data["stable_contract"], bool) or not isinstance(data["risk_acceptable"], bool):
+        raise SpecExecutionError("promotion stability/risk flags must be boolean")
+    if candidate_status not in {"open", "approved"} or not data["stable_contract"] or not data["risk_acceptable"]:
+        return {
+            "status": "no_promotion", "reason": "candidate_not_eligible",
+            "target": None, "placement": None, "write_authorized": False,
+        }
+    placement = decide_placement(global_capabilities, {
+        "capability_id": data["capability_id"],
+        "semantics": data["semantics"],
+        "consumer_projects": data["consumer_projects"],
+        "requested_scope": data["requested_scope"],
+        "equivalent_global": data.get("equivalent_global", ""),
+        "adapter_delta": data.get("adapter_delta", False),
+        "exception": data.get("exception", ""),
+    })
+    return {
+        "status": "ready" if placement["status"] == "ready" else placement["status"],
+        "reason": "promotion_target_selected" if placement["status"] == "ready" else placement["reason"],
+        "target": PROMOTION_TARGETS[pattern],
+        "placement": placement,
+        "write_authorized": False,
+    }
+
+
+def transition_candidate(
+    candidate: Mapping[str, Any], target_status: str, evidence: str = ""
+) -> dict[str, Any]:
+    """Apply a pure candidate lifecycle transition; terminal states never reopen implicitly."""
+    current = _text(candidate.get("status"), "candidate.status", limit=24)
+    target = _text(target_status, "candidate.target_status", limit=24)
+    transitions = {
+        "open": {"approved", "rejected", "blocked"},
+        "approved": {"implemented", "blocked", "rejected"},
+        "implemented": {"verified", "blocked"},
+        "verified": {"closed"},
+        "blocked": {"open", "rejected"},
+        "closed": set(),
+        "rejected": set(),
+    }
+    if current not in transitions or target not in transitions[current]:
+        raise SpecExecutionError(f"invalid candidate transition: {current}->{target}", "invalid_transition")
+    evidence = _text(evidence, "candidate.evidence", required=False, limit=MAX_OBSERVATION)
+    if target in {"implemented", "verified", "closed"} and not evidence:
+        raise SpecExecutionError("candidate transition requires evidence", "evidence_required")
+    result = dict(candidate)
+    result["status"] = target
+    result["transition_evidence"] = evidence or None
+    result["write_authorized"] = False
+    return result
+
+
 def _read_json(path: Path) -> Mapping[str, Any]:
     if not path.is_file() or path.stat().st_size > MAX_INPUT_BYTES:
         raise SpecExecutionError("input is missing or oversized")
@@ -696,6 +879,12 @@ def build_parser() -> argparse.ArgumentParser:
     placement.add_argument("--registry", type=Path, required=True)
     placement.add_argument("--source-root", type=Path)
     placement.add_argument("--input", type=Path, required=True)
+    opportunity = commands.add_parser("opportunity", help="detect a repeatable automation candidate")
+    opportunity.add_argument("--input", type=Path, required=True)
+    promotion = commands.add_parser("promotion", help="choose a promotion target and placement")
+    promotion.add_argument("--registry", type=Path, required=True)
+    promotion.add_argument("--source-root", type=Path)
+    promotion.add_argument("--input", type=Path, required=True)
     return parser
 
 
@@ -715,13 +904,22 @@ def main(argv: Iterable[str] | None = None) -> int:
             output = validate_trace(
                 load_registry(args.registry, args.source_root), _read_json(args.input)
             )
-        else:
+        elif args.command == "placement":
             registry = load_registry(args.registry, args.source_root)
             global_capabilities = sorted({
                 capability for item in registry if item.scope == "global"
                 for capability in item.capabilities
             })
             output = decide_placement(global_capabilities, _read_json(args.input))
+        elif args.command == "opportunity":
+            output = detect_opportunity(_read_json(args.input))
+        else:
+            registry = load_registry(args.registry, args.source_root)
+            global_capabilities = sorted({
+                capability for item in registry if item.scope == "global"
+                for capability in item.capabilities
+            })
+            output = decide_promotion(global_capabilities, _read_json(args.input))
     except SpecExecutionError as exc:
         print(json.dumps({"ok": False, "error": str(exc), "error_code": exc.code},
                          sort_keys=True, ensure_ascii=False))
