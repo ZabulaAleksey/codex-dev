@@ -269,3 +269,6 @@ No destructive data rollback is required.
 - 2026-09-11 — `DEV-SEP-A..F` implemented and verified locally at checkpoint `a715f2e`.
 - 2026-09-12 — feature fast-forward integrated into local `main`; manifest-driven active-runtime
   materialization, global validation and idempotent no-change dry-run PASS; push not performed.
+- 2026-09-12 — `DEV-SEP-LAUNCHER-001` follow-up verified at isolated checkpoint `f25903c`:
+  minimal launcher chain, live Git recovery and security boundaries have executable regression
+  evidence; integration and active-runtime materialization await explicit approval.

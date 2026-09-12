@@ -113,6 +113,13 @@ Windows symlink skip; full suite 358 PASS with seven expected platform skips; co
 security reviews PASS. Fast-forward local integration, manifest-driven active-runtime
 materialization, global validation and repeat no-change dry-run also PASS; push не выполнялся.
 
+Follow-up `DEV-SEP-LAUNCHER-001` evidence at checkpoint `f25903c`: full canonical discovery
+383 PASS with seven expected platform skips; launcher/CME/spec/path set 140 PASS with one expected
+platform skip; final launcher/CME security subset 67 PASS. Context validator 271 files PASS,
+installer dry-run made no runtime writes, Python compile and staged diff check PASS. Independent
+correctness and security reviews PASS. Merge and active-runtime apply remain a separate approved
+integration step.
+
 `tools.test_install_global` использует только temporary source/home roots и проверяет separate
 source, populated runtime preservation, manifest allowlist, ledger-governed stale deletion,
 unknown/protected collisions, Skill routing, zero-write dry-run, rollback, validator order,

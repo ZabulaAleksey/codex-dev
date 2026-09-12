@@ -13,6 +13,14 @@ promotion lifecycle, diagnostics/retirement preflight и final compatibility aud
 automatic promotion/tuning and push did not run. Manifest-driven active-runtime materialization and
 read-back validation PASS; the retained Notion master is not cleanup-eligible.
 
+Follow-up `DEV-SEP-LAUNCHER-001` closes the previously under-evidenced `SEP-012` minimal-launcher
+chain at isolated checkpoint `f25903c`: exact project/STAGES/CME/Git recovery now precedes
+relevant-only capability routing, `NEW_PROJECT` has an idempotent post-bootstrap short-resume
+contract, and untrusted paths/Git environment/secret-like intake fail closed. Full discovery is
+383 PASS with 7 expected platform skips; correctness and security reviews PASS. Integration into
+local `main` and active-runtime materialization remain pending explicit approval; push and prompt
+cleanup were not performed, and all three Notion sources remain retention-protected.
+
 ## Текущий internal delta — unified DEV/product path roles
 
 `DEV-PATHS-001` переносит active architecture на единый layout
