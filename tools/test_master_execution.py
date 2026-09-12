@@ -379,6 +379,27 @@ class RecoveryTests(unittest.TestCase):
     def test_clean_state_resumes(self) -> None:
         self.assertEqual(recover_execution(self.current(), self.facts()).action, "resume")
 
+    def test_selected_track_recovery_never_returns_another_tracks_running_slice(self) -> None:
+        value = self.current()
+        value["tracks"].append({
+            "id": "track-b", "repository": "/repo", "worktree": "/worktrees/b",
+            "branch": "feature/b", "checkpoint": "def456", "ownership": ["tools/b"],
+            "status": "active",
+        })
+        second = dict(value["slices"][0])
+        second.update({
+            "id": "SLICE-B", "status": "ready", "worktree_track": "track-b",
+            "checkpoint_before": "def456", "checkpoint_after": "",
+        })
+        value["slices"].append(second)
+        decision = recover_execution(
+            value,
+            self.facts(git_head="def456", launcher_checkpoint="def456"),
+            track_id="track-b",
+        )
+        self.assertEqual("resume", decision.action)
+        self.assertEqual("", decision.slice_id)
+
     def test_crash_after_commit_before_status_update_reconciles(self) -> None:
         decision = recover_execution(self.current(), self.facts(
             git_head="new-commit", state_revision_at_head=False))

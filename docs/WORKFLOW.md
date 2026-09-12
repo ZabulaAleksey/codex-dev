@@ -101,7 +101,8 @@ profiler.
 ```
 
 означает `CONTINUE_EXISTING`: разрешить project через `dev_paths.py`, восстановить live Git и
-selected STAGES/CME state, затем выполнить unique safe slice через `spec_execution.py` route.
+selected STAGES/CME state через read-only `spec_execution.py launcher`, затем выполнить unique safe
+slice через его relevant-only capability route.
 Исторический handoff уступает live repository. Новая user constraint является delta и не требует
 повторения infrastructure prompt.
 

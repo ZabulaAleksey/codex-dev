@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Bounded, side-effect-free decisions for the Specification → Execution Pipeline.
+"""Bounded decisions and read-only launcher resolution for Specification → Execution.
 
-The module consumes explicit structured facts.  It never executes registry commands, changes Git,
-loads an unselected Skill body, mutates a project, or writes external state.
+The pure core consumes explicit structured facts; the launcher adapter reads only the exact
+project and selected stage through canonical resolvers.  The module never executes registry
+commands, changes Git, loads an unselected Skill body, mutates a project, or writes external state.
 """
 
 from __future__ import annotations
@@ -14,8 +15,10 @@ import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
+import stat
 import subprocess
 import sys
+import threading
 import tomllib
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -24,7 +27,24 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from hooks.stage_selector import find_stage_record, parse_stage_id
-from tools.master_execution import MasterExecutionError, extract_master_state
+from tools.dev_paths import (
+    DevLayout,
+    PathResolutionError,
+    is_exact_git_root,
+    inspect_project,
+    resolve_layout,
+    resolve_project_reference,
+)
+from tools.master_execution import (
+    GitWorktreeAdapter,
+    MasterExecutionError,
+    MasterExecutionResourceLimit,
+    RecoveryFacts,
+    extract_master_state,
+    next_execution_decision,
+    recover_execution,
+)
+from tools.stage_compatibility import CompatibilityError, stage_routing_snapshot
 
 
 MAX_INPUT_BYTES = 512 * 1024
@@ -39,7 +59,14 @@ SKILL_NAME = re.compile(r"^name:\s*([^\r\n]+)\s*$", re.MULTILINE)
 SKILL_FRONTMATTER = re.compile(r"\A---\r?\n(?P<body>.*?)\r?\n---(?:\r?\n|\Z)", re.DOTALL)
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SECRET_LIKE = re.compile(
-    r"(?i)(?:api[_-]?key|password|secret|token)\s*[:=]\s*\S+|-----BEGIN [A-Z ]*PRIVATE KEY-----"
+    r"(?i)(?:api[_-]?key|password|secret|token)\s*[:=]\s*\S+"
+    r"|authorization\s*:\s*\S+"
+    r"|(?:github_pat|ghp|xox[baprs])[-_][A-Za-z0-9_-]{8,}"
+    r"|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----"
+    r"|[a-z][a-z0-9+.-]*://[^/\s:@]+:[^@\s/]+@"
+    r"|eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"
+    r"|(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{8,}|sk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{12,}"
+    r"|glpat-[A-Za-z0-9_-]{8,}|npm_[A-Za-z0-9]{8,}|AIza[0-9A-Za-z_-]{20,}"
 )
 
 ENTRYPOINTS = {"CONTINUE_EXISTING", "NEW_PROJECT"}
@@ -260,7 +287,13 @@ def _contained(root: Path, relative: str, label: str) -> Path:
 
 def _is_link_like(path: Path) -> bool:
     is_junction = getattr(os.path, "isjunction", None)
-    return path.is_symlink() or bool(is_junction and is_junction(path))
+    if path.is_symlink() or bool(is_junction and is_junction(path)):
+        return True
+    try:
+        attributes = getattr(path.stat(follow_symlinks=False), "st_file_attributes", 0)
+    except OSError:
+        return False
+    return bool(attributes & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
 
 
 def _local_path(value: str | os.PathLike[str], label: str) -> Path:
@@ -269,6 +302,66 @@ def _local_path(value: str | os.PathLike[str], label: str) -> Path:
     if windows.startswith(("\\\\", "\\?\\", "\\.\\")):
         raise SpecExecutionError(f"{label} must be a local non-device path", "unsafe_local_path")
     return Path(raw).expanduser()
+
+
+def _reject_link_like_components(path: Path, label: str) -> None:
+    candidate = path.expanduser()
+    if not candidate.is_absolute():
+        return
+    current = Path(candidate.anchor)
+    for part in candidate.parts[1:]:
+        current = current / part
+        if current.exists() and _is_link_like(current):
+            raise SpecExecutionError(f"{label} contains link-like path", "unsafe_local_path")
+
+
+def _path_identity(path: Path) -> str:
+    return os.path.normcase(str(path.resolve(strict=False)))
+
+
+def _run_bounded(
+    command: Sequence[str], *, environment: Mapping[str, str], timeout: int = 15,
+    limit: int = MAX_INPUT_BYTES,
+) -> subprocess.CompletedProcess[str]:
+    process = subprocess.Popen(
+        list(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=dict(environment),
+    )
+    chunks: list[bytes] = []
+    observed = 0
+    overflow = False
+
+    def drain() -> None:
+        nonlocal observed, overflow
+        assert process.stdout is not None
+        while True:
+            chunk = process.stdout.read(min(64 * 1024, limit + 1 - observed))
+            if not chunk:
+                return
+            chunks.append(chunk)
+            observed += len(chunk)
+            if observed > limit:
+                overflow = True
+                process.kill()
+                return
+
+    reader = threading.Thread(target=drain, daemon=True)
+    reader.start()
+    try:
+        returncode = process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        process.kill()
+        process.wait()
+        reader.join(timeout=1)
+        if process.stdout is not None:
+            process.stdout.close()
+        raise SpecExecutionError("Git recovery timed out", "git_recovery_failed") from exc
+    reader.join(timeout=1)
+    if process.stdout is not None:
+        process.stdout.close()
+    output = b"".join(chunks).decode("utf-8", errors="replace")
+    if overflow:
+        raise SpecExecutionError("Git recovery output exceeded bounded limit", "resource_limit")
+    return subprocess.CompletedProcess(list(command), returncode, output, "")
 
 
 def _skill_name(path: Path) -> str:
@@ -476,6 +569,338 @@ def normalize_intake(raw: Mapping[str, Any]) -> dict[str, Any]:
         "user_decisions": list(decisions),
         "project_class": project_class or None,
         "next_owner": "live_repository_router" if entrypoint == "CONTINUE_EXISTING" else "project_framework_intake",
+    }
+
+
+def _git_recovery_facts(
+    project_root: Path,
+    master_state: Mapping[str, Any],
+    track: Mapping[str, Any],
+    *,
+    source_revision: str,
+    queue_item_present: bool,
+) -> RecoveryFacts:
+    repository_path = _local_path(track["repository"], "track repository")
+    worktree_path = _local_path(track["worktree"], "track worktree")
+    if not repository_path.is_absolute() or not worktree_path.is_absolute():
+        raise SpecExecutionError("track paths must be absolute", "invalid_track_path")
+    _reject_link_like_components(repository_path, "track repository")
+    _reject_link_like_components(worktree_path, "track worktree")
+    repository = repository_path.resolve(strict=False)
+    worktree = worktree_path.resolve(strict=False)
+    if _path_identity(repository) != _path_identity(project_root):
+        raise SpecExecutionError("track repository does not match resolved project", "track_repository_mismatch")
+    if not is_exact_git_root(repository):
+        raise SpecExecutionError("track repository is not an exact Git root", "invalid_track_repository")
+
+    try:
+        inventory = GitWorktreeAdapter(repository, worktree.parent).snapshot()
+    except MasterExecutionResourceLimit as exc:
+        raise SpecExecutionError(str(exc), "resource_limit") from exc
+    except (MasterExecutionError, OSError, subprocess.SubprocessError) as exc:
+        raise SpecExecutionError(str(exc), "git_recovery_failed") from exc
+    worktree_key = _path_identity(worktree)
+    branch = track["branch"]
+    worktree_fact = next(
+        (item for item in inventory if _path_identity(Path(item.path)) == worktree_key),
+        None,
+    )
+    if worktree_fact is not None and worktree_fact.branch != branch:
+        raise SpecExecutionError(
+            "track worktree is checked out on a different branch",
+            "worktree_branch_mismatch",
+        )
+    worktree_exists = worktree_fact is not None
+
+    def git(root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+        environment = {
+            key: value for key, value in os.environ.items()
+            if not key.upper().startswith("GIT_")
+        }
+        environment.update({
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+            "GIT_PAGER": "cat",
+            "GIT_NO_LAZY_FETCH": "1",
+        })
+        return _run_bounded(
+            [
+                "git", "-c", f"safe.directory={root}",
+                "-c", "core.fsmonitor=false", "-c", f"core.hooksPath={os.devnull}",
+                "-c", "submodule.recurse=false", "-C", str(root), *arguments,
+            ],
+            environment=environment,
+        )
+
+    branch_exists = git(
+        repository, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"
+    ).returncode == 0
+
+    dirty = False
+    if worktree_exists:
+        status = git(
+            worktree,
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+            "--ignore-submodules=all",
+            "--no-renames",
+            "--no-ahead-behind",
+        )
+        if status.returncode != 0:
+            raise SpecExecutionError("worktree status is unavailable", "git_recovery_failed")
+        dirty = bool(status.stdout.strip())
+    checkpoint = track["checkpoint"]
+    checkpoint_reachable = False
+    if worktree_fact is not None:
+        checkpoint_check = git(
+            repository,
+            "merge-base",
+            "--is-ancestor",
+            checkpoint,
+            worktree_fact.head,
+        )
+        checkpoint_reachable = checkpoint_check.returncode == 0
+    state_at_head = False
+    if worktree_exists:
+        state_diff = git(
+            worktree, "diff", "--quiet", "--no-ext-diff", "--no-textconv",
+            "HEAD", "--", "prompts/STAGES.md",
+        )
+        head_state_file: subprocess.CompletedProcess[str] | None = None
+        if state_diff.returncode == 0:
+            head_state_size = git(worktree, "cat-file", "-s", "HEAD:prompts/STAGES.md")
+            try:
+                size = int(head_state_size.stdout.strip()) if head_state_size.returncode == 0 else -1
+            except ValueError:
+                size = -1
+            if 0 <= size <= MAX_INPUT_BYTES:
+                head_state_file = git(worktree, "cat-file", "-p", "HEAD:prompts/STAGES.md")
+        if head_state_file is not None and head_state_file.returncode == 0:
+            try:
+                head_selector = parse_stage_id(head_state_file.stdout)
+                if head_selector.issue_code or head_selector.stage_id is None:
+                    raise ValueError("invalid Stage ID at HEAD")
+                head_record = find_stage_record(head_state_file.stdout, head_selector.stage_id)
+                if head_record.issue_code or head_record.record is None:
+                    raise ValueError("selected stage record is invalid at HEAD")
+                head_state = extract_master_state(head_record.record)
+                head_track = next(
+                    (item for item in head_state["tracks"] if item["id"] == track["id"]),
+                    None,
+                )
+                state_at_head = bool(
+                    head_state["master"]["id"] == master_state["master"]["id"]
+                    and head_state["state_revision"] == master_state["state_revision"]
+                    and head_track is not None
+                    and head_track["checkpoint"] == track["checkpoint"]
+                )
+            except (ValueError, MasterExecutionError):
+                state_at_head = False
+    return RecoveryFacts(
+        source_revision=source_revision,
+        worktree_exists=worktree_exists,
+        branch_exists=branch_exists,
+        dirty=dirty,
+        queue_item_present=queue_item_present,
+        git_head=worktree_fact.head if worktree_fact else "",
+        checkpoint_reachable=checkpoint_reachable,
+        state_revision_at_head=state_at_head,
+        overlapping_contract_merged=False,
+        launcher_state_revision=master_state["state_revision"],
+        launcher_checkpoint=track["checkpoint"],
+        context_compacted=False,
+    )
+
+
+def _launcher_status(action: str, capability_route: Mapping[str, Any] | None) -> str:
+    action_status = {
+        "complete": "completed",
+        "blocked": "blocked",
+        "stopped": "blocked",
+        "user_decision": "needs_decision",
+        "integration_checkpoint": "needs_decision",
+        "handoff": "needs_continuation",
+        "reconcile_status": "needs_reconciliation",
+        "route_worktree": "needs_reconciliation",
+        "verification_gate": "verification_required",
+        "await_result": "in_progress",
+        "continue": "ready",
+        "canonical_stage": "ready",
+    }
+    status = action_status.get(action, "blocked")
+    if capability_route is not None and capability_route["status"] != "ready":
+        return "blocked"
+    return status
+
+
+def resolve_user_launcher(
+    raw: Mapping[str, Any],
+    registry: Sequence[SkillMetadata],
+    *,
+    layout: DevLayout | None = None,
+    available_tools: Sequence[str] = (),
+    source_revision: str | None = None,
+    queue_item_present: bool | None = None,
+) -> dict[str, Any]:
+    """Resolve a minimal user entrypoint without mutating project or global state.
+
+    ``NEW_PROJECT`` remains an explicit handoff to the existing project-framework intake.
+    ``CONTINUE_EXISTING`` composes the canonical path, bridge, selected-stage and CME
+    adapters before routing only the capabilities declared by the next live slice.
+    """
+    intake = normalize_intake(raw)
+    if intake["intent"] == "NEW_PROJECT":
+        return {
+            "schema_version": 1,
+            "status": intake["status"],
+            "reason": intake["reason"],
+            "phase": "project_framework_intake",
+            "intake": intake,
+            "global_mutation_authorized": False,
+        }
+
+    try:
+        active_layout = layout or resolve_layout()
+        project_reference = intake["project"]
+        project_lexical = _local_path(project_reference, "project")
+        if (
+            project_reference not in {".", "..", "~"}
+            and "/" not in project_reference
+            and "\\" not in project_reference
+        ):
+            project_lexical = active_layout.projects_root / project_reference
+        elif not project_lexical.is_absolute():
+            project_lexical = Path.cwd() / project_lexical
+        _reject_link_like_components(project_lexical, "project")
+        project_root = resolve_project_reference(intake["project"], active_layout)
+        _reject_link_like_components(project_root, "project")
+        project = inspect_project(project_root, active_layout)
+        if project.dev_integration != "enabled" or not project.git_repo:
+            raise SpecExecutionError("project is not an exact DEV-enabled Git root", "invalid_dev_bridge")
+        stage_state, selected_record = stage_routing_snapshot(project_root)
+    except PathResolutionError as exc:
+        raise SpecExecutionError(str(exc), "invalid_project") from exc
+    except (CompatibilityError, OSError, subprocess.SubprocessError) as exc:
+        raise SpecExecutionError(str(exc), "invalid_stage_state") from exc
+
+    if stage_state.get("execution_allowed") is not True or selected_record is None:
+        return {
+            "schema_version": 1,
+            "status": "blocked",
+            "reason": "stage_execution_not_allowed",
+            "phase": "live_repository_router",
+            "intake": intake,
+            "project": asdict(project),
+            "stage_state": stage_state,
+            "global_mutation_authorized": False,
+        }
+
+    stage_id = stage_state.get("stage_selector")
+    if not isinstance(stage_id, str) or not stage_id:
+        raise SpecExecutionError("selected stage is missing", "invalid_stage_state")
+
+    capability_route: dict[str, Any] | None = None
+    recovery: dict[str, Any] | None = None
+    try:
+        master_state = extract_master_state(selected_record)
+    except MasterExecutionError as exc:
+        if str(exc) != "selected record must contain exactly one master-execution block":
+            raise SpecExecutionError(str(exc), "invalid_master_state") from exc
+        if intake["master_or_goal"] and intake["master_or_goal"] != stage_id:
+            raise SpecExecutionError(
+                "requested stage does not match selected live state",
+                "master_selector_mismatch",
+            )
+        controller = {"action": "canonical_stage", "reason": "no_master_execution_state", "slice_id": ""}
+    else:
+        requested_master = intake["master_or_goal"]
+        valid_targets = {
+            stage_id,
+            master_state["master"]["id"],
+        }
+        if requested_master and requested_master not in valid_targets:
+            raise SpecExecutionError(
+                "requested master does not match selected live state",
+                "master_selector_mismatch",
+            )
+        decision = next_execution_decision(master_state)
+        if decision.action not in {"complete", "blocked", "user_decision", "integration_checkpoint"}:
+            if source_revision is None or queue_item_present is None:
+                return {
+                    "schema_version": 1,
+                    "status": "needs_reconciliation",
+                    "reason": "source_observation_required",
+                    "phase": "live_repository_router",
+                    "intake": intake,
+                    "project": asdict(project),
+                    "stage_state": stage_state,
+                    "controller": asdict(decision),
+                    "capability_route": None,
+                    "global_mutation_authorized": False,
+                }
+            if type(queue_item_present) is not bool:
+                raise SpecExecutionError(
+                    "queue_item_present must be a boolean", "invalid_source_observation"
+                )
+            selected_slice = next(
+                (item for item in master_state["slices"] if item["id"] == decision.slice_id),
+                None,
+            )
+            track_id = selected_slice["worktree_track"] if selected_slice else ""
+            track = next(
+                (item for item in master_state["tracks"] if item["id"] == track_id),
+                None,
+            )
+            if track is None:
+                raise SpecExecutionError("controller track is missing", "invalid_master_state")
+            facts = _git_recovery_facts(
+                project_root,
+                master_state,
+                track,
+                source_revision=_text(source_revision, "source_revision", limit=512),
+                queue_item_present=queue_item_present,
+            )
+            recovery_decision = recover_execution(master_state, facts, track_id=track["id"])
+            recovery = asdict(recovery_decision)
+            if recovery_decision.action != "resume":
+                decision = recovery_decision
+        controller = asdict(decision)
+        if decision.slice_id:
+            selected_slice = next(
+                (item for item in master_state["slices"] if item["id"] == decision.slice_id),
+                None,
+            )
+            if selected_slice is None:
+                raise SpecExecutionError("controller selected an unknown slice", "invalid_master_state")
+            capabilities = selected_slice.get("capabilities", [])
+            if capabilities:
+                risk = "high" if selected_slice.get("model_class") in {"HIGH", "FRONTIER"} else "medium"
+                capability_route = route_skills(
+                    registry,
+                    {
+                        "stage_id": stage_id,
+                        "scope": "global" if project.bridge == "dev_source" else "project",
+                        "intent": intake["intent"],
+                        "risk": risk,
+                        "required_capabilities": capabilities,
+                        "available_tools": list(available_tools),
+                    },
+                )
+
+    status = _launcher_status(controller["action"], capability_route)
+    return {
+        "schema_version": 1,
+        "status": status,
+        "reason": controller["reason"],
+        "phase": "live_repository_router",
+        "intake": intake,
+        "project": asdict(project),
+        "stage_state": stage_state,
+        "controller": controller,
+        "recovery": recovery,
+        "capability_route": capability_route,
+        "global_mutation_authorized": False,
     }
 
 
@@ -1382,10 +1807,24 @@ def _load_composed_registry(args: argparse.Namespace) -> tuple[SkillMetadata, ..
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Pure Specification-to-Execution decisions")
+    parser = argparse.ArgumentParser(
+        description="Specification-to-Execution decisions and read-only launcher resolution"
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     intake = commands.add_parser("intake", help="normalize explicit compact intake")
     intake.add_argument("--input", type=Path, required=True)
+    launcher = commands.add_parser(
+        "launcher", help="resolve a minimal user entrypoint through live DEV state"
+    )
+    _add_registry_arguments(launcher)
+    launcher.add_argument("--input", type=Path, required=True)
+    launcher.add_argument("--available-tool", action="append", default=[])
+    launcher.add_argument("--source-revision")
+    launcher.add_argument(
+        "--queue-item-present",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+    )
     route = commands.add_parser("route", help="select relevant Skill metadata")
     _add_registry_arguments(route)
     route.add_argument("--input", type=Path, required=True)
@@ -1417,6 +1856,14 @@ def main(argv: Iterable[str] | None = None) -> int:
     try:
         if args.command == "intake":
             output = normalize_intake(_read_json(args.input))
+        elif args.command == "launcher":
+            output = resolve_user_launcher(
+                _read_json(args.input),
+                _load_composed_registry(args),
+                available_tools=args.available_tool,
+                source_revision=args.source_revision,
+                queue_item_present=args.queue_item_present,
+            )
         elif args.command == "route":
             output = route_skills(
                 _load_composed_registry(args),

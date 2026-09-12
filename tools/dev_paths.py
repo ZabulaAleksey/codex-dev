@@ -195,12 +195,28 @@ def project_path(layout: DevLayout, project: str) -> Path:
 
 
 def _run_git(root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+    environment = {
+        key: value for key, value in os.environ.items()
+        if not key.upper().startswith("GIT_")
+    }
+    environment.update({
+        "GIT_OPTIONAL_LOCKS": "0",
+        "GIT_TERMINAL_PROMPT": "0",
+        "GIT_PAGER": "cat",
+        "GIT_NO_LAZY_FETCH": "1",
+    })
     return subprocess.run(
-        ["git", "-c", f"safe.directory={root}", "-C", str(root), *arguments],
+        [
+            "git", "-c", f"safe.directory={root}",
+            "-c", "core.fsmonitor=false", "-c", f"core.hooksPath={os.devnull}",
+            "-c", "submodule.recurse=false", "-C", str(root), *arguments,
+        ],
         check=False,
         capture_output=True,
         text=True,
         encoding="utf-8",
+        timeout=30,
+        env=environment,
     )
 
 

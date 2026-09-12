@@ -250,6 +250,7 @@ tools/test_global_framework_hardening.py
 tools/test_i18n_l10n_policy.py
 tools/test_install_global.py
 tools/test_master_execution.py
+tools/test_minimal_user_launchers.py
 tools/test_reconcile_project_framework.py
 tools/test_stage_compatibility.py
 tools/test_stage_completion_policy.py

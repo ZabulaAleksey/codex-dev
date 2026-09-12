@@ -139,15 +139,19 @@ unknown lock и rollback failure возвращаются как typed non-zero 
 ## Specification → Execution Pipeline
 
 После выбора live stage `tools/spec_execution.py` компилирует компактный
-`CONTINUE_EXISTING`/`NEW_PROJECT` intake, выбирает только релевантные capabilities и Skill metadata,
+`CONTINUE_EXISTING`/`NEW_PROJECT` intake. Read-only `launcher` для continuation связывает exact
+DEV project/bridge, selected STAGES/CME decision и relevant-only capability route без загрузки
+полного master. Pipeline выбирает только релевантные capabilities и Skill metadata,
 проверяет requirement → capability → evidence trace и выдаёт read-only решения по executor,
 placement, automation promotion, context economy и Skill retirement. Он не исполняет команды,
 не меняет модель, hooks, policies, Skills, Git или внешние backlog-системы.
 
 ```powershell
+$freshSourceRevision = "<revision from the fresh Prompt Queue read>"
+py -3 -B .\tools\spec_execution.py launcher --registry .\skill-sources\registry.toml --source-root . --input .\launcher.json --available-tool dev_paths --available-tool master_execution --source-revision $freshSourceRevision --queue-item-present
 py -3 -B .\tools\spec_execution.py route --registry .\skill-sources\registry.toml --input .\route.json
 py -3 -B .\tools\spec_execution.py context-diagnostics --input .\context-summary.json
-py -3 -B -m unittest tools.test_spec_execution
+py -3 -B -m unittest discover -s tools -p "test_*.py"
 ```
 
 Полный contract принадлежит
