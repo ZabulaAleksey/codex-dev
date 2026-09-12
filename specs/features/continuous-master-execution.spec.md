@@ -83,7 +83,9 @@ finalization и никогда сам не выполняет merge/push/release
 
 Completed one-shot launcher/child может стать cleanup-eligible независимо от partial parent master.
 Partial/blocked/needs-continuation master сохраняется; master cleanup возможен только после overall
-DoD и retention/authorization gates существующего Prompt Queue Lifecycle. Existing exact-item
+DoD и retention/authorization gates существующего Prompt Queue Lifecycle. Completed execution
+master с историческим `keep` требует отдельной zero-orphan/runtime-parity/regression аттестации.
+Existing exact-item
 guard/receipt/read-back остаётся единственным cleanup mechanism.
 
 ### CME-008 Recovery and portability

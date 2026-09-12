@@ -66,7 +66,7 @@ class PromptQueueTests(unittest.TestCase):
                 self.evaluate("retain", "execution_incomplete")
 
     def test_master_reusable_reference_unknown_and_keep_retain(self):
-        for kind in ("master_prompt", "reusable_template", "reference", "unknown", "typo"):
+        for kind in ("reusable_template", "reference", "unknown", "typo"):
             with self.subTest(kind=kind):
                 self.record["prompt_type"] = kind
                 self.evaluate("retain")
@@ -74,6 +74,45 @@ class PromptQueueTests(unittest.TestCase):
         for retention in ("keep", "unknown"):
             self.record["retention"] = retention
             self.evaluate("retain")
+        self.record["prompt_type"] = "master_prompt"
+        self.record["retention"] = "keep"
+        self.evaluate("retain")
+
+    def test_completed_auto_master_reaches_exact_item_guard(self):
+        self.record["prompt_type"] = "master_prompt"
+        self.evaluate("allowed")
+
+    def test_completed_auto_child_and_launcher_reach_exact_item_guard(self):
+        for kind in ("child_prompt", "one_shot_launcher"):
+            with self.subTest(kind=kind):
+                self.record["prompt_type"] = kind
+                self.evaluate("allowed")
+
+    def test_completed_historical_master_requires_zero_orphan_attestation(self):
+        self.record["prompt_type"] = "historical_execution_master"
+        self.record["retention"] = "keep"
+        self.record["durable_required"] = True
+        self.record["canonical_sources"] = [{
+            "ref": "docs/notes/dev-master-orphan-audit.md", "sha256": "a" * 64,
+            "verification_ref": "review+readback:pass",
+        }]
+        self.evaluate("retain", "historical_master_audit_incomplete")
+        for check in ("orphan_audit", "runtime_parity", "regression"):
+            self.record["required_checks"].append(check)
+            self.record["checks"][check] = passed()
+        self.evaluate("allowed")
+        self.record["checks"]["runtime_parity"] = {
+            "status": "not_applicable", "evidence_ref": "policy-only", "reason": "claimed N/A"}
+        self.evaluate("retain", "historical_master_checks_require_pass")
+        self.record["checks"]["runtime_parity"] = passed()
+        self.record["durable_required"] = False
+        self.evaluate("retain", "historical_master_requires_canonicalization")
+
+    def test_partial_historical_master_is_retained(self):
+        self.record["prompt_type"] = "historical_execution_master"
+        self.record["retention"] = "keep"
+        self.record["state"] = "partial"
+        self.evaluate("retain", "execution_incomplete")
 
     def test_canonicalization_required_before_cleanup(self):
         self.record["prompt_type"] = "canonicalization_candidate"

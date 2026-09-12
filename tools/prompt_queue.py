@@ -27,6 +27,7 @@ RECORD_KEYS = {
 }
 SNAPSHOT_KEYS = {"backend", "queue_id", "members", "item_revision", "complete", "observed_at", "capability"}
 CHECK_KEYS = {"status", "evidence_ref", "reason"}
+HISTORICAL_MASTER_REQUIRED_CHECKS = {"orphan_audit", "runtime_parity", "regression"}
 
 
 def digest(value: Any) -> str:
@@ -155,9 +156,15 @@ def evaluate(record: dict, snapshot: dict, *, now: datetime | None = None,
     now = now or datetime.now(timezone.utc)
     deny = lambda reason: result(record, "retain", reason)
     blocked = lambda reason: result(record, "cleanup_blocked", reason)
-    if record["retention"] != "auto" or record["prompt_type"] not in {
-        "one_shot", "canonicalization_candidate"
-    }:
+    standard_eligible = record["retention"] == "auto" and record["prompt_type"] in {
+        "one_shot", "one_shot_launcher", "child_prompt",
+        "canonicalization_candidate", "master_prompt",
+    }
+    historical_master = (
+        record["prompt_type"] == "historical_execution_master"
+        and record["retention"] in {"auto", "keep"}
+    )
+    if not (standard_eligible or historical_master):
         return deny("retention_protected_or_unknown")
     if record["state"] != "completed":
         return deny("execution_incomplete")
@@ -170,7 +177,17 @@ def evaluate(record: dict, snapshot: dict, *, now: datetime | None = None,
         return deny("check_inventory_mismatch")
     if any(not passed(record["checks"][key]) for key in required):
         return deny("checks_incomplete")
-    if record["durable_required"] or record["prompt_type"] == "canonicalization_candidate":
+    if historical_master:
+        if not record["durable_required"]:
+            return deny("historical_master_requires_canonicalization")
+        if not HISTORICAL_MASTER_REQUIRED_CHECKS.issubset(required):
+            return deny("historical_master_audit_incomplete")
+        if any(record["checks"][key]["status"] != "pass"
+               or not record["checks"][key]["evidence_ref"].strip()
+               for key in HISTORICAL_MASTER_REQUIRED_CHECKS):
+            return deny("historical_master_checks_require_pass")
+    if (record["durable_required"] or record["prompt_type"] in {
+            "canonicalization_candidate", "historical_execution_master"}):
         if not record["canonical_sources"]:
             return deny("canonicalization_missing")
         for source in record["canonical_sources"]:

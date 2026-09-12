@@ -247,7 +247,9 @@ overlay/SPEC/STAGES, не копируя global rules. User prompt сообща�
 6. `DEV-SEP-F`: acceptance A–L, compatibility/security review, full verification and master sync.
 
 Each slice is backward-complete and may stop only on CME canonical stop conditions. A checkpoint is
-not a stop. The Notion master has retention `keep` and is not cleanup-eligible on completion.
+not a stop. The source Notion master originally has retention `keep`; после завершения он остаётся
+protected до отдельной классификации `historical_execution_master` с zero durable orphans,
+active-runtime parity и regression evidence по Prompt Queue Lifecycle.
 
 ## 9. Rollback
 

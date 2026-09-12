@@ -454,7 +454,10 @@ def integration_decision(signals: IntegrationSignals) -> ExecutionDecision:
 def cleanup_eligibility(prompt_type: str, item_status: str, retention: str, *,
                         parent_master_status: str = "", overall_dod: bool = False) -> CleanupEligibility:
     """Classify hierarchy before delegating any eligible exact item to prompt_queue.py."""
-    if prompt_type not in {"one_shot", "one_shot_launcher", "child_prompt", "master_prompt"}:
+    if prompt_type not in {
+        "one_shot", "one_shot_launcher", "child_prompt", "master_prompt",
+        "historical_execution_master",
+    }:
         return CleanupEligibility("retain", "unknown_prompt_type")
     if item_status != "completed":
         return CleanupEligibility("retain", "item_incomplete")
@@ -464,6 +467,13 @@ def cleanup_eligibility(prompt_type: str, item_status: str, retention: str, *,
         if not overall_dod:
             return CleanupEligibility("retain", "master_overall_dod_missing")
         return CleanupEligibility("existing_guard", "completed_auto_master_requires_exact_item_guard")
+    if prompt_type == "historical_execution_master":
+        if retention not in {"auto", "keep"}:
+            return CleanupEligibility("retain", "historical_master_retention_unknown")
+        if not overall_dod:
+            return CleanupEligibility("retain", "master_overall_dod_missing")
+        return CleanupEligibility(
+            "existing_guard", "completed_historical_master_requires_zero_orphan_guard")
     if retention != "auto":
         return CleanupEligibility("retain", "item_retention_protected")
     reason = "completed_child_independent_of_partial_parent"

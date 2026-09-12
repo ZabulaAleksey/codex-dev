@@ -2,8 +2,10 @@
 
 ## Prompt Queue Lifecycle
 
-`python -B -m unittest discover -s tools -p "test_prompt_queue.py"` проверяет PQ-01..10,
-CLI на временном Git project, receipt reconciliation и защищённые retention types.
+`python -B -m unittest discover -s tools -p "test_prompt_queue.py"` проверяет fixtures/guard для
+PQ-01..10 и PQ-12..13: CLI на временном Git project, receipt reconciliation, защищённые retention
+types и обязательные zero-orphan/runtime-parity/regression gates historical execution master.
+Real current-project/Notion operation + read-back остаётся отдельным evidence PQ-11.
 Full suite: `python -B -m unittest discover -s tools -p "test_*.py"`; manifest gate:
 `python -B tools/validate_context.py`. Real queue mutation/read-back фиксируется в project evidence
 и не подменяется fixtures.
@@ -32,7 +34,7 @@ continuation/parallel routing, real temporary Git worktree create/read-back, aut
 L1–L6, context budget/handoff, hierarchical prompt eligibility и recovery matrix.
 `tools.test_continuous_master_execution_policy` проверяет, что router/governance/Skills/templates и
 SPEC используют один state/cleanup owner и не требуют merge question после каждого slice.
-Текущий global evidence: 273 tests PASS, 6 platform-specific skips, context manifest 246 files
+Текущий global evidence: 363 tests PASS, 7 platform-specific skips, context manifest 270 files
 PASS. Controlled read-only
 `electro-tutor` check вернул pre-existing migration gaps и не является regression/global test
 failure; temporary real Git integration остаётся positive portable adapter evidence.

@@ -359,6 +359,16 @@ class HierarchicalLifecycleTests(unittest.TestCase):
         self.assertEqual(decision, CleanupEligibility(
             "existing_guard", "completed_auto_master_requires_exact_item_guard"))
 
+    def test_completed_historical_master_with_dod_delegates_to_zero_orphan_guard(self) -> None:
+        decision = cleanup_eligibility(
+            "historical_execution_master", "completed", "keep", overall_dod=True)
+        self.assertEqual(decision, CleanupEligibility(
+            "existing_guard", "completed_historical_master_requires_zero_orphan_guard"))
+        self.assertEqual(cleanup_eligibility(
+            "historical_execution_master", "partial", "keep", overall_dod=True).action, "retain")
+        self.assertEqual(cleanup_eligibility(
+            "historical_execution_master", "completed", "keep", overall_dod=False).action, "retain")
+
 
 class RecoveryTests(unittest.TestCase):
     def current(self) -> dict:

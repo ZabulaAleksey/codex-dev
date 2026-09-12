@@ -2,8 +2,9 @@
 
 - Stage ID: `DEV-SEP-F`
 - Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F`
-- NEXT: master completed and integrated into local `main`; active runtime materialization and
-  read-back validation PASS. Retain the Notion master; push was not performed.
+- NEXT: master completed and integrated into local `main`; source retention remains recorded as
+  `keep`, while any queue cleanup requires a fresh historical-master audit and exact-item guard.
+  Push was not performed.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -402,8 +403,9 @@ diff PASS. Checkpoint: `252e935`.
 
 ### Runnable slice / PASS / boundaries
 
-Hierarchical cleanup eligibility delegates completed children to the existing guard and retains this
-master because source retention is `keep`. Recovery covers commit/status ordering, missing branch/
+Hierarchical cleanup eligibility delegates completed children to the existing guard. The recorded
+source retention is `keep`; a later cleanup needs historical-master reclassification plus the
+zero-orphan/runtime-parity/regression guard. Recovery covers commit/status ordering, missing branch/
 worktree, stale launcher/source, dirty edits, overlapping integration, missing queue item and
 compaction. Router/rules/Skills/templates/docs are synchronized.
 
@@ -416,7 +418,7 @@ Read-only `electro-tutor` validation classified a pre-existing brownfield gap (l
 
 Stop: master complete and fast-forward merged into local `main` at `1e34f41`; post-merge context,
 80 deterministic tests, diff and completed-state smoke PASS. Push was not performed. Prompt
-cleanup: `retain` because this is a `master_prompt` with retention `keep`.
+cleanup at that checkpoint: `retain`; no historical-master audit had yet been performed.
 
 ## DEV-CANONICAL-STAGES-001 — Canonical STAGES.md Policy
 

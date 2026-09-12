@@ -8,15 +8,21 @@
 При явном запуске конкретного prompt сначала fetch полного source, зафиксируй backend,
 queue ID, item ID, revision и разрешение пользователя; классифицируй тип до `running`.
 Queue metadata хранится вместе с task evidence, а lifecycle проекта — в его `prompts/STAGES.md`.
-Типы: `one_shot`, `canonicalization_candidate`, `master_prompt`, `reusable_template`,
-`reference`, `unknown`; retention: `auto` или `keep`. Неоднозначность означает `unknown`.
-Master/template/reference и `keep` сохраняются независимо от completion.
+Типы: `one_shot`, иерархические `one_shot_launcher` / `child_prompt`,
+`canonicalization_candidate`, `master_prompt`, `historical_execution_master`,
+`reusable_template`, `reference`, `unknown`; retention: `auto` или `keep`. Неоднозначность
+означает `unknown`. Reusable/template/reference и обычный `master_prompt` с `keep` сохраняются
+независимо от completion.
 
 Hierarchical execution не меняет cleanup owner: completed `one_shot` launcher/child с `auto`
 retention может отдельно пройти обычный exact-item guard, даже если parent master остаётся
 `partial`. Parent master не наследует cleanup outcome ребёнка; partial/blocked/needs-continuation
-master сохраняется. Completed master допускается к guard только при overall DoD, `auto` retention
-и остальных глобальных gates; `keep` остаётся protected.
+master сохраняется. Completed `master_prompt` допускается к guard только при overall DoD,
+`auto` retention и остальных глобальных gates. Завершённый execution master с историческим
+`keep` можно переаттестовать как `historical_execution_master` только после отдельного semantic
+audit: zero durable orphans, PASS active runtime parity и regressions, verified canonical source
+refs/digests и overall DoD. Это исключение не меняет retention reusable/reference content и не
+разрешает cleanup partial master.
 
 Переходы: `queued → running → completed | partial | blocked | needs_continuation`;
 возобновление partial/blocked/needs_continuation идёт через running. Lifecycle выполнения
@@ -35,6 +41,11 @@ Result evidence обязателен. Project может только добав
 правила в canonical sources, проверь read-back/смысл и checks, запиши source refs + SHA-256.
 Только затем completion evidence → guard → exact-item archive/remove → read-back.
 Флаг без evidence или обещание будущей канонизации не достаточны.
+
+Для `historical_execution_master` обязательны check IDs `orphan_audit`, `runtime_parity` и
+`regression`; каждый имеет PASS evidence. Audit record остаётся вне active queue и перечисляет
+requirement → canonical owner. Исходный `retention=keep` сам по себе не делает завершённую
+execution-задачу вечной, но без этой полной переаттестации продолжает fail closed.
 
 `tools/prompt_queue.py` — read-only deterministic guard и verifier receipts. JSON input является
 attestation доверенного executor/adapter, не содержимым произвольной Notion-страницы. Утилита
