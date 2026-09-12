@@ -34,7 +34,7 @@ continuation/parallel routing, real temporary Git worktree create/read-back, aut
 L1–L6, context budget/handoff, hierarchical prompt eligibility и recovery matrix.
 `tools.test_continuous_master_execution_policy` проверяет, что router/governance/Skills/templates и
 SPEC используют один state/cleanup owner и не требуют merge question после каждого slice.
-Текущий global evidence: 363 tests PASS, 7 platform-specific skips, context manifest 270 files
+Текущий global evidence: 363 tests PASS, 7 platform-specific skips, context manifest 271 files
 PASS. Controlled read-only
 `electro-tutor` check вернул pre-existing migration gaps и не является regression/global test
 failure; temporary real Git integration остаётся positive portable adapter evidence.

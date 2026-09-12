@@ -77,7 +77,7 @@ an execution-history item and remains in `A. DEV`.
 - `py -3 -B -m unittest tools.test_prompt_queue tools.test_master_execution
   tools.test_continuous_master_execution_policy tools.test_spec_execution` — 122 PASS,
   1 expected platform skip.
-- `py -3 -B tools/validate_context.py` — 270 files PASS.
+- `py -3 -B tools/validate_context.py` — 271 files PASS after registering this audit artifact.
 - `py -3 -B tools/validate_global_codex.py --workspace ~/codex-dev --codex-home ~/.codex` —
   global Codex layer PASS; `sync_global_skills.py` repeat read-only parity — 10 sources PASS.
 - Branch-scoped installer dry-run with resolved `DEV_SOURCE_ROOT` lists only the bounded managed

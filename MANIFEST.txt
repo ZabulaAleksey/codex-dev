@@ -30,6 +30,7 @@ docs/notes/AUTOMATION_EXTENSIONS.md
 docs/notes/CONTEXT_DEPENDENCY_MAP.md
 docs/notes/CONTEXT_FILE_INVENTORY.md
 docs/notes/DEV_PATH_AUDIT.md
+docs/notes/dev-master-orphan-audit.md
 docs/notes/LEARNING_LOG.md
 docs/notes/MENTORING_GUIDE.md
 docs/notes/ORCHESTRATION_LATER.md
