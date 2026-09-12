@@ -2,9 +2,9 @@
 
 - Stage ID: `DEV-SEP-F`
 - Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F`
-- NEXT: master completed and integrated into local `main`; source retention remains recorded as
-  `keep`, while any queue cleanup requires a fresh historical-master audit and exact-item guard.
-  Push was not performed.
+- NEXT: master completed and integrated into local `main`; historical source metadata retains the
+  original `keep`, while the completed execution prompt was removed from active Notion `A. DEV`
+  after zero-orphan/runtime-parity/regression gates and exact-item read-back. Push was not performed.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -126,7 +126,7 @@ context validator 270 files PASS and `git diff --cached --check` PASS.
 - Status: `verified`; Lifecycle: `completed`; predecessor `DEV-SEP-E` verified at `1a0e3f4`.
 - Goal: exercise acceptance A–L and terminal documentation/security/regression gates.
 - PASS: targeted/full suites, context/global/project validators, final reviewer and clean diff; master
-  is completed and integrated while the Notion source is retained.
+  is completed and integrated, and its historical Notion execution source is now outside active queue.
 
 ```master-execution
 {"schema_version":2,"state_revision":8,"master":{"id":"DEV-SEP-001","status":"completed","source":{"backend":"notion","queue_id":"3d061ed8f2468163b502d1829668063c","item_id":"3d561ed8f24681c0b8c6d06c1819bb4a","revision":"2026-09-08T19:51:49.477Z","prompt_type":"master_prompt","retention":"keep"}},"tracks":[{"id":"spec-execution-pipeline","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/spec-execution-pipeline","branch":"feature/spec-execution-pipeline","checkpoint":"a715f2ee724458623725c8c7459ec0833d0302a2","ownership":["specification-execution-pipeline","tools/spec_execution.py","skill-sources/registry.toml"],"status":"integrated"}],"slices":[{"id":"DEV-SEP-A","master_id":"DEV-SEP-001","title":"Canonical contract and compatibility audit","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"89539840725ad57655a1f6e6ffe45ced874ce055","checkpoint_after":"87edde1ac222c692a96f1a1ebd418a840ded09a8","required_evidence":["L1"],"evidence":["L1"],"context_scope":["SEP SPEC","CME SPEC","global architecture","gap map"],"requirements":["SEP-001","SEP-011"],"capabilities":["project.framework.governance"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-B","master_id":"DEV-SEP-001","title":"Intake and capability router core","status":"verified","predecessors":["DEV-SEP-A"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"87edde1ac222c692a96f1a1ebd418a840ded09a8","checkpoint_after":"6e9a76a826bff9b6c342cd801cbef2a3fc218afb","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["SEP-001..006","stage selector","dev paths","model routing"],"requirements":["SEP-002","SEP-003","SEP-004","SEP-006","SEP-012"],"capabilities":["project.resume","project.framework.bootstrap","stage.implement"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-SEP-C","master_id":"DEV-SEP-001","title":"Traceability and placement validation","status":"verified","predecessors":["DEV-SEP-B"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"6e9a76a826bff9b6c342cd801cbef2a3fc218afb","checkpoint_after":"f100e1ba0155c24f8a783c3c0532484d29705cf9","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-005","SEP-008","CME state","project overlay validator"],"requirements":["SEP-005","SEP-008","SEP-011"],"capabilities":["stage.implement","change.review"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-D","master_id":"DEV-SEP-001","title":"Automation detector and promotion lifecycle","status":"verified","predecessors":["DEV-SEP-C"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"f100e1ba0155c24f8a783c3c0532484d29705cf9","checkpoint_after":"907b3d59e929377167d18e3037b6447336baaa8d","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-007..010","AEP policy","Prompt Queue boundary"],"requirements":["SEP-007","SEP-008","SEP-009","SEP-010"],"capabilities":["project.framework.governance","change.review"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false},{"id":"DEV-SEP-E","master_id":"DEV-SEP-001","title":"Context metrics and gradual integration","status":"verified","predecessors":["DEV-SEP-D"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"907b3d59e929377167d18e3037b6447336baaa8d","checkpoint_after":"1a0e3f4d53b293d1ef9ade3c8aaad97421fad6a2","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-009..012","Skills","hooks","validators","workflow"],"requirements":["SEP-009","SEP-010","SEP-011","SEP-012"],"capabilities":["project.framework.governance","project.resume"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false},{"id":"DEV-SEP-F","master_id":"DEV-SEP-001","title":"Acceptance and compatibility audit","status":"verified","predecessors":["DEV-SEP-E"],"dependencies":[],"worktree_track":"spec-execution-pipeline","checkpoint_before":"1a0e3f4d53b293d1ef9ade3c8aaad97421fad6a2","checkpoint_after":"a715f2ee724458623725c8c7459ec0833d0302a2","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP acceptance","security","full regression","documentation sync"],"requirements":["SEP-001","SEP-002","SEP-003","SEP-004","SEP-005","SEP-006","SEP-007","SEP-008","SEP-009","SEP-010","SEP-011","SEP-012"],"capabilities":["change.review","stage.implement"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false}],"blockers":[],"decisions":["extend-cme-not-replace","single-pure-stdlib-router","skill-source-registry-metadata-only","no-automatic-promotion"],"context_budget":{"max_chars":8000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"await an explicitly selected DEV prompt; retain Notion master","integration":{"required":false,"reason":""}}
@@ -137,7 +137,8 @@ Completion evidence: implementation checkpoint `a715f2e`; acceptance `AC-SEP-A..
 platform skips; context validator 270 files PASS; direct Windows CLI help and diff check PASS.
 Independent correctness and security reviews PASS. Fast-forward merge into local `main`,
 manifest-driven active-runtime materialization, global validation and idempotent no-change dry-run
-PASS. Push was not performed; the Notion master remains retained.
+PASS. Push was not performed. A later audited cleanup moved the Notion master to Trash and removed
+its active `A. DEV` entry while retaining the reusable launcher.
 
 ## DEV-PATHS-001 — Unified DEV and product path roles (standalone delta)
 
@@ -418,7 +419,8 @@ Read-only `electro-tutor` validation classified a pre-existing brownfield gap (l
 
 Stop: master complete and fast-forward merged into local `main` at `1e34f41`; post-merge context,
 80 deterministic tests, diff and completed-state smoke PASS. Push was not performed. Prompt
-cleanup at that checkpoint: `retain`; no historical-master audit had yet been performed.
+cleanup at that checkpoint was `retain`; the later zero-orphan audit and exact-item guard passed,
+so the historical execution prompt was moved to Trash and removed from active `A. DEV`.
 
 ## DEV-CANONICAL-STAGES-001 — Canonical STAGES.md Policy
 

@@ -13,7 +13,7 @@ Baseline: source `~/codex-dev`, starting local-main HEAD
 Initial result: один orphan — completed historical execution master с исходным
 `retention=keep` не мог пройти deterministic cleanup guard. Этот bounded gap канонизирован в
 PQ-13, `rules/prompt-queue-lifecycle.md`, `prompt_queue.py`, `master_execution.py` и regression
-tests. Runtime Skill drift обнаружен отдельно и не является requirement orphan; cleanup остаётся
+tests. Runtime Skill drift обнаружен отдельно и не является requirement orphan; cleanup был
 заблокирован до восстановления и повторной проверки parity. Восемь drifted runtime Skills затем
 синхронизированы штатным `sync_global_skills.py` с recoverable backup; повторные
 `validate_global_codex.py` и Skill parity вернули PASS для global layer и 10 источников.
@@ -86,6 +86,9 @@ an execution-history item and remains in `A. DEV`.
   historical-check N/A bypass and two taxonomy/evidence wording inconsistencies; final re-review
   found no functional blocker.
 
-Queue mutation remains separately approval-gated. The Notion parent read-back before mutation
-contains both exact target IDs and the reusable launcher ID. After mutation it must contain only
-the launcher inside `A. DEV`, with no target mentions or child-page links anywhere in the parent.
+Пользователь подтвердил cleanup. Оба master prompt перемещены в Notion Trash; exact-item
+read-back удалил только их строки из `A. DEV`, сохранил reusable launcher и соседние разделы.
+Повторная проверка parent page не нашла target mentions или child-page links. Deterministic
+`prompt_queue.py` verification вернул `cleaned / exact_target_removed_neighbors_preserved` для
+обоих targets; record hashes: `ecc2b9eaad7c525819be606ceb564c75bd1386f22cf88a2f6705484971fd5d93`
+и `5794c2900351154102df143d36309f6fe730722c251a9a3273212d099e379c3c`.
