@@ -1,5 +1,5 @@
 {
-  "description": "Hooks жизненного цикла AI Dev Team: загружают компактное состояние проекта и блокируют небольшой набор разрушительных команд.",
+  "description": "Hooks жизненного цикла AI Dev Team: загружают компактное состояние проекта, проверяют приватность Git identity и блокируют небольшой набор разрушительных команд.",
   "hooks": {
     "SessionStart": [
       {
@@ -11,6 +11,13 @@
             "commandWindows": "py -3 \"%USERPROFILE%\\.codex\\hooks\\session_context.py\"",
             "statusMessage": "Загрузка состояния AI-проекта",
             "additionalContextLimit": 3000,
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.codex/tools/check_git_identity.py",
+            "commandWindows": "py -3 \"%USERPROFILE%\\.codex\\tools\\check_git_identity.py\"",
+            "statusMessage": "Проверка приватности Git identity",
             "timeout": 5
           }
         ]
