@@ -264,3 +264,6 @@ tools/prompt_queue.py
 tools/project_bootstrap.py
 tools/test_prompt_queue.py
 tools/test_project_bootstrap.py
+rules/git-identity-privacy.md
+tools/check_git_identity.py
+tools/test_git_identity_privacy.py
