@@ -188,6 +188,22 @@ documentation/security/performance/fallback/migration impact, DoD и handoff, а
 `blocked`, checkpoint/evidence — для terminal status. Невалидный canonical owner не исправляется
 fallback-ом на retained legacy state.
 
+### Действия пользователя в canonical state
+
+Любое текущее или ожидаемое действие, которое может выполнить только пользователь или владелец
+проекта, фиксируй в selected `prompts/STAGES.md` record до handoff и до запроса этого действия.
+Сюда относятся decisions/approvals, предоставление secret или внешнего доступа, локальный setup,
+ручная проверка и approval-gated merge/push/deploy/history/cleanup operation. Чат не является
+долговечным владельцем этих обязательств и не должен требоваться новому агенту для их восстановления.
+
+Каждая запись имеет stable ID, статус, trigger/условие, точное безопасное действие, ожидаемое
+evidence и явно указывает, что она разблокирует. Используй `READY`, когда действие можно выполнить
+сейчас; `PENDING`, когда сначала нужна работа или условие; `DONE` только с evidence;
+`NOT_REQUIRED` при подтверждённом закрытии. Условное будущее действие помечай `CONDITIONAL` и не
+выдавай за текущий blocker. Секретное значение никогда не записывается — только необходимость и
+разрешённый безопасный канал. Если действий пользователя нет, selected record явно указывает
+`User actions: none`.
+
 Компактный `Status` использует vocabulary `planned | implemented | verified | partial | blocked |
 unavailable` и является projection двух точных осей: `implemented` = production implementation
 без terminal verification, `verified` = `completed` с требуемым evidence, `unavailable` =
@@ -293,6 +309,7 @@ feature branch не доказывает, что merge-level status и след�
 |---|---|
 | Изменился detailed stage contract, его DAG, scope, PASS criteria, активный slice или порядок текущей работы | обновить единственный `prompts/STAGES.md`; `ROADMAP` менять только при изменении долгосрочного порядка |
 | Выполнена работа, изменился progress/evidence, появился blocker или следующий шаг | обновить lifecycle/evidence/blocker/NEXT соответствующего record и current selector в `prompts/STAGES.md` |
+| Появилось, изменилось или завершилось действие, доступное только пользователю/владельцу проекта | обновить user-action entry в selected `prompts/STAGES.md` record до handoff; не оставлять обязательство только в чате |
 | Изменились назначение, setup, запуск, публичный интерфейс или user/developer workflow | обновить `README.md` |
 | Принято архитектурное решение | обновить `ARCHITECTURE.md` и/или `DECISIONS.md`; STAGES — только по затронутым execution facts |
 | Возникла значимая нетривиальная ошибка с повторно полезным выводом | добавить evidence-backed запись в `LEARNING_LOG.md`; в STAGES оставить краткий blocker и ссылку, если он активен |

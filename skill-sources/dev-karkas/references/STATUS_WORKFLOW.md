@@ -67,9 +67,16 @@ queue; completed child cleanup не меняет parent status.
 5. ровно один конкретный NEXT и, если текущий stage завершён, selector следующего допустимого stage;
    если утверждённого следующего stage нет, оставь selector на последнем verified record и явно
    укажи ожидание нового выбора вместо создания placeholder stage.
+6. все действия, которые может выполнить только пользователь/владелец проекта: stable ID,
+   `READY | PENDING | DONE | NOT_REQUIRED`, trigger/условие, точное безопасное действие,
+   ожидаемое evidence и разблокируемый шаг. Условные будущие действия дополнительно помечай
+   `CONDITIONAL`; если действий нет, запиши `User actions: none`.
 
 Не превращай `STAGES.md` в журнал действий. Устаревшие подробности удаляй из current record только
 после сохранения нужной истории в Git/CHANGELOG/DEV_LOG; не теряй активные facts или evidence.
+Чат не является owner пользовательских обязательств. Перед запросом decision/approval, external
+access, secret, local setup, manual validation либо merge/push/deploy/history/cleanup action сначала
+синхронизируй эту запись. Никогда не сохраняй secret value — только необходимость и безопасный канал.
 
 ## Brownfield migration
 
