@@ -550,6 +550,10 @@ Blockers: none
 - `USER-DEV-STAGES-ACTIONS-PUSH` — `PENDING / CONDITIONAL`: после подтверждённого local merge
   отдельно разрешить push в `origin/main`. Evidence: явное разрешение и remote Git status.
   Разблокирует remote publication; local completion от push не зависит.
+- `USER-DEV-STAGES-ACTIONS-INSTALL` — `PENDING / CONDITIONAL`: после local integration отдельно
+  разрешить штатную manifest-driven установку из canonical `~/codex-dev` в active `~/.codex`,
+  если правило должно применяться в новых чатах на этом устройстве. Evidence: installer validation
+  и hash-verified Skill/runtime parity. До разрешения active runtime не изменяется.
 
 ### Fallback / rollback / NEXT
 
