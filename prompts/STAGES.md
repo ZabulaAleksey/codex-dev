@@ -1,13 +1,54 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-SEP-F`
-- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F`
-- NEXT: master completed and integrated into local `main`; historical source metadata retains the
-  original `keep`, while the completed execution prompt was removed from active Notion `A. DEV`
-  after zero-orphan/runtime-parity/regression gates and exact-item read-back. Push was not performed.
+- Stage ID: `DEV-SEP-LAUNCHER-001`
+- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001`
+- NEXT: launcher evidence is integrated into local `main`; active-runtime materialization remains
+  a separate approval-gated action. Continue with the approved user-actions policy integration.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
+
+## DEV-SEP-LAUNCHER-001 — Minimal User Launcher Evidence Hardening
+
+- Status: `verified`
+- Lifecycle state: `completed locally`
+- Evidence level: `L1,L2,L3`
+- Checkpoint: `f25903c`
+- Branch/worktree: `fix/dev-launcher-evidence` /
+  `~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/dev-launcher-evidence`.
+- Implementation checkpoint: `f25903c`; integration into `main` and active-runtime
+  materialization require a separate explicit approval.
+- Requirements: `SEP-012`; acceptance: `AC-SEP-G`, `AC-SEP-L`; CME recovery compatibility.
+- Sources: retained Notion items `3d461ed8f246812db41cda2510a70dd3`,
+  `3d561ed8f24681c0b8c6d06c1819bb4a` and reusable launcher
+  `3d561ed8f246814f8430e7613f591153`. Cleanup guard result for each: `retain` because
+  `master_prompt`/`reusable_template` has retention `keep`.
+
+```master-execution
+{"schema_version":2,"state_revision":1,"master":{"id":"DEV-SEP-LAUNCHER-001","status":"running","source":{"backend":"git","queue_id":"DEV-SEP-001","item_id":"dev-sep-launcher-evidence","revision":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","prompt_type":"child_prompt","retention":"keep"}},"tracks":[{"id":"minimal-user-launcher","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/dev-launcher-evidence","branch":"fix/dev-launcher-evidence","checkpoint":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","ownership":["minimal-launcher","tools/spec_execution.py","tools/master_execution.py"],"status":"active"}],"slices":[{"id":"DEV-SEP-LAUNCHER-001","master_id":"DEV-SEP-LAUNCHER-001","title":"Minimal user launcher evidence hardening and integration handoff","status":"running","predecessors":[],"dependencies":[],"worktree_track":"minimal-user-launcher","checkpoint_before":"47b6c223534c1a8f6e7d67ddfa506be6809d819d","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-012","AC-SEP-G","AC-SEP-L","launcher recovery","integration handoff"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["SEP-012"],"capabilities":["project.resume","project.framework.bootstrap"]}],"blockers":[],"decisions":["retain-protected-notion-sources","merge-requires-explicit-approval","active-runtime-apply-after-integration"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":5,"max_decisions":4,"max_evidence_threads":6},"next_action":"await explicit merge approval, then materialize and validate active runtime","integration":{"required":false,"reason":""}}
+```
+
+### Runnable slice / consumer path
+
+`NEW_PROJECT` produces a bounded project-framework handoff without writes; a materialized fixture
+is then resumed through the same short `CONTINUE_EXISTING` entrypoint. Existing projects resolve
+exact DEV bridge → selected STAGES/CME state → live Git recovery → relevant-only capability route.
+No selected record/master body, secret-like intake, command execution or global mutation is exposed.
+
+### Verification / review / stop
+
+- Full discovery: 383 PASS, 7 expected platform skips.
+- Launcher/CME/spec/path regressions: 140 PASS, 1 expected platform skip; final launcher/CME
+  security subset: 67 PASS.
+- Context validator: 271 files PASS; manifest-driven installer dry-run PASS with zero runtime
+  writes; Python compile and staged diff check PASS.
+- Independent correctness/release review: PASS. Independent security review: PASS.
+- Not performed: merge, push, active-runtime apply, prompt deletion or external release.
+
+NEXT: `DEV-SEP-LAUNCHER-001`
+
+Stop condition: integration approval is required before merge. The retention-protected Notion
+prompts remain in place.
 
 ## DEV-SEP-A — Canonical Contract + Compatibility Audit
 

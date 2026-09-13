@@ -21,7 +21,7 @@ framework. Общие правила test contracts остаются в `AGENTS.
 
 ```powershell
 py -3 -B tools\validate_context.py
-py -3 -B -m unittest tools.test_install_global tools.test_sync_global_skills tools.test_reconcile_project_framework tools.test_validate_global_codex tools.test_validate_project_overlay tools.test_backend_dx_policy tools.test_documentation_sync_policy tools.test_stage_completion_policy tools.test_unified_project_workflow_policy tools.test_i18n_l10n_policy tools.test_global_framework_hardening tools.test_ai_policy_profiler tools.test_master_execution tools.test_continuous_master_execution_policy tools.test_stage_compatibility
+py -3 -B -m unittest discover -s tools -p "test_*.py"
 .\install-global.ps1 -DryRun
 py -3 -B tools\validate_global_codex.py --workspace . --codex-home ~/.codex
 git diff --check
@@ -114,6 +114,13 @@ Windows symlink skip; full suite 358 PASS with seven expected platform skips; co
 270 files PASS; direct Windows CLI help and `git diff --check` PASS. Independent correctness and
 security reviews PASS. Fast-forward local integration, manifest-driven active-runtime
 materialization, global validation and repeat no-change dry-run also PASS; push не выполнялся.
+
+Follow-up `DEV-SEP-LAUNCHER-001` evidence at checkpoint `f25903c`: full canonical discovery
+383 PASS with seven expected platform skips; launcher/CME/spec/path set 140 PASS with one expected
+platform skip; final launcher/CME security subset 67 PASS. Context validator 271 files PASS,
+installer dry-run made no runtime writes, Python compile and staged diff check PASS. Independent
+correctness and security reviews PASS. Merge and active-runtime apply remain a separate approved
+integration step.
 
 `tools.test_install_global` использует только temporary source/home roots и проверяет separate
 source, populated runtime preservation, manifest allowlist, ledger-governed stale deletion,

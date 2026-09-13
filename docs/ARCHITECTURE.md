@@ -17,10 +17,13 @@ short user intent
   → pure automation opportunity/promotion review
 ```
 
-`tools/spec_execution.py` является bounded standard-library pure application core/CLI. Он принимает
-explicit structured input и уже проверенный live routing snapshot; не сканирует весь repository без
-reason, не исполняет commands, не пишет Git/Notion/runtime и не меняет model автоматически. Existing
-`master_execution.py` остаётся единственным graph/context/evidence/worktree controller.
+`tools/spec_execution.py` содержит bounded standard-library pure decision core и read-only
+`launcher` adapter. Adapter сам получает один bounded live routing snapshot через canonical
+`dev_paths`/stage compatibility interfaces, передаёт CME state существующему controller и затем
+вызывает pure capability route; selected record и полный master наружу не проецируются. Он не
+сканирует весь repository без reason, не исполняет commands, не пишет Git/Notion/runtime и не
+меняет model автоматически. Existing `master_execution.py` остаётся единственным
+graph/context/evidence/worktree controller.
 
 `skill-sources/registry.toml` хранит только routing metadata: Skill source identity, capability IDs,
 triggers, scope/placement, maturity/status и replacement. Full `SKILL.md` остаётся единственным

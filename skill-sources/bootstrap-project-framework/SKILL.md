@@ -29,6 +29,11 @@ description: Создать или актуализировать проектн
 16. Обнови текущий status и остановись до реализации продукта, если пользователь явно не запросил код.
 17. Проверь `./.codex/bootstrap.sh --check` или `.\.codex\bootstrap.ps1 check`; `--apply`/`apply`
    запускай только как explicit bootstrap action. Не клонируй global DEV автоматически при missing source.
+18. Для `NEW_PROJECT` после содержательного project overlay/SPEC/STAGES выполни post-bootstrap
+   read-back через `tools/spec_execution.py launcher` с коротким `CONTINUE_EXISTING` intake.
+   PASS требует exact DEV bridge, selected stage и ready/typed stop outcome без повторного полного
+   infrastructure prompt. Повторный bootstrap должен быть идемпотентным: inspect → gap не
+   перегенерирует точные owners и не дублирует КАРКАС, rules, Skills, hooks или state files.
 
 ## Ограничения
 

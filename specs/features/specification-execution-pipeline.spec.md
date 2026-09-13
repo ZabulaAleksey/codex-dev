@@ -184,6 +184,13 @@ project/live state/current safe slice, после чего pipeline выбира
 overlay/SPEC/STAGES, не копируя global rules. User prompt сообщает intent и новые constraints, а не
 повторяет infrastructure protocol.
 
+Read-only `launcher` adapter детерминированно связывает normalized `CONTINUE_EXISTING` с exact
+DEV bridge, одним selected STAGES snapshot, CME next decision и relevant-only capability route.
+Он не возвращает selected record/master body и не авторизует global mutation. Для `NEW_PROJECT`
+adapter возвращает bounded `project_framework_intake`; materialization остаётся существующим
+явно запущенным КАРКАС bootstrap, после которого тот же короткий continuation обязан проходить
+live resolver без повторного infrastructure prompt.
+
 ## 5. Security, fallback и bounds
 
 - Реализация Python standard library only; JSON inputs bounded по file size, depth, items и strings.
@@ -231,7 +238,7 @@ overlay/SPEC/STAGES, не копируя global rules. User prompt сообща�
 | SEP-002 | registry schema/parser/path/duplicate/unknown-field tests |
 | SEP-004 | executor-cost decision and deterministic-failure escalation tests |
 | SEP-005 | trace positive/negative validation and accepted stage evidence scenario |
-| SEP-006, SEP-012 | compact intake/constraint preservation and live-vs-stale tests |
+| SEP-006, SEP-012 | compact intake/constraint preservation, composed launcher integration, agent-bootstrap contract + post-bootstrap short-resume fixture and live-vs-stale tests |
 | SEP-007..009 | detector/dedup/lifecycle/promotion/placement/retirement tests |
 | SEP-010 | context-economy record/diagnostic/privacy/bounds tests |
 | all | targeted suite, full unittest discovery, global context validator, diff check, final review |
@@ -264,3 +271,6 @@ No destructive data rollback is required.
 - 2026-09-11 — `DEV-SEP-A..F` implemented and verified locally at checkpoint `a715f2e`.
 - 2026-09-12 — feature fast-forward integrated into local `main`; manifest-driven active-runtime
   materialization, global validation and idempotent no-change dry-run PASS; push not performed.
+- 2026-09-12 — `DEV-SEP-LAUNCHER-001` follow-up verified at isolated checkpoint `f25903c`:
+  minimal launcher chain, live Git recovery and security boundaries have executable regression
+  evidence; integration and active-runtime materialization await explicit approval.

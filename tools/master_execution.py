@@ -13,6 +13,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -29,6 +30,7 @@ from tools.stage_compatibility import inspect_compatibility, materialize_plan, s
 MAX_STAGES_CHARS = 500_000
 MAX_STATE_CHARS = 64_000
 MAX_ITEMS = 128
+MAX_GIT_OUTPUT_BYTES = 512 * 1024
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 BRANCH = re.compile(r"^(?![./])(?!.*(?:\.\.|//|@\{|\\|\s))[A-Za-z0-9._/-]{1,160}(?<![./])$")
 STATE_FENCE = re.compile(
@@ -64,6 +66,10 @@ EVIDENCE_RANK = {level: index for index, level in enumerate(("L1", "L2", "L3", "
 
 class MasterExecutionError(ValueError):
     """A fail-closed state, route, or adapter error."""
+
+
+class MasterExecutionResourceLimit(MasterExecutionError):
+    """A bounded adapter observation exceeded its declared resource limit."""
 
 
 def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -482,12 +488,32 @@ def cleanup_eligibility(prompt_type: str, item_status: str, retention: str, *,
     return CleanupEligibility("existing_guard", reason)
 
 
-def recover_execution(state: dict[str, Any], facts: RecoveryFacts) -> ExecutionDecision:
+def recover_execution(
+    state: dict[str, Any], facts: RecoveryFacts, *, track_id: str = ""
+) -> ExecutionDecision:
     """Reconcile durable state with bounded Git/prompt/session observations."""
     validate_state(state)
-    track = next((item for item in state["tracks"] if item["status"] in {"active", "integration_required"}), None)
+    if track_id:
+        selected_track = _identifier(track_id, "recovery track id")
+        track = next(
+            (
+                item for item in state["tracks"]
+                if item["id"] == selected_track
+                and item["status"] in {"active", "integration_required"}
+            ),
+            None,
+        )
+    else:
+        track = next(
+            (
+                item for item in state["tracks"]
+                if item["status"] in {"active", "integration_required"}
+            ),
+            None,
+        )
     if track is None:
-        return ExecutionDecision("blocked", "active_track_missing")
+        reason = "selected_active_track_missing" if track_id else "active_track_missing"
+        return ExecutionDecision("blocked", reason)
     if facts.source_revision != state["master"]["source"]["revision"]:
         return ExecutionDecision("blocked", "master_source_revision_changed")
     if not facts.queue_item_present:
@@ -505,7 +531,10 @@ def recover_execution(state: dict[str, Any], facts: RecoveryFacts) -> ExecutionD
     if (facts.launcher_state_revision != state["state_revision"]
             or facts.launcher_checkpoint != track["checkpoint"]):
         return ExecutionDecision("handoff", "stale_launcher_requires_fresh_state")
-    running = [item for item in state["slices"] if item["status"] == "running"]
+    running = [
+        item for item in state["slices"]
+        if item["status"] == "running" and item["worktree_track"] == track["id"]
+    ]
     if facts.git_head != track["checkpoint"]:
         if not facts.checkpoint_reachable:
             return ExecutionDecision("blocked", "status_checkpoint_not_present_in_git")
@@ -806,10 +835,64 @@ class GitWorktreeAdapter:
         self.timeout = timeout
 
     def _git(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-        completed = subprocess.run(
-            ["git", "-c", f"safe.directory={self.repository}", "-C", str(self.repository), *args],
-            capture_output=True, text=True, encoding="utf-8", timeout=self.timeout, check=False,
+        environment = {
+            key: value for key, value in os.environ.items()
+            if not key.upper().startswith("GIT_")
+        }
+        environment.update({
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+            "GIT_PAGER": "cat",
+            "GIT_NO_LAZY_FETCH": "1",
+        })
+        command = [
+            "git",
+            "-c", f"safe.directory={self.repository}",
+            "-c", "core.fsmonitor=false",
+            "-c", f"core.hooksPath={os.devnull}",
+            "-c", "submodule.recurse=false",
+            "-C", str(self.repository),
+            *args,
+        ]
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=environment,
         )
+        chunks: list[bytes] = []
+        observed = 0
+        overflow = False
+
+        def drain() -> None:
+            nonlocal observed, overflow
+            assert process.stdout is not None
+            while True:
+                chunk = process.stdout.read(min(64 * 1024, MAX_GIT_OUTPUT_BYTES + 1 - observed))
+                if not chunk:
+                    return
+                chunks.append(chunk)
+                observed += len(chunk)
+                if observed > MAX_GIT_OUTPUT_BYTES:
+                    overflow = True
+                    process.kill()
+                    return
+
+        reader = threading.Thread(target=drain, daemon=True)
+        reader.start()
+        try:
+            returncode = process.wait(timeout=self.timeout)
+        except subprocess.TimeoutExpired as exc:
+            process.kill()
+            process.wait()
+            reader.join(timeout=1)
+            if process.stdout is not None:
+                process.stdout.close()
+            raise MasterExecutionError("git adapter timed out") from exc
+        reader.join(timeout=1)
+        if process.stdout is not None:
+            process.stdout.close()
+        output = b"".join(chunks).decode("utf-8", errors="replace")
+        if overflow:
+            raise MasterExecutionResourceLimit("git adapter output exceeded bounded limit")
+        completed = subprocess.CompletedProcess(command, returncode, output, "")
         if check and completed.returncode != 0:
             detail = (completed.stderr or completed.stdout)[-2000:].strip()
             raise MasterExecutionError(f"git adapter failed: {detail}")
@@ -822,6 +905,10 @@ class GitWorktreeAdapter:
         for line in [*output.splitlines(), ""]:
             if not line:
                 if current:
+                    if len(facts) >= MAX_ITEMS:
+                        raise MasterExecutionResourceLimit(
+                            "git worktree inventory exceeds item limit"
+                        )
                     facts.append(WorktreeFact(
                         path=str(current.get("worktree", "")), head=str(current.get("HEAD", "")),
                         branch=str(current.get("branch", "")).removeprefix("refs/heads/"),
