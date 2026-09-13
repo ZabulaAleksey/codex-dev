@@ -33,8 +33,9 @@ relevant-only capability routing, `NEW_PROJECT` has an idempotent post-bootstrap
 contract, and untrusted paths/Git environment/secret-like intake fail closed. Full discovery is
 383 PASS with 7 expected platform skips; correctness and security reviews PASS. Integration into
 local `main` была завершена ранее; user-approved active-runtime materialization теперь также имеет
-idempotent `[no changes]` read-back. Prompt cleanup не выполнялся, reusable Notion source остаётся
-retention-protected.
+idempotent `[no changes]` read-back. Поглощённый bootstrap HOTFIX прошёл exact-item guard и удалён
+из active queue с сохранением всех соседей; reusable Notion source остаётся retention-protected,
+а partial/integration-gated masters сохранены.
 
 ## Текущий internal delta — unified DEV/product path roles
 

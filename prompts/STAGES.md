@@ -117,7 +117,11 @@ No selected record/master body, secret-like intake, command execution or global 
 - Completed: fully-merged local branch/worktree cleanup and GitHub `main` publication/read-back;
   remote topic branches are absent.
 - Completed: user-approved active-runtime apply and idempotent read-back.
-- Not performed: prompt deletion or external release.
+- Completed: exact Prompt Queue cleanup of absorbed HOTFIX item
+  `3d661ed8f246819bbfebc7a6d92819e3`; guard record
+  `dd87745a5f8fe9844fd186da163f657c59a198143fceeeff9512204224050967`, decision `cleaned`,
+  source read-back `deleted`, all 23 neighboring child pages preserved.
+- Not performed: deletion of reusable/partial/integration-gated prompts or external release.
 
 NEXT: `DEV-SEP-LAUNCHER-001`
 
