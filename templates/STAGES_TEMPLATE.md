@@ -61,6 +61,13 @@ bounded `master-execution` JSON block по `schemas/master-execution.schema.json
 - Fallback / degraded behavior:
 - Rollback:
 
+### Действия пользователя
+
+- `User actions: none`, если действий пользователя нет.
+- Иначе для каждого действия: `<stable-action-id>` — `READY | PENDING | DONE | NOT_REQUIRED`
+  (`CONDITIONAL`, если применимо); trigger/условие; точное безопасное действие; ожидаемое evidence;
+  какой шаг оно разблокирует. Secret values сюда не записываются.
+
 ### Допустимая временная реализация / Deferred
 
 - Полностью рабочая temporary implementation или `none`:

@@ -1,9 +1,9 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-SEP-LAUNCHER-001`
-- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001`
-- NEXT: launcher evidence is integrated into local `main`; active-runtime materialization remains
-  a separate approval-gated action. Continue with the approved user-actions policy integration.
+- Stage ID: `DEV-STAGES-USER-ACTIONS-001`
+- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001`
+- NEXT: validate integrated local `main`, remove merged temporary worktrees/local branches and
+  publish `main`; active-runtime materialization remains a separate conditional action.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -558,3 +558,49 @@ NEXT: await an explicitly selected DEV prompt; no future scope is inferred from 
 - Blocker: pre-existing active-runtime `unmatched-browser-client-hash`; runtime config is outside
   repository mutation scope.
 - NEXT: terminal runtime verification only after the external blocker is resolved.
+
+## DEV-STAGES-USER-ACTIONS-001 — Durable user actions in canonical STAGES
+
+Status: verified
+NEXT: DEV-STAGES-USER-ACTIONS-001
+Checkpoint: d9625c8
+Evidence: L1
+Blockers: none
+
+- Lifecycle: `completed`; Evidence level: `validated locally + committed`.
+- Goal: make every project-owner-only action recoverable from selected `prompts/STAGES.md` without
+  relying on chat history.
+- Scope: canonical governance, global router, `dev-karkas` status workflow, project framework,
+  STAGES template and contract regression; no runtime installation, product rollout or external write.
+- Contract: user decisions/approvals, secret or external-access needs, local setup, manual checks
+  and approval-gated operations receive a stable action ID, status/condition, exact safe action,
+  expected evidence and the step they unblock. Secret values are never stored in project state.
+- Implementation checkpoint: `d9625c8` on `docs/stages-user-actions`; no merge or push.
+- Evidence: `tools.test_documentation_sync_policy` 6 PASS; full DEV suite 364 PASS with 7 expected
+  skips; `tools/validate_context.py` PASS for 271 files; `git diff --check` PASS.
+- Documentation synchronization: updated `AGENTS.md`, `rules/governance.md`,
+  `docs/PROJECT_FRAMEWORK.md`, `skill-sources/dev-karkas/references/STATUS_WORKFLOW.md`,
+  `templates/STAGES_TEMPLATE.md` and this selected record. `README.md`, `docs/ROADMAP.md`,
+  architecture, decisions, security and testing contracts were checked and remain accurate.
+
+### Действия пользователя
+
+- `USER-DEV-STAGES-ACTIONS-INTEGRATE` — `DONE`: пользователь явно разрешил merge; policy и launcher
+  commits включены в canonical local `main`. Evidence: target-branch ancestry и post-merge checks;
+  exact merge checkpoint фиксируется после завершения merge commit.
+- `USER-DEV-STAGES-ACTIONS-CLEANUP` — `READY`: пользователь разрешил удалить слитые temporary
+  worktrees и local/remote topic branches после post-merge validation. Evidence: итоговый worktree/
+  branch inventory. Разблокирует завершение repository cleanup.
+- `USER-DEV-STAGES-ACTIONS-PUSH` — `READY`: пользователь разрешил публикацию объединённой `main`
+  и удаление слитых topic branches на GitHub. Evidence: successful push, remote prune и итоговый
+  remote branch inventory.
+- `USER-DEV-STAGES-ACTIONS-INSTALL` — `PENDING / CONDITIONAL`: после local integration отдельно
+  разрешить штатную manifest-driven установку из canonical `~/codex-dev` в active `~/.codex`,
+  если правило должно применяться в новых чатах на этом устройстве. Evidence: installer validation
+  и hash-verified Skill/runtime parity. До разрешения active runtime не изменяется.
+
+### Fallback / rollback / NEXT
+
+Изменение policy не устанавливается в active `~/.codex` автоматически. Rollback — atomic Git
+revert implementation/state/merge commits. NEXT: выполнить post-merge validation, разрешённый
+branch/worktree cleanup и push; runtime install не подразумевается.

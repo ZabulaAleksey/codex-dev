@@ -47,7 +47,7 @@ Implementation → tests → state update
 - `specs/system.spec.md` и при необходимости `specs/features/*` — стабильные требования и критерии приёмки;
 - `AGENTS.md` — тонкий project overlay с локальными инвариантами и маршрутизацией контекста;
 - `prompts/STAGES.md` — единственный подробный источник stages и execution state: selector,
-  current plan, lifecycle/evidence, blockers и NEXT;
+  current plan, lifecycle/evidence, blockers, действия пользователя и NEXT;
 - `docs/ARCHITECTURE.md` — границы, зависимости, интерфейсы и потоки данных;
 - `docs/DECISIONS.md` — существенные решения и их последствия;
 - `docs/ROADMAP.md` — долгосрочная последовательность этапов;
@@ -184,6 +184,11 @@ contract tests, а изменение хранения — data model, security/
 для остальных достаточно подтверждения `checked, still accurate` без timestamp-only churn.
 После merge повторяй gate по target branch. Merge остаётся контрольной точкой синхронизации,
 но не заменяет review и явное разрешение пользователя.
+
+Если продолжение зависит от действия владельца — решения, approval, секрета/доступа, локального
+setup или ручной проверки — selected STAGES record хранит stable action ID, статус/условие, точное
+безопасное действие, evidence и разблокируемый шаг. История чата не является recovery path для
+таких обязательств; значения секретов в project state не сохраняются.
 
 ## Закон отсутствия дубликатов
 

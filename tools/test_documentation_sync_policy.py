@@ -70,6 +70,29 @@ class DocumentationSyncPolicyTests(unittest.TestCase):
             ("Completion Documentation Synchronization Gate", "target branch"),
         )
 
+    def test_user_owned_actions_are_durable_in_selected_stages_record(self) -> None:
+        self.assert_markers(
+            "rules/governance.md",
+            (
+                "Действия пользователя в canonical state",
+                "stable ID, статус, trigger/условие",
+                "Чат не является",
+                "Секретное значение никогда не записывается",
+            ),
+        )
+        self.assert_markers(
+            "AGENTS.md",
+            ("которые должен выполнить пользователь", "Не оставляй такие обязательства только в чате"),
+        )
+        self.assert_markers(
+            "skill-sources/dev-karkas/references/STATUS_WORKFLOW.md",
+            ("User actions: none", "разблокируемый шаг", "Никогда не сохраняй secret value"),
+        )
+        self.assert_markers(
+            "templates/STAGES_TEMPLATE.md",
+            ("### Действия пользователя", "READY | PENDING | DONE | NOT_REQUIRED"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
