@@ -82,6 +82,8 @@ class ContinuousMasterPolicyTests(unittest.TestCase):
             expected = "await_result"
         elif selected["status"] == "ready":
             expected = "continue"
+        elif selected["status"] == "blocked":
+            expected = "blocked"
         else:
             self.fail(f"selected slice has non-routable status: {selected['status']}")
         self.assertEqual(decision.action, expected)

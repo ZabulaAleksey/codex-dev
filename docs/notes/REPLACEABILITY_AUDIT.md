@@ -1,0 +1,89 @@
+# Replaceability audit — DEV main repositories
+
+## Scope and evidence
+
+Audit run: 2026-09-13. Local Git roots were discovered under `PROJECTS_ROOT=~` with bounded
+filesystem traversal; GitHub owner inventory was read through the connected API. The scan did not
+change product repositories. Scores are evidence-based snapshots, not release claims.
+
+Primary local repositories:
+
+| Repo | Local checkpoint / state | Classification | Reason |
+|---|---|---|---|
+| `codex-dev` | `040c51a`, clean `main` | PRIMARY ACTIVE | global framework and current DEV queue owner |
+| `math-morph` | `main=027cc29`; additional clean detached/feature worktrees | PRIMARY ACTIVE | active billing/identity/equation work |
+| `electro-tutor` | `963c237`, clean `feature/et-09-4c-profiles-lifecycle` | PRIMARY ACTIVE / INTEGRATION BLOCKED | active Tutor work; local clone has no `main`/`origin/main` ref |
+| `video-chronicle` | `d1d3a09`, clean `main`; two clean feature worktrees | PRIMARY ACTIVE | active media/GUI/release track |
+
+Non-product/local artifacts excluded: plugin cache Git metadata, old DEV staging clones, package
+sdist build trees and linked worktrees already attributed to their common repository.
+
+GitHub reports 21 owned, non-archived repositories. The 17 without a current local canonical
+checkout or project-stage evidence are `UNKNOWN — NEEDS EVIDENCE`, not automatic clone/retrofit
+targets: `ai-mix`, `docasaurus`, `dune-rts`, `fourier-sketch`, `initial-project`, `join-media`,
+`marvel`, `monte-carlo`, `off-screen-canvas`, `receipt-scanner-ua`, `server`, `solana`,
+`solar-system`, `task-js-ai`, `text-recognition-core`, `vector-diagram`, `wifi-share`.
+
+## Consolidated score
+
+| Repo | Module | Current implementation | Before | After | Evidence / coupling | Retrofit | Remaining risk / next |
+|---|---|---|---:|---:|---|---|---|
+| `codex-dev` | architecture governance | dev-karkas architecture reference | 5 | 8 | previous reference required only a common backend contract; no complete global owner | `rules/replaceable-modules.md`, FR-015/AC-018, routes and structural test | product runtime evidence remains project-owned; merge + runtime install are gated |
+| `math-morph` | billing/payments | `ports/billing.py` + `adapters/stripe.py` + canonical billing services | 7 | 7 | Stripe SDK is adapter-local; normalized provider events and contract tests exist | audit only | `api/billing.py` imports the project Stripe adapter at provider ingress; move factory to composition module as P1 |
+| `math-morph` | identity/entitlements | OIDC boundary + provider-neutral entitlement ports/transport | 8 | 8 | dedicated domain/services/ports and focused contract/integration suites | audit only | live-provider acceptance and cross-product consumer remain separately gated |
+| `math-morph` | equation backends | Document IR, `EquationBackend`, MathML/MathType adapters | 8 | 8 | backend-neutral IR, explicit optional bridge and golden/adapter tests | audit only | WIRIS/Word/MathType live compatibility and migration evidence remain provider-specific |
+| `math-morph` | artifact storage | `ArtifactStore` port with current local implementation | 7 | 7 | application consumes a project port; provider implementation remains local | audit only | S3-compatible durable migration/export is not rehearsed |
+| `electro-tutor` | RTC/whiteboard | direct `JitsiMeetExternalAPI` lifecycle in `src/components/Classroom.tsx` | 2 | 2 | UI owns script loading, vendor type, provider domain, constructor and command name | BLOCKED P0 | local repository lacks `main`/`origin/main`; current worktree is an active unrelated feature branch. Establish a clean integration base, then add `MeetingPort`/facade + Jitsi adapter and component contract tests |
+| `electro-tutor` | identity/OIDC | domain `ExternalIdentity` + `adapters/oidc.py` | 7 | 7 | provider-neutral domain principal; HTTP/JWT types stay in adapter | audit only | test-only `e2e_support.py` uses Keycloak-named helpers/config and should be renamed when the local test provider becomes swappable |
+| `electro-tutor` | persistence/capabilities | application services + repository/unit-of-work adapters | 7 | 7 | boundaries and real PostgreSQL integration evidence exist on active track | audit only | active stage integration is not on a canonical local default-branch ref |
+| `video-chronicle` | FFmpeg/FFprobe | `PipelinePorts`, managed command runner/process control | 8 | 8 | process creation centralized; list argv, timeout/cancel and contract tests | audit only | one internal engine is intentional; generic media-provider abstraction would be YAGNI |
+| `video-chronicle` | timeline interchange | adapter-neutral contract + optional OTIO adapter | 8 | 8 | proposal-only import, optional resolver, golden/contract tests | audit only | broader OTIO capability remains explicitly optional |
+| `video-chronicle` | transcription | explicit local `whisper.cpp` adapter and manifest | 7 | 7 | bounded adapter, provenance/hash/license contract and focused tests | audit only | real model WER/CER benchmark unavailable; stage remains implemented-unverified |
+
+## Top coupling findings
+
+1. Electro Tutor RTC/UI has direct Jitsi SDK and command coupling; this is the only current P0.
+2. Electro Tutor has no local default-branch ref after fresh fetch attempt, so a safe independent
+   retrofit cannot be based or integrated without first restoring the canonical Git topology.
+3. MathMorph billing ingress imports the Stripe adapter factory directly in the API controller.
+4. MathMorph worker composition selects the Stripe operation adapter directly; this is acceptable
+   as a composition root but should remain the only non-adapter selection site.
+5. MathMorph provider webhook storage retains raw payload for audit/idempotency, so retention and
+   export/migration policy remains security-sensitive even though domain events are normalized.
+6. MathMorph artifact storage has a port, but durable S3-compatible migration/fallback is not yet
+   rehearsed.
+7. Electro Tutor local/test orchestration contains Keycloak-specific helper names outside the OIDC
+   adapter; production domain types remain neutral, so this is P1 naming/config debt.
+8. Video Chronicle FFmpeg/FFprobe invocation is correctly centralized; bypasses were not found.
+9. Video Chronicle uses optional adapters for OTIO/transcription without leaking their types into
+   canonical project schema.
+10. Seventeen remote-only owned repositories lack local stage/code evidence and remain UNKNOWN;
+    cloning or retrofitting them automatically would exceed the active-repository contract.
+
+## Priority and migration debt
+
+- **P0:** Electro Tutor `Classroom.tsx` → local meeting facade/port + Jitsi adapter. Blocker:
+  missing local default-branch ref and an active unrelated feature branch; no product write was
+  made.
+- **P1:** MathMorph webhook factory/composition cleanup; Electro Tutor Keycloak-specific test
+  helper naming; MathMorph artifact-storage migration rehearsal.
+- **P2 / YAGNI:** do not wrap every FFmpeg operation in a generic media-provider hierarchy. Keep
+  the current `PipelinePorts`/process boundary; FFmpeg is the selected internal engine.
+
+Provider switches, data migrations, active feature integration, production secrets and deploy are
+outside this audit. No merge, push, branch deletion or product mutation was performed.
+
+## Deterministic guards and suites
+
+- Global: `tools/test_replaceable_module_policy.py` ensures one canonical policy owner, all routes,
+  FR-015/AC-018 and the structural-vs-runtime evidence boundary.
+- MathMorph existing evidence surfaces: billing/provider/entitlement contract and integration
+  tests, document/equation adapter goldens, project validator.
+- Electro Tutor existing evidence surfaces: OIDC/auth transport and PostgreSQL repository tests;
+  RTC lacks a local provider contract suite and is the P0 follow-up.
+- Video Chronicle existing evidence surfaces: process control, pipeline ports, OTIO interchange and
+  transcription tests.
+
+Generic cross-language regex vendor lint was intentionally not added: it would classify provider
+ingress/composition/tests as false positives. Each project should use its AST/import/dependency
+tooling when the P1/P0 retrofit is executed.

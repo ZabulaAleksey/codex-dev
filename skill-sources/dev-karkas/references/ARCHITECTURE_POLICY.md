@@ -29,7 +29,10 @@ Adapters: storage / providers / external systems
 
 ## Adapters and backends
 
-Для сменных backends используй единый contract и явный selection/fallback policy. Не размазывай `if provider == ...` по приложению.
+Для сменных backends используй единый contract и явный selection/fallback policy. Не размазывай
+`if provider == ...` по приложению. Полный inherited Replaceable Module Contract принадлежит
+`~/.codex/rules/replaceable-modules.md`; этот reference только маршрутизирует к нему. Проект
+хранит конкретные ports/adapters, score, exceptions и evidence.
 
 ## Telemetry
 

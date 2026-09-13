@@ -84,6 +84,9 @@ canonical reviewable clone command.
 - [`rules/i18n-l10n.md`](rules/i18n-l10n.md) задаёт наследуемую архитектурную готовность
   пользовательских продуктов к нескольким языкам и локалям, locale-aware данным, fallback,
   text expansion и RTL; проекты хранят только конкретную delta в SPEC/DESIGN/architecture.
+- [`rules/replaceable-modules.md`](rules/replaceable-modules.md) задаёт единый Replaceable Module
+  Contract для vendor-bound providers/backends: system-owned ports, anti-corruption adapters,
+  composition-root selection, contract tests и migration/fallback evidence без YAGNI-обёрток.
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md) содержит copy-ready запросы для старта, stage,
   completion, архитектурного изменения, pre-merge, паузы, возобновления и новой идеи, а также
   computer↔laptop handoff.

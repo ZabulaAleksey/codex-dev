@@ -1,5 +1,17 @@
 # Roadmap AI Dev Team
 
+## Текущий one-shot — Replaceable Modules Audit
+
+`DEV-REPLACEABILITY-001` канонизирует inherited Replaceable Module Contract и проводит
+evidence-based audit PRIMARY ACTIVE repositories. Global policy/SPEC/routes/structural guard и
+consolidated report реализованы и локально проверены в `feature/dev-replaceability-audit`: 16
+focused checks и полный suite 397 PASS / 7 expected skips. Product repositories не изменялись.
+Единственный P0 — прямой Jitsi SDK lifecycle
+в Electro Tutor UI — заблокирован отсутствием local/remote default-branch ref в текущем clean
+feature-only checkout; сначала требуется восстановить безопасную integration base. P1/P2 и scores
+принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
+`prompts/STAGES.md`.
+
 ## Текущий master — Specification → Execution Pipeline
 
 `DEV-SEP-001` is completed and integrated at implementation checkpoint `a715f2e`: all slices

@@ -1,7 +1,7 @@
 # Системная спецификация AI Dev Team Codex
 
 Статус: Действует
-Версия: 1.8
+Версия: 1.9
 
 ## 1. Назначение
 
@@ -178,6 +178,16 @@ fail closed. Product location не является inheritance signal: project 
 resume bootstrap требуют valid project-local `.codex/dev-project.toml` и проверяемый global
 version/capability contract.
 
+### FR-015 Replaceability by Design
+
+Значимая external/vendor-bound подсистема или реалистично сменная implementation должна быть
+отделена от domain/application logic system-owned port, canonical internal DTO/event и
+anti-corruption adapter. Provider selection принадлежит composition root; vendor SDK/types,
+secrets и provider-specific errors не протекают в domain/application/UI. Каждая реализация имеет
+общий contract suite, а provider-owned durable state — export/import/migration/rollback и
+fallback/degraded contract. YAGNI исключение допустимо только с evidence, что реальной замены,
+vendor lock-in, alternate implementation, fake/emulator, migration или fallback need нет.
+
 ## 3. Критерии приёмки
 
 - AC-001 Корневой валидатор подтверждает целостность канонической AI-инфраструктуры.
@@ -220,6 +230,10 @@ version/capability contract.
 - AC-017 Единый resolver проходит default/env/config/Windows tests; plain Git repository остаётся
   DEV-disabled, marked overlay включается, installer сохраняет runtime, Prompt Queue/`Продолжай`
   не зависят от legacy workspace path, diagnostics классифицирует legacy layout без mutations.
+- AC-018 Единственный Replaceable Module Contract маршрутизируется через global router, rule index,
+  dev-karkas architecture policy и project framework; он требует port/adapter/anti-corruption,
+  composition-root selection, contract tests, migration/fallback/security evidence и разрешает
+  YAGNI только с явным обоснованием. Structural test не выдаётся за product runtime evidence.
 
 ## 4. История изменений
 
@@ -234,5 +248,6 @@ version/capability contract.
 - 2026-09-08 — добавлен portable Continuous Master Execution contract с deterministic graph,
   worktree routing, low-context handoff и verification/integration gates.
 - 2026-09-08 — добавлен контракт brownfield stage compatibility и retained-legacy manifest.
+- 2026-09-13 — добавлен Replaceable Module Contract и межрепозиторный evidence audit.
 - 2026-09-10 — добавлены unified path roles, explicit project DEV bridge и fail-closed migration
   diagnostics для target layout `~/codex-dev`, `~/.codex`, `~/<project>`.

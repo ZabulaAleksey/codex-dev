@@ -1,12 +1,62 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-SEP-LAUNCHER-001`
-- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001`
-- NEXT: branch cleanup and GitHub publication are complete; await a separate explicit decision on
-  `USER-DEV-RUNTIME-INSTALL` before changing active `~/.codex`.
+- Stage ID: `DEV-REPLACEABILITY-C`
+- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001 → DEV-REPLACEABILITY-A → DEV-REPLACEABILITY-B → DEV-REPLACEABILITY-C → DEV-REPLACEABILITY-D`
+- NEXT: restore a safe canonical Electro Tutor default-branch integration base; the global contract
+  and bounded repository audit are verified.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
+
+## DEV-REPLACEABILITY-C — Replaceable Modules Audit + Main Repositories Retrofit
+
+- Status: `partial`
+- Lifecycle state: `blocked_by_environment`
+- Evidence level: global `L1,L2`; product evidence is read-only audit only.
+- Source: Notion queue `3d061ed8f2468163b502d1829668063c`, item
+  `3da61ed8f2468198b889d629331a310e`, revision `2026-09-13T10:15:22.756Z`.
+- Prompt type / retention: `master_prompt` / `auto` (ONE-SHOT cleanup only after overall DoD).
+- Branch/worktree: `feature/dev-replaceability-audit` /
+  `~/Documents/Codex/2026-09-13/new-chat-3/work/dev-replaceability`.
+- Checkpoint before: `040c51a442cde48df00d7662ca2552b304b8daac`; checkpoint after: pending.
+- Requirements: `FR-015`; acceptance: `AC-018`; global policy owner:
+  `rules/replaceable-modules.md`.
+- Inventory: 21 owned GitHub repositories, four PRIMARY ACTIVE local repositories, 17 remote-only
+  UNKNOWN repositories. Exact classification and scores: `docs/notes/REPLACEABILITY_AUDIT.md`.
+- Blocker: Electro Tutor P0 direct Jitsi UI coupling cannot safely be retrofitted from the current
+  clone because it contains only active feature refs and no local/remote default-branch ref.
+- Deferred: P1 MathMorph composition cleanup, Electro Tutor test-helper naming and artifact-storage
+  migration rehearsal; provider changes and production migrations are separate scopes.
+
+### Действия пользователя
+
+- `USER-DEV-RUNTIME-INSTALL` — `PENDING / CONDITIONAL`: separately approve manifest-driven apply
+  to active `~/.codex`; the dry-run found 21 stale/missing managed artifacts and preserved all
+  protected runtime paths.
+- `USER-DEV-REPLACEABILITY-INTEGRATION` — `PENDING`: after local checks/review, explicitly approve
+  merge of this feature branch into `main`; runtime apply and Notion cleanup remain separate gates.
+
+```master-execution
+{"schema_version":2,"state_revision":2,"master":{"id":"DEV-REPLACEABILITY-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8f2468163b502d1829668063c","item_id":"3da61ed8f2468198b889d629331a310e","revision":"2026-09-13T10:15:22.756Z","prompt_type":"master_prompt","retention":"auto"}},"tracks":[{"id":"replaceability-global","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-13/new-chat-3/work/dev-replaceability","branch":"feature/dev-replaceability-audit","checkpoint":"040c51a442cde48df00d7662ca2552b304b8daac","ownership":["rules/replaceable-modules.md","FR-015/AC-018","replaceability audit"],"status":"active"}],"slices":[{"id":"DEV-REPLACEABILITY-A","master_id":"DEV-REPLACEABILITY-001","title":"Canonical global contract","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"040c51a442cde48df00d7662ca2552b304b8daac","checkpoint_after":"","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["FR-015","AC-018","architecture policy","global routes"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["FR-015"],"capabilities":["project.framework.governance","change.review"]},{"id":"DEV-REPLACEABILITY-B","master_id":"DEV-REPLACEABILITY-001","title":"Primary repository inventory and scoring","status":"verified","predecessors":["DEV-REPLACEABILITY-A"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1"],"evidence":["L1"],"context_scope":["local Git inventory","GitHub owner inventory","primary repository architecture"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false,"requirements":["FR-015"],"capabilities":["project.framework.governance"]},{"id":"DEV-REPLACEABILITY-C","master_id":"DEV-REPLACEABILITY-001","title":"Safe P0 product retrofit","status":"blocked","predecessors":["DEV-REPLACEABILITY-B"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3","L5"],"evidence":[],"context_scope":["Electro Tutor RTC facade","Jitsi adapter","component contract"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true,"requirements":["FR-015"],"capabilities":["change.review"]},{"id":"DEV-REPLACEABILITY-D","master_id":"DEV-REPLACEABILITY-001","title":"Overall review, integration and queue cleanup","status":"queued","predecessors":["DEV-REPLACEABILITY-C"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["completion documentation gate","Notion exact-item cleanup"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true,"requirements":["FR-015"],"capabilities":["change.review","project.framework.governance"]}],"blockers":[{"id":"electro-tutor-default-branch","class":"environment_unavailable","status":"active","blocking":true,"owner":"user","evidence":"local clone has no main or origin/main; current checkout is an active feature branch"}],"decisions":["single-global-policy-owner","no-brittle-generic-regex-lint","no-product-write-on-active-feature-ref"],"context_budget":{"max_chars":7000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"restore a safe Electro Tutor default-branch integration base","integration":{"required":false,"reason":""}}
+```
+
+### Runnable slice / consumer path
+
+Global router loads one canonical Replaceable Module Contract for a provider-bound architecture
+change; dev-karkas and project framework route to it without copying the normative checklist.
+Structural tests verify delivery, while product runtime/contract suites remain the evidence owner.
+
+### Verification / stop
+
+- PASS: 16 focused policy/i18n/master tests; 397 full tests with 7 expected platform skips;
+  `tools/validate_context.py` over 278 files; staged diff whitespace review.
+- PASS: canonical-source installer dry-run preserved protected runtime paths; an actual runtime apply
+  was not performed because it requires separate explicit approval.
+- Product repositories were read-only; no merge, push, provider switch or migration occurred.
+- Stop condition after global checkpoint: restore an exact clean Electro Tutor `main`/`origin/main`
+  base before changing its RTC UI boundary.
+
+NEXT: `DEV-REPLACEABILITY-C`
 
 ## DEV-SEP-LAUNCHER-001 — Minimal User Launcher Evidence Hardening
 

@@ -1,5 +1,20 @@
 # Существенные решения
 
+## 2026-09-13 — Replaceability contract имеет одного global owner
+
+**Контекст:** vendor SDK и provider-specific DTO могут незаметно связать domain/application/UI с
+payments, identity, RTC, storage, AI и document backends. Универсальная обёртка вокруг каждого
+класса, напротив, создаёт YAGNI и ложную заменяемость.
+
+**Решение:** полный наследуемый контракт хранится в `rules/replaceable-modules.md`. Global router,
+dev-karkas и project framework только маршрутизируют к нему; product repositories владеют своими
+ports/adapters, исключениями и evidence. Автоматический generic regex-lint отклонён: project AST/
+dependency tools предпочтительнее, а structural global test проверяет только delivery contract.
+
+**Последствия:** provider change и durable migration остаются отдельными approval-gated slices.
+P0 finding исправляется безопасным retrofit или получает точный blocker; score без file/test
+evidence не считается audit result.
+
 ## 2026-09-11 — Specification pipeline расширяет CME одним pure router core
 
 **Контекст:** approved master требует stage-first context, capability/Skill routing, traceability и

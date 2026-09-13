@@ -83,6 +83,9 @@ Feature SPEC
 - Если repository имеет или проектирует пользовательскую поверхность либо задача меняет
   пользовательские строки, locale-dependent данные, layout для переводов или RTL, загрузи
   `rules/i18n-l10n.md`.
+- Если задача вводит, меняет или проверяет внешний provider, vendor SDK, сменный backend,
+  capability/fallback adapter либо provider-owned durable state, загрузи
+  `rules/replaceable-modules.md`.
 - Если задача вводит или оценивает дорогую AI-policy, agent/retrieval/reuse contour,
   автоматизацию, human handoff либо baseline/variant experiment, загрузи
   `rules/ai-policy-profiling.md`.

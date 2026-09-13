@@ -238,6 +238,12 @@ Project `SPEC` и `DESIGN.md` не копируют глобальный ста�
 доказывать расширяемость уже в этом самостоятельном slice; будущий stage добавляет переводы, а не
 впервые разблокирует i18n.
 
+## Replaceable modules
+
+External/vendor-bound subsystem, сменный backend, provider-owned durable state или capability
+fallback наследуют [`Replaceable Module Contract`](../rules/replaceable-modules.md). Project
+overlay хранит только реализацию, исключения, debt и evidence; полный контракт не копируется.
+
 Язык project context — отдельная настройка документации и не является product locale.
 
 ## Язык проектного контекста

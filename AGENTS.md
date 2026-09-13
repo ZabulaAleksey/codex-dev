@@ -82,6 +82,9 @@ registry/decision в автоматическое исполнение commands 
   главного агента не меняется молча.
 - User-facing product architecture/strings/locale/RTL: `~/.codex/rules/i18n-l10n.md`. Язык
   project context не определяет product language/locale.
+- External/vendor-bound subsystems and replaceable implementations:
+  `~/.codex/rules/replaceable-modules.md`; project хранит только ports/adapters, исключения и
+  evidence, а не копию глобального contract.
 - Дорогие AI-policies, agent/retrieval/reuse contours, experiments и human handoff economics:
   `~/.codex/rules/ai-policy-profiling.md`; opt-in Observe предшествует tuning.
 - Stage-first capability/Skill routing, traceability, context economy и automation promotion:

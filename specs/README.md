@@ -13,6 +13,8 @@
   `prompts/STAGES.md` для selector, execution state, blockers/evidence и NEXT; безопасная
   brownfield migration без конкурирующих AI plan/status файлов.
 - [`features/prompt-queue-lifecycle.spec.md`](features/prompt-queue-lifecycle.spec.md) — retention/cleanup guard, receipts и project inheritance.
+- [`system.spec.md`](system.spec.md), `FR-015` / `AC-018` — Replaceable Module Contract для
+  provider/vendor-bound подсистем и сменных implementations.
 
 
 ## Системная спецификация
