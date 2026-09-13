@@ -10,7 +10,7 @@ Primary local repositories:
 
 | Repo | Local checkpoint / state | Classification | Reason |
 |---|---|---|---|
-| `codex-dev` | local `main` contains integrated replaceability checkpoint `a196b89`; 397 tests / 7 skips and context validator PASS | PRIMARY ACTIVE | global framework and current DEV queue owner; active-runtime rematerialization approval pending |
+| `codex-dev` | local `main` contains integrated replaceability checkpoint `a196b89`; 397 tests / 7 skips, context validator and active-runtime parity PASS | PRIMARY ACTIVE | global framework and current DEV queue owner; exact-item cleanup is the remaining queue action |
 | `math-morph` | `main=027cc29`; additional clean detached/feature worktrees | PRIMARY ACTIVE | active billing/identity/equation work |
 | `electro-tutor` | local `main=e1527e6`; RTC checkpoints `9a91884`/`c3481ed`; post-merge regression PASS | PRIMARY ACTIVE / RTC INTEGRATED LOCALLY | user-approved `ET-RTC-001` and feature SPEC isolate Jitsi; remote push remains separate |
 | `video-chronicle` | `d1d3a09`, clean `main`; two clean feature worktrees | PRIMARY ACTIVE | active media/GUI/release track |
@@ -28,7 +28,7 @@ targets: `ai-mix`, `docasaurus`, `dune-rts`, `fourier-sketch`, `initial-project`
 
 | Repo | Module | Current implementation | Before | After | Evidence / coupling | Retrofit | Remaining risk / next |
 |---|---|---|---:|---:|---|---|---|
-| `codex-dev` | architecture governance | dev-karkas architecture reference | 5 | 8 | previous reference required only a common backend contract; no complete global owner | `rules/replaceable-modules.md`, FR-015/AC-018, routes and structural test | product runtime evidence remains project-owned; post-merge rematerialization is approval-gated |
+| `codex-dev` | architecture governance | dev-karkas architecture reference | 5 | 8 | previous reference required only a common backend contract; no complete global owner | `rules/replaceable-modules.md`, FR-015/AC-018, routes and structural test | product runtime evidence remains project-owned; merged runtime parity is verified |
 | `math-morph` | billing/payments | `ports/billing.py` + `adapters/stripe.py` + canonical billing services | 7 | 7 | Stripe SDK is adapter-local; normalized provider events and contract tests exist | audit only | `api/billing.py` imports the project Stripe adapter at provider ingress; move factory to composition module as P1 |
 | `math-morph` | identity/entitlements | OIDC boundary + provider-neutral entitlement ports/transport | 8 | 8 | dedicated domain/services/ports and focused contract/integration suites | audit only | live-provider acceptance and cross-product consumer remain separately gated |
 | `math-morph` | equation backends | Document IR, `EquationBackend`, MathML/MathType adapters | 8 | 8 | backend-neutral IR, explicit optional bridge and golden/adapter tests | audit only | WIRIS/Word/MathType live compatibility and migration evidence remain provider-specific |

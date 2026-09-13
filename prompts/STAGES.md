@@ -2,17 +2,17 @@
 
 - Stage ID: `DEV-REPLACEABILITY-D`
 - Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001 → DEV-REPLACEABILITY-A → DEV-REPLACEABILITY-B → DEV-REPLACEABILITY-C → DEV-REPLACEABILITY-D`
-- NEXT: obtain explicit approval for persistent rematerialization of merged DEV into active
-  `~/.codex`; then verify runtime parity and run exact-item Prompt Queue cleanup.
+- NEXT: run the fresh exact-item Prompt Queue guard and remove the completed Replaceability
+  one-shot only after full Notion parent/source read-back.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
 
 ## DEV-REPLACEABILITY-D — Replaceable Modules Final Review + Integration
 
-- Status: `partial`
-- Lifecycle state: `awaiting_runtime_install_approval`
-- Evidence level: global `L1,L2`; Electro Tutor product `L1,L2,L3,L5`.
+- Status: `verified`
+- Lifecycle state: `completed`
+- Evidence level: global `L1,L2,L3`; Electro Tutor product `L1,L2,L3,L5`.
 - Source: Notion queue `3d061ed8f2468163b502d1829668063c`, item
   `3da61ed8f2468198b889d629331a310e`, revision `2026-09-13T10:15:22.756Z`.
 - Prompt type / retention: `master_prompt` / `auto` (ONE-SHOT cleanup only after overall DoD).
@@ -32,16 +32,15 @@ SPEC, долговременный порядок — `docs/ROADMAP.md`, archite
 
 ### Действия пользователя
 
-- `USER-DEV-RUNTIME-INSTALL` — `PENDING`: the earlier manifest-driven apply covered pre-merge
-  `main`. Persistent rematerialization of merged DEV into active `~/.codex` was blocked by the
-  external safety gate and requires a separate explicit approval naming that runtime write;
-  expected evidence is installer PASS plus idempotent `[no changes]` dry-run.
+- `USER-DEV-RUNTIME-INSTALL` — `DONE`: user explicitly approved persistent rematerialization of
+  merged DEV from `~/codex-dev` into active `~/.codex`; 246 managed files reconciled, protected
+  runtime paths preserved, validation PASS and the immediate dry-run returned `[no changes]`.
 - `USER-DEV-REPLACEABILITY-INTEGRATION` — `DONE`: user explicitly approved both merges. Electro
   Tutor local `main=e1527e6`; global DEV local `main` contains `a196b89`; three verified temporary
   worktrees were removed. No push, provider switch, migration or deploy occurred.
 
 ```master-execution
-{"schema_version":2,"state_revision":6,"master":{"id":"DEV-REPLACEABILITY-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8f2468163b502d1829668063c","item_id":"3da61ed8f2468198b889d629331a310e","revision":"2026-09-13T10:15:22.756Z","prompt_type":"master_prompt","retention":"auto"}},"tracks":[{"id":"replaceability-global","repository":"~/codex-dev","worktree":"~/codex-dev","branch":"main","checkpoint":"a196b8976014412770e5920dc9c2fb37b6e81e5b","ownership":["rules/replaceable-modules.md","FR-015/AC-018","replaceability audit"],"status":"active"}],"slices":[{"id":"DEV-REPLACEABILITY-A","master_id":"DEV-REPLACEABILITY-001","title":"Canonical global contract","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"040c51a442cde48df00d7662ca2552b304b8daac","checkpoint_after":"28da49b099a2c9a614f8fd9fb560c2e5b5121be3","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["FR-015","AC-018","architecture policy","global routes"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["FR-015"],"capabilities":["project.framework.governance","change.review"]},{"id":"DEV-REPLACEABILITY-B","master_id":"DEV-REPLACEABILITY-001","title":"Primary repository inventory and scoring","status":"verified","predecessors":["DEV-REPLACEABILITY-A"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"040c51a442cde48df00d7662ca2552b304b8daac","checkpoint_after":"28da49b099a2c9a614f8fd9fb560c2e5b5121be3","required_evidence":["L1"],"evidence":["L1"],"context_scope":["local Git inventory","GitHub owner inventory","primary repository architecture"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false,"requirements":["FR-015"],"capabilities":["project.framework.governance"]},{"id":"DEV-REPLACEABILITY-C","master_id":"DEV-REPLACEABILITY-001","title":"Safe P0 product retrofit","status":"verified","predecessors":["DEV-REPLACEABILITY-B"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"28da49b099a2c9a614f8fd9fb560c2e5b5121be3","checkpoint_after":"e1527e62799796df96ae11ff39a2c6b7316f7f16","required_evidence":["L1","L2","L3","L5"],"evidence":["L1","L2","L3","L5"],"context_scope":["Electro Tutor RTC facade","Jitsi adapter","component contract"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true,"requirements":["FR-015"],"capabilities":["change.review"]},{"id":"DEV-REPLACEABILITY-D","master_id":"DEV-REPLACEABILITY-001","title":"Overall review, integration and queue cleanup","status":"blocked","predecessors":["DEV-REPLACEABILITY-C"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"a196b8976014412770e5920dc9c2fb37b6e81e5b","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["completion documentation gate","Notion exact-item cleanup"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true,"requirements":["FR-015"],"capabilities":["change.review","project.framework.governance"]}],"blockers":[{"id":"electro-tutor-default-branch","class":"environment_unavailable","status":"resolved","blocking":false,"owner":"agent","evidence":"explicit fetch restored origin/main at 2c63e2862490eeaac8ce625852b2ae4bb0a9c84d"},{"id":"electro-tutor-stage-authority","class":"pre_existing","status":"resolved","blocking":false,"owner":"user","evidence":"user approved ET-RTC-001 and rtc-provider-boundary.spec.md; local main integration e1527e6 verified"},{"id":"integration-approval","class":"pre_existing","status":"resolved","blocking":false,"owner":"user","evidence":"user explicitly approved and local Electro Tutor/global DEV merges completed; temporary worktrees removed"},{"id":"runtime-install-approval","class":"pre_existing","status":"active","blocking":true,"owner":"user","evidence":"external safety gate requires explicit approval naming persistent rematerialization into active ~/.codex"}],"decisions":["single-global-policy-owner","no-brittle-generic-regex-lint","user-approved-bounded-rtc-stage","local-integration-completed"],"context_budget":{"max_chars":7000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"obtain explicit active runtime installation approval, rematerialize merged DEV, verify idempotent parity, then run exact-item queue cleanup","integration":{"required":false,"reason":""}}
+{"schema_version":2,"state_revision":7,"master":{"id":"DEV-REPLACEABILITY-001","status":"completed","source":{"backend":"notion","queue_id":"3d061ed8f2468163b502d1829668063c","item_id":"3da61ed8f2468198b889d629331a310e","revision":"2026-09-13T10:15:22.756Z","prompt_type":"master_prompt","retention":"auto"}},"tracks":[{"id":"replaceability-global","repository":"~/codex-dev","worktree":"~/codex-dev","branch":"main","checkpoint":"d21905300087ec629fbc271f2950eaf2ebf8b152","ownership":["rules/replaceable-modules.md","FR-015/AC-018","replaceability audit"],"status":"closed"}],"slices":[{"id":"DEV-REPLACEABILITY-A","master_id":"DEV-REPLACEABILITY-001","title":"Canonical global contract","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"040c51a442cde48df00d7662ca2552b304b8daac","checkpoint_after":"28da49b099a2c9a614f8fd9fb560c2e5b5121be3","required_evidence":["L1","L2"],"evidence":["L1","L2"],"context_scope":["FR-015","AC-018","architecture policy","global routes"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["FR-015"],"capabilities":["project.framework.governance","change.review"]},{"id":"DEV-REPLACEABILITY-B","master_id":"DEV-REPLACEABILITY-001","title":"Primary repository inventory and scoring","status":"verified","predecessors":["DEV-REPLACEABILITY-A"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"040c51a442cde48df00d7662ca2552b304b8daac","checkpoint_after":"28da49b099a2c9a614f8fd9fb560c2e5b5121be3","required_evidence":["L1"],"evidence":["L1"],"context_scope":["local Git inventory","GitHub owner inventory","primary repository architecture"],"model_class":"MEDIUM","reasoning_effort":"medium","stop_after":false,"requirements":["FR-015"],"capabilities":["project.framework.governance"]},{"id":"DEV-REPLACEABILITY-C","master_id":"DEV-REPLACEABILITY-001","title":"Safe P0 product retrofit","status":"verified","predecessors":["DEV-REPLACEABILITY-B"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"28da49b099a2c9a614f8fd9fb560c2e5b5121be3","checkpoint_after":"e1527e62799796df96ae11ff39a2c6b7316f7f16","required_evidence":["L1","L2","L3","L5"],"evidence":["L1","L2","L3","L5"],"context_scope":["Electro Tutor RTC facade","Jitsi adapter","component contract"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true,"requirements":["FR-015"],"capabilities":["change.review"]},{"id":"DEV-REPLACEABILITY-D","master_id":"DEV-REPLACEABILITY-001","title":"Overall review, integration and queue cleanup","status":"verified","predecessors":["DEV-REPLACEABILITY-C"],"dependencies":[],"worktree_track":"replaceability-global","checkpoint_before":"a196b8976014412770e5920dc9c2fb37b6e81e5b","checkpoint_after":"d21905300087ec629fbc271f2950eaf2ebf8b152","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["completion documentation gate","Notion exact-item cleanup"],"model_class":"HIGH","reasoning_effort":"high","stop_after":true,"requirements":["FR-015"],"capabilities":["change.review","project.framework.governance"]}],"blockers":[{"id":"electro-tutor-default-branch","class":"environment_unavailable","status":"resolved","blocking":false,"owner":"agent","evidence":"explicit fetch restored origin/main at 2c63e2862490eeaac8ce625852b2ae4bb0a9c84d"},{"id":"electro-tutor-stage-authority","class":"pre_existing","status":"resolved","blocking":false,"owner":"user","evidence":"user approved ET-RTC-001 and rtc-provider-boundary.spec.md; local main integration e1527e6 verified"},{"id":"integration-approval","class":"pre_existing","status":"resolved","blocking":false,"owner":"user","evidence":"user explicitly approved and local Electro Tutor/global DEV merges completed; temporary worktrees removed"},{"id":"runtime-install-approval","class":"pre_existing","status":"resolved","blocking":false,"owner":"user","evidence":"user explicitly approved persistent install; 246 managed files reconciled, protected runtime state preserved and immediate dry-run reported no changes"}],"decisions":["single-global-policy-owner","no-brittle-generic-regex-lint","user-approved-bounded-rtc-stage","local-integration-completed","merged-runtime-parity-verified"],"context_budget":{"max_chars":7000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"run fresh exact-item Prompt Queue guard and remove the completed Replaceability one-shot after full read-back","integration":{"required":false,"reason":""}}
 ```
 
 ### Runnable slice / consumer path
@@ -54,16 +53,17 @@ Structural tests verify delivery, while product runtime/contract suites remain t
 
 - PASS: 16 focused policy/i18n/master tests; 397 full tests with 7 expected platform skips;
   `tools/validate_context.py` over 278 files; staged diff whitespace review.
-- PASS: user-approved canonical-source runtime apply reconciled 243 managed files with 21 actions,
-  preserved protected runtime state and produced idempotent `[no changes]` read-back.
+- PASS: user-approved merged canonical-source runtime apply reconciled 246 managed files,
+  preserved protected config/credentials/sessions/cache/plugins and produced idempotent
+  `[no changes]` read-back.
 - PASS: Electro Tutor `ET-RTC-001` implementation/state checkpoints `9a91884`/`c3481ed`; local
   `main=e1527e6`; post-merge 110 unit/contract, Astro check, lint, 17-page build/audits and built-
   browser 46 PASS / 2 expected skips; final correctness and security reviews no findings.
 - PASS: global DEV local `main` contains `a196b89`; post-merge 397 tests / 7 expected skips and
   context validator over 278 files; three clean integrated temporary worktrees removed.
 - No push, provider switch, migration or deploy occurred.
-- Stop condition: persistent rematerialization into active `~/.codex` requires separate explicit
-  runtime-write approval; Prompt Queue cleanup remains forbidden until parity passes.
+- Overall project DoD is complete. Prompt Queue cleanup may proceed only through the fresh
+  exact-item guard and full parent/source read-back; no push/deploy is implied.
 
 NEXT: `DEV-REPLACEABILITY-D`
 

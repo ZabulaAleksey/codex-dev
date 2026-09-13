@@ -11,8 +11,9 @@ checkpoint `a196b89`: 16 focused checks и post-merge full suite 397 PASS / 7 ex
 teardown regressions, production build и built-browser path проверены; checkpoints
 `9a91884`/`c3481ed`; local `main=e1527e6`, post-merge 110 tests, check/lint/build и built-browser
 46 PASS / 2 expected skips, оба финальных review без замечаний. Основной partial `ET-09.4` не изменён.
-Три интегрированных временных worktree удалены. Active-runtime rematerialization merged DEV и
-последующий exact-item cleanup one-shot остаются заблокированы отдельным runtime-write approval.
+Три интегрированных временных worktree удалены. Merged DEV rematerialized в active `~/.codex`:
+246 managed files, protected runtime state preserved, validation PASS и immediate dry-run
+`[no changes]`. Completed Replaceability one-shot ожидает только fresh exact-item cleanup guard.
 P1/P2 и scores
 принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
 `prompts/STAGES.md`.
