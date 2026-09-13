@@ -17,6 +17,10 @@ jobs:
           python-version: "3.12"
       - name: Validate tracked context
         run: python -B tools/validate_context.py
+      - name: Validate Git identity privacy contract
+        run: |
+          git config user.email "158517930+ZabulaAleksey@users.noreply.github.com"
+          python -B tools/check_git_identity.py
       - name: Run unit and contract tests
         run: python -B -m unittest discover -s tools -p "test_*.py"
       - name: Check Unix installer syntax

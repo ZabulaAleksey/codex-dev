@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -101,24 +102,25 @@ class ReconciliationTests(unittest.TestCase):
 
     def test_pre_existing_failure_is_not_a_regression(self) -> None:
         baseline = capture_test_baseline(
-            ["py", "-c", "raise SystemExit(2)"], cwd=self.root)
+            [sys.executable, "-c", "raise SystemExit(2)"], cwd=self.root)
         refreshed = capture_test_baseline(
-            ["py", "-c", "raise SystemExit(2)"], cwd=self.root)
+            [sys.executable, "-c", "raise SystemExit(2)"], cwd=self.root)
         comparison = compare_test_runs(baseline, refreshed)
         self.assertTrue(comparison.pre_existing_failure)
         self.assertFalse(comparison.regression)
 
     def test_new_failure_after_refresh_is_regression(self) -> None:
-        baseline = capture_test_baseline(["py", "-c", "pass"], cwd=self.root)
+        baseline = capture_test_baseline(
+            [sys.executable, "-c", "pass"], cwd=self.root)
         refreshed = capture_test_baseline(
-            ["py", "-c", "raise SystemExit(1)"], cwd=self.root)
+            [sys.executable, "-c", "raise SystemExit(1)"], cwd=self.root)
         self.assertTrue(compare_test_runs(baseline, refreshed).regression)
 
     def test_pre_existing_failure_is_reported_separately_from_new_failure(self) -> None:
         baseline = capture_test_baseline(
-            ["py", "-c", "print('FAIL: old_test')"], cwd=self.root)
+            [sys.executable, "-c", "print('FAIL: old_test')"], cwd=self.root)
         refreshed = capture_test_baseline(
-            ["py", "-c", "print('FAIL: old_test\\nFAIL: new_test')"], cwd=self.root)
+            [sys.executable, "-c", "print('FAIL: old_test\\nFAIL: new_test')"], cwd=self.root)
         comparison = compare_test_runs(baseline, refreshed)
         self.assertEqual(("old_test",), comparison.baseline_failures)
         self.assertEqual(("new_test", "old_test"),
