@@ -2,8 +2,8 @@
 
 - Stage ID: `DEV-SEP-LAUNCHER-001`
 - Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001`
-- NEXT: validate integrated local `main`, remove merged temporary worktrees/local branches and
-  publish `main`; active-runtime materialization remains the selected launcher's separate action.
+- NEXT: branch cleanup and GitHub publication are complete; await a separate explicit decision on
+  `USER-DEV-RUNTIME-INSTALL` before changing active `~/.codex`.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -13,7 +13,7 @@ SPEC, долговременный порядок — `docs/ROADMAP.md`, archite
 - Status: `verified`
 - Lifecycle state: `completed locally`
 - Evidence level: `L1,L2,L3`
-- Checkpoint: `c4dff1060e8b2721d7d3ef0dba1ed7aee1f05227`
+- Checkpoint: `8fecd6f87b16b508bdbbec1b9ffcfe0b1595a1c9`
 - Branch/worktree: `main` / `~/codex-dev`.
 - Implementation checkpoint: `f25903c`; launcher merge `bab847a`; user-actions policy merge
   `03c6acf`; post-merge state checkpoint `c4dff10`. Active-runtime materialization remains a
@@ -29,19 +29,18 @@ SPEC, долговременный порядок — `docs/ROADMAP.md`, archite
 - `USER-DEV-BRANCH-INTEGRATION` — `DONE`: пользователь явно разрешил объединить все DEV topic
   branches; remote `main`, launcher и durable user-actions policy включены в local `main`.
   Evidence: target-branch ancestry и post-merge checks.
-- `USER-DEV-BRANCH-CLEANUP` — `READY`: пользователь разрешил удалить слитые temporary worktrees
-  и local/remote topic branches после post-merge validation. Evidence: итоговый worktree/branch
-  inventory. Разблокирует завершение repository cleanup.
-- `USER-DEV-MAIN-PUSH` — `READY`: пользователь разрешил публикацию объединённой `main` и удаление
-  слитых topic branches на GitHub. Evidence: successful push, remote prune и итоговый remote
-  branch inventory.
+- `USER-DEV-BRANCH-CLEANUP` — `DONE`: удалены два merged temporary worktree и шесть fully-merged
+  local topic branches. Evidence: итоговый inventory содержит один worktree и только local `main`.
+- `USER-DEV-MAIN-PUSH` — `DONE`: объединённая `main` опубликована; `HEAD` и `origin/main` равны
+  `8fecd6f87b16b508bdbbec1b9ffcfe0b1595a1c9`. После fetch/prune remote inventory содержит только
+  `origin/main`; remote topic branches отсутствуют.
 - `USER-DEV-RUNTIME-INSTALL` — `PENDING / CONDITIONAL`: отдельно разрешить штатную
   manifest-driven установку canonical `~/codex-dev` в active `~/.codex`, если новые правила и
   launcher должны применяться в новых чатах на этом устройстве. Evidence: installer validation и
   hash-verified Skill/runtime parity. Текущее разрешение merge/delete runtime mutation не включает.
 
 ```master-execution
-{"schema_version":2,"state_revision":2,"master":{"id":"DEV-SEP-LAUNCHER-001","status":"running","source":{"backend":"git","queue_id":"DEV-SEP-001","item_id":"dev-sep-launcher-evidence","revision":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","prompt_type":"child_prompt","retention":"keep"}},"tracks":[{"id":"minimal-user-launcher","repository":"~/codex-dev","worktree":"~/codex-dev","branch":"main","checkpoint":"c4dff1060e8b2721d7d3ef0dba1ed7aee1f05227","ownership":["minimal-launcher","tools/spec_execution.py","tools/master_execution.py"],"status":"active"}],"slices":[{"id":"DEV-SEP-LAUNCHER-001","master_id":"DEV-SEP-LAUNCHER-001","title":"Minimal user launcher evidence hardening and integration handoff","status":"running","predecessors":[],"dependencies":[],"worktree_track":"minimal-user-launcher","checkpoint_before":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-012","AC-SEP-G","AC-SEP-L","launcher recovery","integration handoff"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["SEP-012"],"capabilities":["project.resume","project.framework.bootstrap"]}],"blockers":[],"decisions":["retain-protected-notion-sources","merge-approved-and-completed","active-runtime-apply-requires-separate-approval"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":5,"max_decisions":4,"max_evidence_threads":6},"next_action":"complete authorized branch cleanup and push, then await separate runtime install approval","integration":{"required":false,"reason":""}}
+{"schema_version":2,"state_revision":3,"master":{"id":"DEV-SEP-LAUNCHER-001","status":"running","source":{"backend":"git","queue_id":"DEV-SEP-001","item_id":"dev-sep-launcher-evidence","revision":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","prompt_type":"child_prompt","retention":"keep"}},"tracks":[{"id":"minimal-user-launcher","repository":"~/codex-dev","worktree":"~/codex-dev","branch":"main","checkpoint":"8fecd6f87b16b508bdbbec1b9ffcfe0b1595a1c9","ownership":["minimal-launcher","tools/spec_execution.py","tools/master_execution.py"],"status":"active"}],"slices":[{"id":"DEV-SEP-LAUNCHER-001","master_id":"DEV-SEP-LAUNCHER-001","title":"Minimal user launcher evidence hardening and integration handoff","status":"running","predecessors":[],"dependencies":[],"worktree_track":"minimal-user-launcher","checkpoint_before":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-012","AC-SEP-G","AC-SEP-L","launcher recovery","integration handoff"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["SEP-012"],"capabilities":["project.resume","project.framework.bootstrap"]}],"blockers":[],"decisions":["retain-protected-notion-sources","merge-approved-and-completed","active-runtime-apply-requires-separate-approval"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":5,"max_decisions":4,"max_evidence_threads":6},"next_action":"await separate explicit active-runtime installation approval","integration":{"required":false,"reason":""}}
 ```
 
 ### Runnable slice / consumer path
@@ -60,7 +59,9 @@ No selected record/master body, secret-like intake, command execution or global 
   writes; Python compile and staged diff check PASS.
 - Independent correctness/release review: PASS. Independent security review: PASS.
 - Completed: remote/local main reconciliation, launcher merge and user-actions policy merge.
-- Not performed: push, active-runtime apply, prompt deletion or external release.
+- Completed: fully-merged local branch/worktree cleanup and GitHub `main` publication/read-back;
+  remote topic branches are absent.
+- Not performed: active-runtime apply, prompt deletion or external release.
 
 NEXT: `DEV-SEP-LAUNCHER-001`
 
