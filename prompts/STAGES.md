@@ -1,9 +1,9 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-STAGES-USER-ACTIONS-001`
+- Stage ID: `DEV-SEP-LAUNCHER-001`
 - Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001`
 - NEXT: validate integrated local `main`, remove merged temporary worktrees/local branches and
-  publish `main`; active-runtime materialization remains a separate conditional action.
+  publish `main`; active-runtime materialization remains the selected launcher's separate action.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -23,6 +23,22 @@ SPEC, долговременный порядок — `docs/ROADMAP.md`, archite
   `3d561ed8f24681c0b8c6d06c1819bb4a` and reusable launcher
   `3d561ed8f246814f8430e7613f591153`. Cleanup guard result for each: `retain` because
   `master_prompt`/`reusable_template` has retention `keep`.
+
+### Действия пользователя
+
+- `USER-DEV-BRANCH-INTEGRATION` — `DONE`: пользователь явно разрешил объединить все DEV topic
+  branches; remote `main`, launcher и durable user-actions policy включены в local `main`.
+  Evidence: target-branch ancestry и post-merge checks.
+- `USER-DEV-BRANCH-CLEANUP` — `READY`: пользователь разрешил удалить слитые temporary worktrees
+  и local/remote topic branches после post-merge validation. Evidence: итоговый worktree/branch
+  inventory. Разблокирует завершение repository cleanup.
+- `USER-DEV-MAIN-PUSH` — `READY`: пользователь разрешил публикацию объединённой `main` и удаление
+  слитых topic branches на GitHub. Evidence: successful push, remote prune и итоговый remote
+  branch inventory.
+- `USER-DEV-RUNTIME-INSTALL` — `PENDING / CONDITIONAL`: отдельно разрешить штатную
+  manifest-driven установку canonical `~/codex-dev` в active `~/.codex`, если новые правила и
+  launcher должны применяться в новых чатах на этом устройстве. Evidence: installer validation и
+  hash-verified Skill/runtime parity. Текущее разрешение merge/delete runtime mutation не включает.
 
 ```master-execution
 {"schema_version":2,"state_revision":1,"master":{"id":"DEV-SEP-LAUNCHER-001","status":"running","source":{"backend":"git","queue_id":"DEV-SEP-001","item_id":"dev-sep-launcher-evidence","revision":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","prompt_type":"child_prompt","retention":"keep"}},"tracks":[{"id":"minimal-user-launcher","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-11/verify-global-dev-activation/work/dev-launcher-evidence","branch":"fix/dev-launcher-evidence","checkpoint":"f25903caf4f4d2c8fd068111d166a4c3d600a54a","ownership":["minimal-launcher","tools/spec_execution.py","tools/master_execution.py"],"status":"active"}],"slices":[{"id":"DEV-SEP-LAUNCHER-001","master_id":"DEV-SEP-LAUNCHER-001","title":"Minimal user launcher evidence hardening and integration handoff","status":"running","predecessors":[],"dependencies":[],"worktree_track":"minimal-user-launcher","checkpoint_before":"47b6c223534c1a8f6e7d67ddfa506be6809d819d","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["SEP-012","AC-SEP-G","AC-SEP-L","launcher recovery","integration handoff"],"model_class":"HIGH","reasoning_effort":"high","stop_after":false,"requirements":["SEP-012"],"capabilities":["project.resume","project.framework.bootstrap"]}],"blockers":[],"decisions":["retain-protected-notion-sources","merge-requires-explicit-approval","active-runtime-apply-after-integration"],"context_budget":{"max_chars":6000,"max_items":12,"max_contours":5,"max_decisions":4,"max_evidence_threads":6},"next_action":"await explicit merge approval, then materialize and validate active runtime","integration":{"required":false,"reason":""}}
@@ -583,24 +599,8 @@ Blockers: none
   `templates/STAGES_TEMPLATE.md` and this selected record. `README.md`, `docs/ROADMAP.md`,
   architecture, decisions, security and testing contracts were checked and remain accurate.
 
-### Действия пользователя
-
-- `USER-DEV-STAGES-ACTIONS-INTEGRATE` — `DONE`: пользователь явно разрешил merge; policy и launcher
-  commits включены в canonical local `main`. Evidence: target-branch ancestry и post-merge checks;
-  exact merge checkpoint фиксируется после завершения merge commit.
-- `USER-DEV-STAGES-ACTIONS-CLEANUP` — `READY`: пользователь разрешил удалить слитые temporary
-  worktrees и local/remote topic branches после post-merge validation. Evidence: итоговый worktree/
-  branch inventory. Разблокирует завершение repository cleanup.
-- `USER-DEV-STAGES-ACTIONS-PUSH` — `READY`: пользователь разрешил публикацию объединённой `main`
-  и удаление слитых topic branches на GitHub. Evidence: successful push, remote prune и итоговый
-  remote branch inventory.
-- `USER-DEV-STAGES-ACTIONS-INSTALL` — `PENDING / CONDITIONAL`: после local integration отдельно
-  разрешить штатную manifest-driven установку из canonical `~/codex-dev` в active `~/.codex`,
-  если правило должно применяться в новых чатах на этом устройстве. Evidence: installer validation
-  и hash-verified Skill/runtime parity. До разрешения active runtime не изменяется.
-
 ### Fallback / rollback / NEXT
 
 Изменение policy не устанавливается в active `~/.codex` автоматически. Rollback — atomic Git
-revert implementation/state/merge commits. NEXT: выполнить post-merge validation, разрешённый
-branch/worktree cleanup и push; runtime install не подразумевается.
+revert implementation/state/merge commits. Finalization actions принадлежат selected
+`DEV-SEP-LAUNCHER-001`; runtime install не подразумевается.
