@@ -4,12 +4,15 @@
 
 `DEV-REPLACEABILITY-001` канонизирует inherited Replaceable Module Contract и проводит
 evidence-based audit PRIMARY ACTIVE repositories. Global policy/SPEC/routes/structural guard и
-consolidated report реализованы и локально проверены в `feature/dev-replaceability-audit`: 16
-focused checks и полный suite 397 PASS / 7 expected skips; implementation checkpoint `28da49b`.
+consolidated report реализованы, локально проверены и fast-forward integrated в `main` через
+checkpoint `a196b89`: 16 focused checks и post-merge full suite 397 PASS / 7 expected skips.
 Единственный P0 — прямой Jitsi SDK lifecycle в Electro Tutor UI — закрыт локально в отдельно
 утверждённом `ET-RTC-001`: system-owned meeting port, isolated Jitsi adapter, contract/privacy/
 teardown regressions, production build и built-browser path проверены; checkpoints
-`9a91884`/`c3481ed`, оба финальных review без замечаний. Основной partial `ET-09.4` не изменён.
+`9a91884`/`c3481ed`; local `main=e1527e6`, post-merge 110 tests, check/lint/build и built-browser
+46 PASS / 2 expected skips, оба финальных review без замечаний. Основной partial `ET-09.4` не изменён.
+Три интегрированных временных worktree удалены. Active-runtime rematerialization merged DEV и
+последующий exact-item cleanup one-shot остаются заблокированы отдельным runtime-write approval.
 P1/P2 и scores
 принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
 `prompts/STAGES.md`.
