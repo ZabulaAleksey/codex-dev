@@ -5,7 +5,8 @@
 `DEV-REPLACEABILITY-001` канонизирует inherited Replaceable Module Contract и проводит
 evidence-based audit PRIMARY ACTIVE repositories. Global policy/SPEC/routes/structural guard и
 consolidated report реализованы и локально проверены в `feature/dev-replaceability-audit`: 16
-focused checks и полный suite 397 PASS / 7 expected skips. Product repositories не изменялись.
+focused checks и полный suite 397 PASS / 7 expected skips; implementation checkpoint `28da49b`.
+Product repositories не изменялись.
 Единственный P0 — прямой Jitsi SDK lifecycle
 в Electro Tutor UI — заблокирован отсутствием local/remote default-branch ref в текущем clean
 feature-only checkout; сначала требуется восстановить безопасную integration base. P1/P2 и scores
