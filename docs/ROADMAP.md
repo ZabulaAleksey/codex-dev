@@ -8,8 +8,9 @@ consolidated report реализованы и локально проверен�
 focused checks и полный suite 397 PASS / 7 expected skips; implementation checkpoint `28da49b`.
 Product repositories не изменялись.
 Единственный P0 — прямой Jitsi SDK lifecycle
-в Electro Tutor UI — заблокирован отсутствием local/remote default-branch ref в текущем clean
-feature-only checkout; сначала требуется восстановить безопасную integration base. P1/P2 и scores
+в Electro Tutor UI. `origin/main` восстановлен, но retrofit заблокирован каноническим project
+selector: `ET-09.4` разрешает только profile slice `ET-09.4c`, а RTC отсутствует в утверждённой
+project SPEC/stage. P1/P2 и scores
 принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
 `prompts/STAGES.md`.
 

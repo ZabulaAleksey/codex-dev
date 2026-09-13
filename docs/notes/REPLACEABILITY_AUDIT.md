@@ -12,7 +12,7 @@ Primary local repositories:
 |---|---|---|---|
 | `codex-dev` | `040c51a`, clean `main` | PRIMARY ACTIVE | global framework and current DEV queue owner |
 | `math-morph` | `main=027cc29`; additional clean detached/feature worktrees | PRIMARY ACTIVE | active billing/identity/equation work |
-| `electro-tutor` | `963c237`, clean `feature/et-09-4c-profiles-lifecycle` | PRIMARY ACTIVE / INTEGRATION BLOCKED | active Tutor work; local clone has no `main`/`origin/main` ref |
+| `electro-tutor` | active `963c237` feature checkout; GitHub/local `origin/main=2c63e28`; clean isolated RTC worktree | PRIMARY ACTIVE / STAGE BLOCKED | canonical selector permits only `ET-09.4c`; RTC remediation is absent from the approved project SPEC/stage |
 | `video-chronicle` | `d1d3a09`, clean `main`; two clean feature worktrees | PRIMARY ACTIVE | active media/GUI/release track |
 
 Non-product/local artifacts excluded: plugin cache Git metadata, old DEV staging clones, package
@@ -33,9 +33,9 @@ targets: `ai-mix`, `docasaurus`, `dune-rts`, `fourier-sketch`, `initial-project`
 | `math-morph` | identity/entitlements | OIDC boundary + provider-neutral entitlement ports/transport | 8 | 8 | dedicated domain/services/ports and focused contract/integration suites | audit only | live-provider acceptance and cross-product consumer remain separately gated |
 | `math-morph` | equation backends | Document IR, `EquationBackend`, MathML/MathType adapters | 8 | 8 | backend-neutral IR, explicit optional bridge and golden/adapter tests | audit only | WIRIS/Word/MathType live compatibility and migration evidence remain provider-specific |
 | `math-morph` | artifact storage | `ArtifactStore` port with current local implementation | 7 | 7 | application consumes a project port; provider implementation remains local | audit only | S3-compatible durable migration/export is not rehearsed |
-| `electro-tutor` | RTC/whiteboard | direct `JitsiMeetExternalAPI` lifecycle in `src/components/Classroom.tsx` | 2 | 2 | UI owns script loading, vendor type, provider domain, constructor and command name | BLOCKED P0 | local repository lacks `main`/`origin/main`; current worktree is an active unrelated feature branch. Establish a clean integration base, then add `MeetingPort`/facade + Jitsi adapter and component contract tests |
+| `electro-tutor` | RTC/whiteboard | direct `JitsiMeetExternalAPI` lifecycle in `src/components/Classroom.tsx` | 2 | 2 | UI owns script loading, vendor type, provider domain, constructor and command name | BLOCKED P0 | `origin/main` was restored and an isolated clean branch was created, but project `ET-09.4` authorizes only profile slice `ET-09.4c`; approve/add a dedicated RTC stage and SPEC before product writes |
 | `electro-tutor` | identity/OIDC | domain `ExternalIdentity` + `adapters/oidc.py` | 7 | 7 | provider-neutral domain principal; HTTP/JWT types stay in adapter | audit only | test-only `e2e_support.py` uses Keycloak-named helpers/config and should be renamed when the local test provider becomes swappable |
-| `electro-tutor` | persistence/capabilities | application services + repository/unit-of-work adapters | 7 | 7 | boundaries and real PostgreSQL integration evidence exist on active track | audit only | active stage integration is not on a canonical local default-branch ref |
+| `electro-tutor` | persistence/capabilities | application services + repository/unit-of-work adapters | 7 | 7 | boundaries and real PostgreSQL integration evidence exist on active track | audit only | active stage is `ET-09.4`; its next authorized slice remains `ET-09.4c` |
 | `video-chronicle` | FFmpeg/FFprobe | `PipelinePorts`, managed command runner/process control | 8 | 8 | process creation centralized; list argv, timeout/cancel and contract tests | audit only | one internal engine is intentional; generic media-provider abstraction would be YAGNI |
 | `video-chronicle` | timeline interchange | adapter-neutral contract + optional OTIO adapter | 8 | 8 | proposal-only import, optional resolver, golden/contract tests | audit only | broader OTIO capability remains explicitly optional |
 | `video-chronicle` | transcription | explicit local `whisper.cpp` adapter and manifest | 7 | 7 | bounded adapter, provenance/hash/license contract and focused tests | audit only | real model WER/CER benchmark unavailable; stage remains implemented-unverified |
@@ -43,8 +43,9 @@ targets: `ai-mix`, `docasaurus`, `dune-rts`, `fourier-sketch`, `initial-project`
 ## Top coupling findings
 
 1. Electro Tutor RTC/UI has direct Jitsi SDK and command coupling; this is the only current P0.
-2. Electro Tutor has no local default-branch ref after fresh fetch attempt, so a safe independent
-   retrofit cannot be based or integrated without first restoring the canonical Git topology.
+2. Electro Tutor used a narrow fetchspec; exact fetch restored `origin/main=2c63e28` and a clean
+   isolated branch. Product mutation still stops because the selected project record authorizes
+   only `ET-09.4c`, not an RTC retrofit.
 3. MathMorph billing ingress imports the Stripe adapter factory directly in the API controller.
 4. MathMorph worker composition selects the Stripe operation adapter directly; this is acceptable
    as a composition root but should remain the only non-adapter selection site.
@@ -62,9 +63,9 @@ targets: `ai-mix`, `docasaurus`, `dune-rts`, `fourier-sketch`, `initial-project`
 
 ## Priority and migration debt
 
-- **P0:** Electro Tutor `Classroom.tsx` → local meeting facade/port + Jitsi adapter. Blocker:
-  missing local default-branch ref and an active unrelated feature branch; no product write was
-  made.
+- **P0:** Electro Tutor `Classroom.tsx` → local meeting facade/port + Jitsi adapter. Git topology is
+  repaired locally; blocker is now the canonical project stage/SPEC boundary. No product write was
+  made on the empty isolated `feature/et-rtc-provider-boundary` branch.
 - **P1:** MathMorph webhook factory/composition cleanup; Electro Tutor Keycloak-specific test
   helper naming; MathMorph artifact-storage migration rehearsal.
 - **P2 / YAGNI:** do not wrap every FFmpeg operation in a generic media-provider hierarchy. Keep
