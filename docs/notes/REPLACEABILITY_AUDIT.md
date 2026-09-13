@@ -10,7 +10,7 @@ Primary local repositories:
 
 | Repo | Local checkpoint / state | Classification | Reason |
 |---|---|---|---|
-| `codex-dev` | local `main` contains integrated replaceability checkpoint `a196b89`; 397 tests / 7 skips, context validator and active-runtime parity PASS | PRIMARY ACTIVE | global framework and current DEV queue owner; exact-item cleanup is the remaining queue action |
+| `codex-dev` | local `main` contains integrated replaceability checkpoint `a196b89`; 397 tests / 7 skips, context validator and active-runtime parity PASS | PRIMARY ACTIVE | global framework owner; completed one-shot exact-item cleanup is verified and reusable/incomplete queue sources remain retained |
 | `math-morph` | `main=027cc29`; additional clean detached/feature worktrees | PRIMARY ACTIVE | active billing/identity/equation work |
 | `electro-tutor` | local `main=e1527e6`; RTC checkpoints `9a91884`/`c3481ed`; post-merge regression PASS | PRIMARY ACTIVE / RTC INTEGRATED LOCALLY | user-approved `ET-RTC-001` and feature SPEC isolate Jitsi; remote push remains separate |
 | `video-chronicle` | `d1d3a09`, clean `main`; two clean feature worktrees | PRIMARY ACTIVE | active media/GUI/release track |

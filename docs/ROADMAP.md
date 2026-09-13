@@ -1,6 +1,6 @@
 # Roadmap AI Dev Team
 
-## Текущий one-shot — Replaceable Modules Audit
+## Завершённый one-shot — Replaceable Modules Audit
 
 `DEV-REPLACEABILITY-001` канонизирует inherited Replaceable Module Contract и проводит
 evidence-based audit PRIMARY ACTIVE repositories. Global policy/SPEC/routes/structural guard и
@@ -13,7 +13,9 @@ teardown regressions, production build и built-browser path проверены;
 46 PASS / 2 expected skips, оба финальных review без замечаний. Основной partial `ET-09.4` не изменён.
 Три интегрированных временных worktree удалены. Merged DEV rematerialized в active `~/.codex`:
 246 managed files, protected runtime state preserved, validation PASS и immediate dry-run
-`[no changes]`. Completed Replaceability one-shot ожидает только fresh exact-item cleanup guard.
+`[no changes]`. Completed Replaceability one-shot прошёл fresh exact-item guard и удалён из
+active Notion queue: source/parent read-back сохранил все 22 соседние страницы, повтор receipt дал
+`noop / verified_previous_cleanup`.
 P1/P2 и scores
 принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
 `prompts/STAGES.md`.
