@@ -6,11 +6,11 @@
 evidence-based audit PRIMARY ACTIVE repositories. Global policy/SPEC/routes/structural guard и
 consolidated report реализованы и локально проверены в `feature/dev-replaceability-audit`: 16
 focused checks и полный suite 397 PASS / 7 expected skips; implementation checkpoint `28da49b`.
-Product repositories не изменялись.
-Единственный P0 — прямой Jitsi SDK lifecycle
-в Electro Tutor UI. `origin/main` восстановлен, но retrofit заблокирован каноническим project
-selector: `ET-09.4` разрешает только profile slice `ET-09.4c`, а RTC отсутствует в утверждённой
-project SPEC/stage. P1/P2 и scores
+Единственный P0 — прямой Jitsi SDK lifecycle в Electro Tutor UI — закрыт локально в отдельно
+утверждённом `ET-RTC-001`: system-owned meeting port, isolated Jitsi adapter, contract/privacy/
+teardown regressions, production build и built-browser path проверены; checkpoints
+`9a91884`/`c3481ed`, оба финальных review без замечаний. Основной partial `ET-09.4` не изменён.
+P1/P2 и scores
 принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
 `prompts/STAGES.md`.
 
@@ -32,8 +32,9 @@ chain at isolated checkpoint `f25903c`: exact project/STAGES/CME/Git recovery no
 relevant-only capability routing, `NEW_PROJECT` has an idempotent post-bootstrap short-resume
 contract, and untrusted paths/Git environment/secret-like intake fail closed. Full discovery is
 383 PASS with 7 expected platform skips; correctness and security reviews PASS. Integration into
-local `main` and active-runtime materialization remain pending explicit approval; push and prompt
-cleanup were not performed, and all three Notion sources remain retention-protected.
+local `main` была завершена ранее; user-approved active-runtime materialization теперь также имеет
+idempotent `[no changes]` read-back. Prompt cleanup не выполнялся, reusable Notion source остаётся
+retention-protected.
 
 ## Текущий internal delta — unified DEV/product path roles
 
