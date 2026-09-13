@@ -1,10 +1,9 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-SEP-F`
-- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F`
-- NEXT: master completed and integrated into local `main`; historical source metadata retains the
-  original `keep`, while the completed execution prompt was removed from active Notion `A. DEV`
-  after zero-orphan/runtime-parity/regression gates and exact-item read-back. Push was not performed.
+- Stage ID: `DEV-STAGES-USER-ACTIONS-001`
+- Sequence: `DEV-STAGES-USER-ACTIONS-001`
+- NEXT: await explicit user approval to merge `docs/stages-user-actions` into local `main` and
+  remove its temporary worktree. Push remains a separate approval-gated action.
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.
@@ -517,3 +516,43 @@ NEXT: await an explicitly selected DEV prompt; no future scope is inferred from 
 - Blocker: pre-existing active-runtime `unmatched-browser-client-hash`; runtime config is outside
   repository mutation scope.
 - NEXT: terminal runtime verification only after the external blocker is resolved.
+
+## DEV-STAGES-USER-ACTIONS-001 — Durable user actions in canonical STAGES
+
+Status: verified
+NEXT: DEV-STAGES-USER-ACTIONS-001
+Checkpoint: d9625c8
+Evidence: L1
+Blockers: none
+
+- Lifecycle: `completed`; Evidence level: `validated locally + committed`.
+- Goal: make every project-owner-only action recoverable from selected `prompts/STAGES.md` without
+  relying on chat history.
+- Scope: canonical governance, global router, `dev-karkas` status workflow, project framework,
+  STAGES template and contract regression; no runtime installation, product rollout or external write.
+- Contract: user decisions/approvals, secret or external-access needs, local setup, manual checks
+  and approval-gated operations receive a stable action ID, status/condition, exact safe action,
+  expected evidence and the step they unblock. Secret values are never stored in project state.
+- Implementation checkpoint: `d9625c8` on `docs/stages-user-actions`; no merge or push.
+- Evidence: `tools.test_documentation_sync_policy` 6 PASS; full DEV suite 364 PASS with 7 expected
+  skips; `tools/validate_context.py` PASS for 271 files; `git diff --check` PASS.
+- Documentation synchronization: updated `AGENTS.md`, `rules/governance.md`,
+  `docs/PROJECT_FRAMEWORK.md`, `skill-sources/dev-karkas/references/STATUS_WORKFLOW.md`,
+  `templates/STAGES_TEMPLATE.md` and this selected record. `README.md`, `docs/ROADMAP.md`,
+  architecture, decisions, security and testing contracts were checked and remain accurate.
+
+### Действия пользователя
+
+- `USER-DEV-STAGES-ACTIONS-INTEGRATE` — `READY / CONDITIONAL`: если policy нужно включить в
+  canonical local `main`, явно разрешить merge и удаление temporary worktree. Evidence: сообщение
+  `Да, сливай` и последующий target-branch Git/validation check. Разблокирует local integration;
+  до разрешения merge и cleanup запрещены.
+- `USER-DEV-STAGES-ACTIONS-PUSH` — `PENDING / CONDITIONAL`: после подтверждённого local merge
+  отдельно разрешить push в `origin/main`. Evidence: явное разрешение и remote Git status.
+  Разблокирует remote publication; local completion от push не зависит.
+
+### Fallback / rollback / NEXT
+
+Изменение policy не устанавливается в active `~/.codex` автоматически. До merge оно остаётся в
+изолированной ветке; rollback — atomic Git revert implementation/state commits. NEXT: ожидать
+решение `USER-DEV-STAGES-ACTIONS-INTEGRATE`; push не подразумевается.
