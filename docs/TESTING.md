@@ -5,7 +5,8 @@
 `py -3 -B -m unittest tools.test_global_action` exercises explicit
 init → sanitized record → read-back/no-op → exact existing-tool lookup,
 configured repeat candidates, failure isolation, corrupt journal, unsafe refs,
-secret-like input, dry-run, exact existing-script reuse preflight and
+secret-like input, oversized logs, redirected parent, dry-run,
+exact existing-script reuse preflight and
 duplicate/unsafe registry rejection. CLI preflight:
 `py -3 -B tools/global_action.py catalog` and
 `py -3 -B tools/global_action.py lookup source-validation`.

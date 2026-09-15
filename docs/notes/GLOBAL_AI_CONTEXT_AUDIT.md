@@ -88,7 +88,7 @@ an instruction to add every advanced component.
 | 9 Observability | EXISTS_PARTIAL | selected STAGES evidence and opt-in profiler; new action event metadata, no host model spans/token feed |
 | 10 Cost ledger | MISSING | no comparable before/after observations; do not fabricate savings |
 | 11 Validators/guardrails | EXISTS_GOOD | manifest/context/global/overlay validators, destructive hook, privacy tests; registry/journal targeted tests added |
-| 12 Evals | EXISTS_PARTIAL | 402 source unit/contract tests + 7 platform skips; automation outcome/false-positive evals deferred |
+| 12 Evals | EXISTS_PARTIAL | 403 source unit/contract tests + 7 platform skips; automation outcome/false-positive evals deferred |
 | 13 Sandbox/security | EXISTS_PARTIAL | host sandbox/approvals and guarded source installer; journal rejects secret-like strings; host permission matrix is contextual |
 | 14 Planner/orchestration | EXISTS_GOOD | one CME controller, dependency graph, stop/handoff; no second scheduler |
 | 15 Human checkpoints | EXISTS_GOOD | destructive/merge/install/cleanup boundaries in governance and queue guard |
@@ -231,10 +231,10 @@ redacted/verified transfer and is not needed for critical stage recovery.
 |---|---|---|
 | Notion fetch source + parent | PASS | exact item/queue identity and full source |
 | Git source status before edit | PASS | clean `main`; isolated worktree created |
-| `py -3 -B -m unittest tools.test_global_action` | PASS, 5 tests | journal consumer/negative/lookup/detector path |
+| `py -3 -B -m unittest tools.test_global_action` | PASS, 6 tests | journal consumer/negative/lookup/detector/limit path |
 | `py -3 -B tools/global_action.py catalog` | PASS, 16 scripts | exact registry validation |
 | `py -3 -B tools/global_action.py lookup source-validation` | PASS | existing validator selected |
-| `py -3 -B -m unittest discover -s tools -p "test_*.py"` | PASS, 402 tests, 7 platform skips | source suite |
+| `py -3 -B -m unittest discover -s tools -p "test_*.py"` | PASS, 403 tests, 7 platform skips | source suite |
 | `py -3 -B tools/validate_context.py` | PASS, 285 manifest files after staging | tracked source integrity |
 | isolated `install_global.py --dry-run` | PASS, no destination/Skill changes | source-only manifest consumer |
 | `git diff --cached --check` | PASS | whitespace |

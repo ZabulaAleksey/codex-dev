@@ -19,8 +19,8 @@
   `docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`.
 - Consumer: two real manifest checks → sanitized `record ×2 → detect`
   one candidate → `preflight` reused `tools/validate_context.py`.
-- PASS: 402 tests / 7 platform skips; 285-file manifest; isolated installer
-  dry-run/no writes; five focused tests; 16-script catalog; CLI read-back;
+- PASS: 403 tests / 7 platform skips; 285-file manifest; isolated installer
+  dry-run/no writes; six focused tests; 16-script catalog; CLI read-back;
   whitespace, master controller `blocked` and relevant-only `dev-karkas` route.
 - Limits: no merge/runtime install/push/deploy/queue cleanup; cost saving unknown.
 

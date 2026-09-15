@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "schemas" / "script-registry.json"
 THRESHOLDS = ROOT / "schemas" / "repeat-detector.json"
 MAX_BYTES = 65536
+MAX_JOURNAL_BYTES = 16 * 1024 * 1024
 MAX_EVENTS = 10000
 ID = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$")
 SHA = re.compile(r"^[a-f0-9]{64}$")
@@ -139,7 +140,7 @@ def _journal_dir(path: Path, *, must_exist: bool) -> Path:
         raise ActionError("unsafe journal directory")
     if must_exist and not candidate.is_dir():
         raise ActionError("journal not initialized")
-    if candidate.exists() and candidate.resolve() != candidate:
+    if candidate.resolve() != candidate:
         raise ActionError("journal directory redirects")
     return candidate
 
@@ -148,8 +149,10 @@ def _read_events(directory: Path) -> tuple[list[dict[str, Any]], bytes]:
     path = directory / "events.jsonl"
     if path.is_symlink() or (path.exists() and not path.is_file()):
         raise ActionError("unsafe events file")
+    if path.exists() and path.stat().st_size > MAX_JOURNAL_BYTES:
+        raise ActionError("journal exceeds byte limit")
     raw = path.read_bytes() if path.exists() else b""
-    if len(raw) > MAX_EVENTS * MAX_BYTES or (raw and not raw.endswith(b"\n")):
+    if len(raw) > MAX_JOURNAL_BYTES or (raw and not raw.endswith(b"\n")):
         raise ActionError("journal is oversized or incomplete")
     events: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -199,6 +202,8 @@ def record(directory: Path, event: dict[str, Any], *, dry_run: bool = False) -> 
                 if prior == event:
                     return {"status": "noop", "event_id": event["id"]}
                 raise ActionError("conflicting event ID")
+        if len(events) >= MAX_EVENTS:
+            raise ActionError("journal capacity reached")
         return {"status": "planned_record", "event_id": event["id"]}
     lock = _lock(target)
     try:

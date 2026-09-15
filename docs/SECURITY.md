@@ -6,7 +6,8 @@
 oversized, secret-like or unsafe event/catalog inputs and stores only normalized IDs,
 safe relative refs and fingerprints; raw prompts, commands, stdout/stderr, environment
 values, credentials and model reasoning are excluded. `init/record --dry-run` do not
-write; actual append has bounded lock, duplicate-ID no-op/conflict and read-back.
+write; the journal has a 16 MiB pre-read limit, rejects redirected parents,
+and actual append has bounded lock, duplicate-ID no-op/conflict and read-back.
 Detection/preflight cannot execute or promote scripts. The ignored journal is runtime
 data, not Git/project status. Unknown host activation and exact Notion cleanup remain
 separate gates.

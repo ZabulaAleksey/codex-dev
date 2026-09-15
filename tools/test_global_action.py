@@ -2,11 +2,12 @@
 import copy
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
 
-from tools.global_action import ActionError, detect, init, load_catalog, lookup, preflight_candidates, record, _read_events
+from tools.global_action import ActionError, MAX_JOURNAL_BYTES, detect, init, load_catalog, lookup, preflight_candidates, record, _read_events
 
 
 def event() -> dict:
@@ -30,6 +31,25 @@ def event() -> dict:
 
 
 class GlobalActionTest(unittest.TestCase):
+    def test_oversized_log_and_redirected_parent_fail_before_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            directory = root / "journal"
+            init(directory)
+            path = directory / "events.jsonl"
+            with path.open("wb") as output:
+                output.truncate(MAX_JOURNAL_BYTES + 1)
+            with self.assertRaises(ActionError):
+                record(directory, event())
+            self.assertEqual(path.stat().st_size, MAX_JOURNAL_BYTES + 1)
+            link = root / "redirect"
+            try:
+                os.symlink(directory, link, target_is_directory=True)
+            except OSError:
+                return  # Windows without symlink privilege still covers the byte limit.
+            with self.assertRaises(ActionError):
+                init(link / "child", dry_run=True)
+
     def test_repeat_detector_is_configurable_pure_and_separates_failures(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary) / "journal"

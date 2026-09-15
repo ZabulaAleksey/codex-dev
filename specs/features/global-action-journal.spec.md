@@ -22,7 +22,8 @@ promotion decisions; `ai_policy_profiler.py` remains project-local and opt-in.
   nullable and must not be estimated.
 - `GAJ-002`: The parser rejects unknown fields, unsupported versions, duplicate JSON keys,
   secret-like payloads, excessive size/count, path traversal, absolute paths, and link-like
-  journal targets. Invalid input cannot mutate the journal.
+  journal targets, including redirected parents. Journal bytes are capped at 16 MiB
+  before read. Invalid input cannot mutate the journal.
 - `GAJ-003`: Append is serialized across processes with a bounded lock and fsync. A repeated
   event ID with identical bytes is a no-op; a conflicting ID fails closed. Interrupted writes
   are detected by read-back validation. No raw command, prompt, stdout, stderr, environment
