@@ -34,15 +34,16 @@
 
 ### Действия пользователя
 
-- `USER-DEV-STAGES-INTEGRATION` — `PENDING`, condition: after isolated
-  `feature/docs-stages-canonical` commit/push, global checks and brownfield
-  reconciliation are reviewable, approve merging that exact branch into
-  `~/codex-dev/main`. Agent action after approval: fast-forward merge, repeat
-  relevant tests and manifest validation, apply the manifest-managed installer
-  to active `~/.codex`, then read back `docs/STAGES.md` and absence of the
-  retired managed `prompts/STAGES.md`. Expected evidence: clean main ancestry,
-  passing checks, installer ledger/read-back and protected runtime preserved.
-  This unlocks use of the new canonical validator for product migrations.
+- `USER-DEV-STAGES-INTEGRATION` — `DONE`: user authorized merge of the exact
+  `feature/docs-stages-canonical` branch and active-runtime installer apply;
+  `main` fast-forwarded to `19c2974` and pushed. Post-merge evidence: 407
+  tests PASS (7 platform skips), 285-file context PASS, manifest installer
+  applied 253 managed files and synchronized 10 versioned Skill sources.
+  Active `~/.codex/docs/STAGES.md` hash equals source, retired managed
+  `~/.codex/prompts/STAGES.md` is absent, repeat dry-run reports no changes,
+  and privileged runtime validator reports no issues. Protected config,
+  credentials, sessions, cache and plugins were preserved. GitHub `main`
+  tree read-back contains `docs/STAGES.md` only.
 - `USER-DEV-GAJ-MERGE` — `DONE`: user authorized local merge and later worktree
   removal; fast-forward `c81174a → 0884495`, clean ancestry and post-merge
   403 tests / 7 skips plus 285-file manifest PASS. Canonical source integrated;
