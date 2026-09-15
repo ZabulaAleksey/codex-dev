@@ -2,16 +2,16 @@
 
 - Stage ID: `DEV-GAJ-D`
 - Sequence: `DEV-GAJ-A → DEV-GAJ-B → DEV-GAJ-C → DEV-GAJ-D`
-- NEXT: fresh exact-item Notion guard and neighbor-preserving read-back;
-  then final receipt and approved worktree removal.
+- NEXT: no additional slice; await an explicitly selected DEV prompt.
 
 ## DEV-GAJ-D — Global AI Context integration/runtime gate
 
 - Status: `verified`; `DEV-GAJ-A..D` and master execution `completed` locally.
-  Queue cleanup is a separate exact-item operation pending fresh guard.
+  Exact-item Notion cleanup `cleaned` with read-back receipt.
 - Source: Notion queue `3d061ed8-f246-8163-b502-d1829668063c`, item
   `3db61ed8-f246-81d7-bc79-fba7f8d03a41`, revision
-  `2026-09-14T20:47:07.483Z`; prior queue PARTIAL read-back; deletion authorized.
+  `2026-09-14T20:47:07.483Z`; exact child deleted after guard `allowed`;
+  source page marked `deleted`, queue membership `20 → 19`, all neighbors unchanged.
 - Branch/worktree: `feature/global-ai-context-audit` /
   `~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/dev-audit-worktree`;
   fast-forward local `main` integration at `0884495397a979a47087687d187fd028512fb315`.
@@ -25,8 +25,9 @@
   immediate `[no changes]` dry-run and installed 16-script CLI consumer;
   protected config/credentials/sessions/cache/plugins preserved;
   six focused tests; 16-script catalog; CLI read-back; whitespace,
-  master controller `blocked` and relevant-only `dev-karkas` route.
-- Limits: no push/deploy/queue cleanup yet; cost saving unknown.
+  master controller `complete`, queue guard `cleaned → noop` and relevant-only
+  `dev-karkas` route. Receipt record SHA-256 `758f8608d68f3d637e4f20a3e0df04b8846dbeabe39eb707815fd2e44fae53c8`.
+- Limits: no push/deploy; cost saving unknown.
 
 ### Действия пользователя
 
@@ -37,17 +38,18 @@
   apply from `~/codex-dev` into active `~/.codex`; installer validation PASS,
   253 managed files, 10 Skill sources, protected runtime preserved; immediate
   dry-run `[no changes]` and installed CLI catalog PASS (16 scripts).
-- `USER-DEV-GAJ-CLEANUP` — `AUTHORIZED / ELIGIBLE FOR GUARD`: user already
-  allowed deleting the Notion prompt after execution. Execute only after
-  fresh exact source/parent membership, PASS guard, exact child operation
-  and neighbor-preserving read-back; retain receipt.
+- `USER-DEV-GAJ-CLEANUP` — `DONE`: user allowed deleting the Notion prompt
+  after execution. Fresh source/parent fetch matched revision/membership;
+  guard `allowed`; targeted child operation removed only this item; read-back
+  showed source `deleted`, `20 → 19` members and unchanged neighbors; receipt
+  `cleaned` at `2026-09-15T10:06:50Z`, repeat guard `noop`.
 
 ```master-execution
-{"schema_version":2,"state_revision":4,"master":{"id":"DEV-GAJ-001","status":"completed","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3db61ed8-f246-81d7-bc79-fba7f8d03a41","revision":"2026-09-14T20:47:07.483Z","prompt_type":"master_prompt","retention":"auto"}},"tracks":[{"id":"global-ai-context","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/dev-audit-worktree","branch":"feature/global-ai-context-audit","checkpoint":"0884495397a979a47087687d187fd028512fb315","ownership":["GAJ source"],"status":"integrated"}],"slices":[{"id":"DEV-GAJ-A","master_id":"DEV-GAJ-001","title":"DEV-GAJ-A","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-001","GAJ-002","GAJ-003","GAJ-004","GAJ-005"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-B","master_id":"DEV-GAJ-001","title":"DEV-GAJ-B","status":"verified","predecessors":["DEV-GAJ-A"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-006"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-C","master_id":"DEV-GAJ-001","title":"DEV-GAJ-C","status":"verified","predecessors":["DEV-GAJ-B"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-007"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-D","master_id":"DEV-GAJ-001","title":"Finalization gate","status":"verified","predecessors":["DEV-GAJ-C"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"60583245ec748f7b7204d9120b7e278911010816","checkpoint_after":"0884495397a979a47087687d187fd028512fb315","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["merge/runtime parity"],"requirements":[],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":true}],"blockers":[{"id":"global-ai-context-integration","class":"pre_existing","status":"resolved","blocking":false,"owner":"agent","evidence":"user authorized; local main fast-forward at 0884495; post-merge 403 tests/7 skips and 285-file manifest PASS"},{"id":"global-ai-context-runtime-parity","class":"pre_existing","status":"resolved","blocking":false,"owner":"agent","evidence":"explicit apply authorized; installer validated 253 managed files/10 Skill sources; immediate no-change dry-run and installed 16-script CLI PASS"}],"decisions":["sanitized-opt-in","reuse-existing-promotion","no-automatic-hook"],"context_budget":{"max_chars":7000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"fresh Notion exact-item guard/read-back, then final receipt and approved worktree removal","integration":{"required":false,"reason":"local main fast-forward integrated at 0884495"}}
+{"schema_version":2,"state_revision":5,"master":{"id":"DEV-GAJ-001","status":"completed","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3db61ed8-f246-81d7-bc79-fba7f8d03a41","revision":"2026-09-14T20:47:07.483Z","prompt_type":"master_prompt","retention":"auto"}},"tracks":[{"id":"global-ai-context","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/dev-audit-worktree","branch":"feature/global-ai-context-audit","checkpoint":"e7a29c71e936b4fd36a8dd16ddd3be13957113a9","ownership":["GAJ source"],"status":"closed"}],"slices":[{"id":"DEV-GAJ-A","master_id":"DEV-GAJ-001","title":"DEV-GAJ-A","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-001","GAJ-002","GAJ-003","GAJ-004","GAJ-005"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-B","master_id":"DEV-GAJ-001","title":"DEV-GAJ-B","status":"verified","predecessors":["DEV-GAJ-A"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-006"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-C","master_id":"DEV-GAJ-001","title":"DEV-GAJ-C","status":"verified","predecessors":["DEV-GAJ-B"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-007"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-D","master_id":"DEV-GAJ-001","title":"Finalization gate","status":"verified","predecessors":["DEV-GAJ-C"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"60583245ec748f7b7204d9120b7e278911010816","checkpoint_after":"0884495397a979a47087687d187fd028512fb315","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["merge/runtime parity"],"requirements":[],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":true}],"blockers":[{"id":"global-ai-context-integration","class":"pre_existing","status":"resolved","blocking":false,"owner":"agent","evidence":"user authorized; local main fast-forward at 0884495; post-merge 403 tests/7 skips and 285-file manifest PASS"},{"id":"global-ai-context-runtime-parity","class":"pre_existing","status":"resolved","blocking":false,"owner":"agent","evidence":"explicit apply authorized; installer validated 253 managed files/10 Skill sources; immediate no-change dry-run and installed 16-script CLI PASS"}],"decisions":["sanitized-opt-in","reuse-existing-promotion","no-automatic-hook","notion-exact-item-cleaned"],"context_budget":{"max_chars":7000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"await an explicitly selected DEV prompt; DEV-GAJ-001 has no remaining slice","integration":{"required":false,"reason":"local main fast-forward integrated at 0884495"}}
 ```
 
-NEXT: exact-item Notion guard, operation and receipt; worktree removal only
-after final documentation/installation parity and clean ancestry check.
+NEXT: await an explicitly launched DEV prompt; no autonomous slice or queue
+cleanup remains for `DEV-GAJ-001`.
 
 
 

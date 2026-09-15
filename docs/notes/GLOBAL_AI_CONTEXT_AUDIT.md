@@ -6,7 +6,8 @@ at `0884495`. Active `CODEX_HOME` installer and read-back passed. Notion source 
 `3db61ed8-f246-81d7-bc79-fba7f8d03a41`, parent queue
 `3d061ed8-f246-8163-b502-d1829668063c`, revision
 `2026-09-14T20:47:07.483Z`; user launched it on 2026-09-15 and allowed removal after
-execution. The source was fetched in full (23,224 characters; no reported truncation).
+execution. The source was fetched in full (23,224 characters; no reported truncation),
+then exact-item queue cleanup passed after overall DoD and runtime parity.
 
 ## Audit result
 
@@ -231,6 +232,7 @@ redacted/verified transfer and is not needed for critical stage recovery.
 |---|---|---|
 | Notion fetch source + parent | PASS | exact item/queue identity and full source |
 | Notion parent status update/read-back | PASS, `PARTIAL / SOURCE VALIDATED / RETAINED`; all child-page neighbors unchanged, source exists | external queue projection only |
+| Fresh exact-item Notion guard/operation/read-back | PASS, `allowed → cleaned → noop`; source page `deleted`, queue `20 → 19`, all neighbor URLs/order unchanged | authorized exact master cleanup; receipt record SHA-256 `758f8608d68f3d637e4f20a3e0df04b8846dbeabe39eb707815fd2e44fae53c8` |
 | Git source status before edit | PASS | clean `main`; isolated worktree created |
 | `py -3 -B -m unittest tools.test_global_action` | PASS, 6 tests | journal consumer/negative/lookup/detector/limit path |
 | `py -3 -B tools/global_action.py catalog` | PASS, 16 scripts | exact registry validation |
@@ -244,7 +246,7 @@ redacted/verified transfer and is not needed for critical stage recovery.
 | Active runtime install/parity | PASS, 253 managed files, 10 Skill sources; protected runtime preserved; immediate `[no changes]` dry-run | active installed DEV layer |
 | Installed `~/.codex/tools/global_action.py catalog` | PASS, 16 scripts | actual runtime CLI consumer |
 | real opt-in `init → record ×2 → detect → preflight` | PASS, 1 exact candidate, `reuse_existing` | live CLI → ignored journal → existing script lookup |
-| `master_execution.py .` | PASS, `blocked` finalization slice | one selected STAGES/master graph |
+| `master_execution.py .` | PASS, `complete` / `DEV-GAJ-D verified` | one selected STAGES/master graph |
 | `spec_execution.py route` | PASS, `dev-karkas` selected | stage-first relevant-only capability route |
 | Live cost/token savings | UNKNOWN: two validations carry no cost/token baseline | no fabricated economics |
 
@@ -258,10 +260,12 @@ Files in Stages A/B/C delta: `specs/features/global-action-journal.spec.md`,
 `MANIFEST.txt`, and `prompts/STAGES.md`.
 Local merge is evidenced; no push or deployment is implied.
 
-Canonical NEXT: execution DoD and runtime parity passed; refresh the exact
-Notion parent/source membership, run deterministic guard `allowed`, remove
-the authorized exact child and verify neighbor-preserving read-back. Retain
-the receipt and finalize the coherent worktree track.
+Canonical NEXT: execution DoD, runtime parity and exact Notion cleanup passed.
+No further `DEV-GAJ-001` slice remains; await an explicitly selected DEV prompt.
+The local receipt at
+`~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/queue_receipt.json`
+records execution/source IDs, before/after membership and read-back at
+`2026-09-15T10:06:50Z`.
 
 Automation maturity at this checkpoint: nine versioned Skills; 16 cataloged
 scripts including one new explicit CLI; verified active-host runtime
