@@ -230,6 +230,7 @@ redacted/verified transfer and is not needed for critical stage recovery.
 | Check | Result | Scope |
 |---|---|---|
 | Notion fetch source + parent | PASS | exact item/queue identity and full source |
+| Notion parent status update/read-back | PASS, `PARTIAL / SOURCE VALIDATED / RETAINED`; all child-page neighbors unchanged, source exists | external queue projection only |
 | Git source status before edit | PASS | clean `main`; isolated worktree created |
 | `py -3 -B -m unittest tools.test_global_action` | PASS, 6 tests | journal consumer/negative/lookup/detector/limit path |
 | `py -3 -B tools/global_action.py catalog` | PASS, 16 scripts | exact registry validation |

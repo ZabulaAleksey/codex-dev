@@ -11,7 +11,7 @@
   `verified locally`, master `partial`.
 - Source: Notion queue `3d061ed8-f246-8163-b502-d1829668063c`, item
   `3db61ed8-f246-81d7-bc79-fba7f8d03a41`, revision
-  `2026-09-14T20:47:07.483Z`; user launch/conditional deletion authorization.
+  `2026-09-14T20:47:07.483Z`; queue PARTIAL read-back; deletion authorized.
 - Branch/worktree: `feature/global-ai-context-audit` /
   `~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/dev-audit-worktree`; source checkpoint `60583245ec748f7b7204d9120b7e278911010816`.
 - Requirements: `GAJ-001..007`; contract:
