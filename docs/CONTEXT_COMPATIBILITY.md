@@ -1,5 +1,17 @@
 # Аудит совместимости контекста
 
+## Global action observation delta — 2026-09-15
+
+| Возможность | Найденное состояние | Delta | Статус / owner |
+|---|---|---|---|
+| Project profiler vs global actions | `ai_policy_profiler.py` opt-in tracks project AI-policy economics, not global mechanical action frequency | explicit ignored global journal, no automatic capture | `EXTEND` — `tools/global_action.py` + event schema |
+| Skills/capability registry vs scripts | `skill-sources/registry.toml` selects procedural Skills; 15 DEV scripts lacked a single exact-path lookup | catalog existing tools without copying implementation or executing metadata | `EXTEND` — `schemas/script-registry.json` |
+| Automation detector/promotion | `spec_execution.py` has pure opportunity/promotion decisions but no global action sample miner | pure threshold-configured event grouping; promotion stays with existing owner | `EXTEND` — `global_action.py detect` + config |
+| Hooks/MCP/runtime config | no reliable sanitized host event contract; active config differs from recommendation | no new hook/MCP/agent/config mutation | `INHERITED`; activation remains live host fact |
+| Stage/queue/project status | selected STAGES and prompt guard already own lifecycle | journal stays observational, ignored and opt-in | `INHERITED`; no shadow state |
+
+No product repository or installed runtime namespace is mutated by this source delta.
+
 ## Source repository → installed layer delta — 2026-09-10
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический owner |

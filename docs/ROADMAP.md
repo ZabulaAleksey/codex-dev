@@ -1,5 +1,19 @@
 # Roadmap AI Dev Team
 
+## Active master — Global AI Context, Automation & Script Factory Audit
+
+`DEV-GAJ-001` is a global source audit launched from the exact Notion master item
+`3db61ed8-f246-81d7-bc79-fba7f8d03a41`. The 24-phase factual gap/ownership map
+belongs to `docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`. Backward-complete source slices
+`DEV-GAJ-A..C` provide explicit sanitized Action Journal, exact
+Script Registry lookup, a pure configurable Repeat Detector and exact
+existing-script reuse preflight without a new scheduler or automatic hook.
+Two real source-validator observations returned one exact candidate and reused
+`validate_context.py`; comparative cost claims remain unknown. Current
+lifecycle, worktree, blocker
+and NEXT belong to the selected `prompts/STAGES.md` record. No runtime install,
+merge/push or Notion cleanup is implied by source validation.
+
 ## Завершённый one-shot — Replaceable Modules Audit
 
 `DEV-REPLACEABILITY-001` канонизирует inherited Replaceable Module Contract и проводит

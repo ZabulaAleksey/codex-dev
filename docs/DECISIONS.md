@@ -1,5 +1,16 @@
 # Существенные решения
 
+## 2026-09-15 — Global action observation is explicit and source-separated
+
+For `DEV-GAJ-001`, use a versioned, sanitized opt-in local journal and a read-only
+exact-path Script Registry. Existing `spec_execution.py` remains the promotion/placement
+decision owner; selected STAGES remains execution state; `ai_policy_profiler.py`
+remains project-policy telemetry. This avoids a mandatory host hook or second task manager
+before a documented safe event contract and real repeat evidence exist. Event and registry
+format changes fail closed until an explicit migration. Source implementation and factual
+compatibility evidence: `specs/features/global-action-journal.spec.md` and
+`docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`.
+
 ## 2026-09-13 — Replaceability contract имеет одного global owner
 
 **Контекст:** vendor SDK и provider-specific DTO могут незаметно связать domain/application/UI с

@@ -72,6 +72,13 @@ canonical reviewable clone command.
 
 ## Управление контекстом
 
+Для явного глобального аудита действий ДЕВ без автоматического host capture:
+`py -3 -B tools/global_action.py catalog` проверяет Script Registry,
+`py -3 -B tools/global_action.py lookup source-validation` находит существующий
+CLI по классу задачи. `init/record/validate/detect` работают только с
+указанным локальным ignored journal directory; формат события и границы
+приватности — в `specs/features/global-action-journal.spec.md`.
+
 - [`docs/PROJECT_FRAMEWORK.md`](docs/PROJECT_FRAMEWORK.md) определяет общие для всех проектов понятия КАРКАСА и АВТОМАТИЗАЦИИ КОНТЕКСТА.
 - [`docs/CONTEXT_POLICY.md`](docs/CONTEXT_POLICY.md) задаёт порядок загрузки, проектный overlay и канонические имена документов.
 - [`docs/CONTEXT_COMPATIBILITY.md`](docs/CONTEXT_COMPATIBILITY.md) используется перед добавлением agents, hooks, MCP, Skills или config.

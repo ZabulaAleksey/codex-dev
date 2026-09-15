@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "exact_repeat": 2,
+  "equivalent_repeat": 3,
+  "expensive_repeat": 2,
+  "expensive_task_classes": [],
+  "safety_critical_task_classes": [
+    "security-review",
+    "credential-handling",
+    "destructive-cleanup",
+    "production-deploy",
+    "data-migration"
+  ]
+}

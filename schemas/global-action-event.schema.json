@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Global DEV sanitized action event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "timestamp",
+    "scope",
+    "task_class",
+    "intent",
+    "action_type",
+    "actor",
+    "executor",
+    "inputs_fingerprint",
+    "resources_touched",
+    "result",
+    "evidence",
+    "repeat_signature",
+    "redactions_applied"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?Z$"
+    },
+    "scope": {
+      "enum": [
+        "global",
+        "project-overlay",
+        "task"
+      ]
+    },
+    "task_class": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+    },
+    "intent": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+    },
+    "action_type": {
+      "enum": [
+        "command",
+        "tool_call",
+        "edit",
+        "validation",
+        "decision",
+        "failure",
+        "recovery"
+      ]
+    },
+    "actor": {
+      "enum": [
+        "human",
+        "agent",
+        "subagent",
+        "hook",
+        "script"
+      ]
+    },
+    "executor": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+    },
+    "inputs_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "resources_touched": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "maxLength": 240
+      }
+    },
+    "result": {
+      "enum": [
+        "success",
+        "partial",
+        "failed",
+        "blocked"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "maxLength": 240
+      }
+    },
+    "duration_ms": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 86400000
+    },
+    "cost": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    "repeat_signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+    },
+    "redactions_applied": {
+      "const": true
+    }
+  }
+}

@@ -1,0 +1,503 @@
+{
+  "schema_version": 1,
+  "scripts": [
+    {
+      "name": "dev_paths",
+      "path": "tools/dev_paths.py",
+      "version": "1",
+      "purpose": "Resolve DEV source, installed layer, product roots, and bridge",
+      "task_classes": [
+        "path-discovery"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "path-discovery",
+      "repeat_signature": "path-discovery",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_dev_paths"
+      ]
+    },
+    {
+      "name": "master_execution",
+      "path": "tools/master_execution.py",
+      "version": "1",
+      "purpose": "Validate selected master graph and emit next slice decision",
+      "task_classes": [
+        "stage-routing"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only except explicit worktree adapter",
+      "idempotent": false,
+      "dry_run": false,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "stage-routing",
+      "repeat_signature": "stage-routing",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_master_execution"
+      ]
+    },
+    {
+      "name": "spec_execution",
+      "path": "tools/spec_execution.py",
+      "version": "1",
+      "purpose": "Route selected requirements to relevant capabilities and Skills",
+      "task_classes": [
+        "capability-routing"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "capability-routing",
+      "repeat_signature": "capability-routing",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_spec_execution"
+      ]
+    },
+    {
+      "name": "prompt_queue",
+      "path": "tools/prompt_queue.py",
+      "version": "1",
+      "purpose": "Evaluate exact prompt cleanup eligibility and receipts",
+      "task_classes": [
+        "queue-cleanup-guard"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "queue-cleanup-guard",
+      "repeat_signature": "queue-cleanup-guard",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_prompt_queue"
+      ]
+    },
+    {
+      "name": "validate_context",
+      "path": "tools/validate_context.py",
+      "version": "1",
+      "purpose": "Check DEV tracked manifest and context integrity",
+      "task_classes": [
+        "source-validation"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "source-validation",
+      "repeat_signature": "source-validation",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_global_framework_hardening"
+      ]
+    },
+    {
+      "name": "install_global",
+      "path": "tools/install_global.py",
+      "version": "1",
+      "purpose": "Manifest-managed source to installed runtime materialization",
+      "task_classes": [
+        "runtime-install"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "writes installed managed files only in apply mode",
+      "idempotent": false,
+      "dry_run": true,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "runtime-install",
+      "repeat_signature": "runtime-install",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_install_global"
+      ]
+    },
+    {
+      "name": "sync_global_skills",
+      "path": "tools/sync_global_skills.py",
+      "version": "1",
+      "purpose": "Hash-verified Skill source to runtime materialization",
+      "task_classes": [
+        "skill-sync"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "writes runtime Skill projection in apply mode",
+      "idempotent": false,
+      "dry_run": true,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "skill-sync",
+      "repeat_signature": "skill-sync",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_sync_global_skills"
+      ]
+    },
+    {
+      "name": "ai_policy_profiler",
+      "path": "tools/ai_policy_profiler.py",
+      "version": "1",
+      "purpose": "Opt-in project AI policy observations and reports",
+      "task_classes": [
+        "policy-observation"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "writes project .metrics only after explicit init",
+      "idempotent": false,
+      "dry_run": false,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "policy-observation",
+      "repeat_signature": "policy-observation",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_ai_policy_profiler"
+      ]
+    },
+    {
+      "name": "check_git_identity",
+      "path": "tools/check_git_identity.py",
+      "version": "1",
+      "purpose": "Check Git identity privacy contract",
+      "task_classes": [
+        "identity-check"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "identity-check",
+      "repeat_signature": "identity-check",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_git_identity_privacy"
+      ]
+    },
+    {
+      "name": "normalize_user_codex",
+      "path": "tools/normalize_user_codex.py",
+      "version": "1",
+      "purpose": "Diagnose and normalize user Codex layer",
+      "task_classes": [
+        "codex-normalization"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "writes managed user layer only in explicit apply mode",
+      "idempotent": false,
+      "dry_run": true,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "codex-normalization",
+      "repeat_signature": "codex-normalization",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_validate_global_codex"
+      ]
+    },
+    {
+      "name": "project_bootstrap",
+      "path": "tools/project_bootstrap.py",
+      "version": "1",
+      "purpose": "Verify or apply portable DEV project bootstrap",
+      "task_classes": [
+        "project-bootstrap"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "writes project bootstrap files only in explicit apply mode",
+      "idempotent": false,
+      "dry_run": true,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "project-bootstrap",
+      "repeat_signature": "project-bootstrap",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_project_bootstrap"
+      ]
+    },
+    {
+      "name": "reconcile_project_framework",
+      "path": "tools/reconcile_project_framework.py",
+      "version": "1",
+      "purpose": "Read-only brownfield framework compatibility matrix",
+      "task_classes": [
+        "brownfield-reconcile"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "brownfield-reconcile",
+      "repeat_signature": "brownfield-reconcile",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_reconcile_project_framework"
+      ]
+    },
+    {
+      "name": "stage_compatibility",
+      "path": "tools/stage_compatibility.py",
+      "version": "1",
+      "purpose": "Inspect or materialize digest-approved legacy stage compatibility",
+      "task_classes": [
+        "stage-compatibility"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "writes exact STAGES materialization only in explicit mode",
+      "idempotent": false,
+      "dry_run": true,
+      "risk_level": "medium",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "stage-compatibility",
+      "repeat_signature": "stage-compatibility",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_stage_compatibility"
+      ]
+    },
+    {
+      "name": "validate_global_codex",
+      "path": "tools/validate_global_codex.py",
+      "version": "1",
+      "purpose": "Check manifest-managed installed Codex parity",
+      "task_classes": [
+        "runtime-validation"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "runtime-validation",
+      "repeat_signature": "runtime-validation",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_validate_global_codex"
+      ]
+    },
+    {
+      "name": "validate_project_overlay",
+      "path": "tools/validate_project_overlay.py",
+      "version": "1",
+      "purpose": "Check project DEV overlay and selected stage integrity",
+      "task_classes": [
+        "overlay-validation"
+      ],
+      "inputs": "Documented CLI arguments",
+      "outputs": "Structured or human-readable result",
+      "side_effects": "read-only",
+      "idempotent": true,
+      "dry_run": false,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.12 standard library"
+      ],
+      "replaces_manual_pattern": "overlay-validation",
+      "repeat_signature": "overlay-validation",
+      "created_from_events": [],
+      "last_verified": "existing_contract_tests",
+      "status": "active",
+      "fallback": "Read relevant Skill and report unavailable capability",
+      "checks": [
+        "tools.test_validate_project_overlay"
+      ]
+    },
+    {
+      "name": "global_action",
+      "path": "tools/global_action.py",
+      "version": "1",
+      "purpose": "Explicit sanitized global action journal, read-only script lookup and pure repeat candidates",
+      "task_classes": [
+        "action-observation",
+        "script-discovery",
+        "repeat-detection"
+      ],
+      "inputs": "Documented bounded CLI arguments and versioned JSON events",
+      "outputs": "Machine-readable receipts, exact tool matches or candidate-only observations",
+      "side_effects": "writes ignored explicit journal only in init/record mode",
+      "idempotent": true,
+      "dry_run": true,
+      "risk_level": "low",
+      "platforms": [
+        "Windows",
+        "Linux"
+      ],
+      "dependencies": [
+        "Python 3.11+ standard library"
+      ],
+      "replaces_manual_pattern": "manual repeated script search and unstructured action notes",
+      "repeat_signature": "global_action_preflight",
+      "created_from_events": [],
+      "last_verified": "tools.test_global_action",
+      "status": "active",
+      "fallback": "Use existing spec_execution Skill route and report missing observation evidence",
+      "checks": [
+        "tools.test_global_action"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,18 @@
 # Архитектура AI Dev Team
 
+## Global action observation and script discovery contour
+
+`tools/global_action.py` — explicit opt-in adapter after existing evidence/state update.
+It validates sanitized versioned events, appends to an ignored local runtime journal,
+and emits pure repeat candidates. `schemas/script-registry.json` catalogs exact existing
+DEV script paths; lookup/preflight are read-only and never execute them. Exact observed
+executor + active catalog task class can be reused; other candidates require review.
+Candidate promotion and
+placement continue through `tools/spec_execution.py`; selected `prompts/STAGES.md`
+continues to own task state/NEXT. The journal cannot replace project `.metrics`,
+the prompt queue, Git/SPEC/ADR facts, or the installed Codex runtime state.
+See the factual gap/ownership map in `docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`.
+
 ## Specification → Execution Pipeline contour
 
 Новый contour расширяет existing Continuous Master Execution и не создаёт второй orchestrator:

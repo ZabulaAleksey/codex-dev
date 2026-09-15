@@ -34,6 +34,26 @@ Full repository/master scan допустим только с reason
 unknown_regression | explicit_user_request | targeted_path_failed`. Context-economy diagnostics
 фиксируют IDs/counts и route facts, но не prompt/code/output/secrets.
 
+## Authority, freshness and context cleanup
+
+Для task route фактические Git/code/test facts проверяются в live worktree; утверждённая SPEC/ADR
+задаёт требуемый контракт, selected STAGES — execution state, официальные docs — версионные
+внешние факты. Старые reports, queue snippets, чат и model inference служат только подсказками
+для повторной проверки. Ни cache, ни Action Journal не становятся владельцем critical state.
+
+Freshness задаётся типом факта, а не возрастом файла: branch/status/diff, running service, port,
+capability activation, permissions и queue membership перечитываются непосредственно перед
+действием; package/API version и vendor contract сверяются перед зависимым implementation;
+SPEC/ADR и source policy живут до новой утверждённой revision. Runtime token/session facts
+эпhemeral и не сохраняются в Git, summaries или журнал. Неизвестная timestamp/provenance
+означает `DEGRADED`, если факт нужен для gate.
+
+Context cleanup — read-only preflight: найти superseded owner, stale path, competing state,
+orphan prompt, dead script или duplicate Skill; сверить current refs, Git ownership, selected
+stage и active runtime; предложить exact migration/retirement с rollback и проверками.
+Automatic delete/migration по возрасту, отсутствию search result или рекомендациям модели
+запрещены. Prompt Queue cleanup остаётся у `prompt_queue.py` и его fresh exact-item guard.
+
 Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `prompts/STAGES.md`;
 тот же ID должен быть отдельным token ровно одного Markdown heading в этом же файле.
 SessionStart/SubagentStart hook проецирует bounded запись первой. Без valid selector запись не проецируется;

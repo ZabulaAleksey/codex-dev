@@ -1,5 +1,17 @@
 # Проверка глобального ДЕВ
 
+## Global Action Journal / Script Registry
+
+`py -3 -B -m unittest tools.test_global_action` exercises explicit
+init → sanitized record → read-back/no-op → exact existing-tool lookup,
+configured repeat candidates, failure isolation, corrupt journal, unsafe refs,
+secret-like input, dry-run, exact existing-script reuse preflight and
+duplicate/unsafe registry rejection. CLI preflight:
+`py -3 -B tools/global_action.py catalog` and
+`py -3 -B tools/global_action.py lookup source-validation`.
+Neither test nor lookup claims active host installation. Full suite and tracked
+manifest validation remain the terminal source checks below.
+
 ## Prompt Queue Lifecycle
 
 `python -B -m unittest discover -s tools -p "test_prompt_queue.py"` проверяет fixtures/guard для
