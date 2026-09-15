@@ -78,7 +78,7 @@ retirement — deprecate/reference/replacement/hash preflight и отдельн�
 | Product implementation и фактическое поведение | `<project>` Git repository, текущий worktree/branch, production code и migrations | build/release artifacts, GitHub views |
 | Требования и acceptance contract | утверждённые `specs/system.spec.md` / `specs/features/*` и согласованные ADR | stage prompts, plans, issues, human summaries |
 | Архитектурные границы и решения | `docs/ARCHITECTURE.md` и `docs/DECISIONS.md` | Eraser/другие диаграммы после подтверждённого изменения |
-| Stage contracts, текущий selector/plan, lifecycle/evidence, blockers и NEXT | `prompts/STAGES.md` | selected record в session context, `ROADMAP` index, handoff |
+| Stage contracts, текущий selector/plan, lifecycle/evidence, blockers и NEXT | `docs/STAGES.md` | selected record в session context, `ROADMAP` index, handoff |
 | Назначение, setup, запуск и публичный developer workflow | `README.md` | внешняя onboarding-страница |
 | Повторно полезная диагностика | `docs/LEARNING_LOG.md` | краткая ссылка/итог в соответствующем STAGES record |
 | Сырая идея до approval | назначенный Notion/backlog source | `PROMPT_READY` draft; после approval контракт переносится в repository |
@@ -95,7 +95,7 @@ retirement — deprecate/reference/replacement/hash preflight и отдельн�
 ~/.codex/AGENTS.md
 → <repo>/AGENTS.md
 → optional subtree AGENTS.override.md
-→ prompts/STAGES.md для выбранного stage
+→ docs/STAGES.md для выбранного stage
 ```
 
 - Project `AGENTS.md` не копирует global Git/testing/security/fallback/tool policy.
@@ -109,7 +109,7 @@ retirement — deprecate/reference/replacement/hash preflight и отдельн�
 Для активного product repository, подключённого как полный staged ДЕВ overlay, обязательны содержательные:
 
 - `AGENTS.md`;
-- `prompts/STAGES.md`;
+- `docs/STAGES.md`;
 - `docs/ROADMAP.md`;
 - `docs/ARCHITECTURE.md`;
 - `docs/DECISIONS.md`;
@@ -135,7 +135,7 @@ retirement — deprecate/reference/replacement/hash preflight и отдельн�
 - Произвольные новые `.md` в корне repository и непосредственно в `docs/` запрещены. Временный scratch/audit output не коммитится.
 - Политика действует на новые файлы; legacy layout меняется только после semantic content audit, проверки ссылок и сохранения уникального содержания.
 
-- `prompts/STAGES.md` одновременно описывает current/next slice и подтверждённые lifecycle/evidence;
+- `docs/STAGES.md` одновременно описывает current/next slice и подтверждённые lifecycle/evidence;
   отдельные plan/status owners запрещены после migration.
 - `ROADMAP` — короткий индекс этапов, не копия prompts.
 - `DECISIONS` хранит permanent decisions/ADR; `LEARNING_LOG` — диагностику, root cause, fix и regression prevention.
@@ -146,11 +146,12 @@ retirement — deprecate/reference/replacement/hash preflight и отдельн�
 1. Запусти read-only reconciliation и normal `tools/master_execution.py <project>`; он сам
    классифицирует canonical/legacy/mixed/conflict/none. `--compatibility` оставь для expanded
    diagnostic report, а не как обязательный скрытый pre-step.
-   Compatibility adapter читает только bounded known paths `prompts/STAGES.md`,
+   Compatibility adapter читает только bounded known paths `docs/STAGES.md`,
+   прежний `prompts/STAGES.md` как migration input,
    `docs/AI_PLAN.md`, `docs/AI_STATUS.md` и детерминированно классифицирует состояние как
    `canonical | legacy | mixed | conflict | migrated | none`. До разрешения `conflict` mutation
    и запуск product stage запрещены.
-2. Семантически объедини в `prompts/STAGES.md` актуальные stages, selector, current/next work,
+2. Семантически объедини в `docs/STAGES.md` актуальные stages, selector, current/next work,
    lifecycle/evidence, blockers, acceptance/DoD и `NEXT`. При расхождении приоритет имеют
    проверяемое evidence и более свежий подтверждённый факт; adapter не выбирает один из
    конфликтующих legacy facts эвристически, неоднозначность остаётся blocker.
@@ -161,7 +162,7 @@ retirement — deprecate/reference/replacement/hash preflight и отдельн�
    canonical parser/router read-back. Drift даёт zero-write `stale_plan`; publish/read-back failure
    восстанавливает pre-image, а unknown leftover lock требует explicit recovery. Завершённая
    migration хранит versioned `stage-compatibility` manifest в том же selected
-   `prompts/STAGES.md` record; manifest projection и same-file selector обязаны совпадать.
+   `docs/STAGES.md` record; manifest projection и same-file selector обязаны совпадать.
 4. Обнови router, Skills, hooks, prompts, templates, scripts и documentation, которые читали или
    создавали legacy source. Исторический журнал не превращай в current state.
 5. Запусти project validator, relevant tests, reference scan и semantic content audit. Legacy file
@@ -178,7 +179,7 @@ no-state; argparse/invalid invocation остаётся отдельной usage/
 
 ## Stage contract
 
-`prompts/STAGES.md` — единственный detailed stage и execution-state source полного project overlay.
+`docs/STAGES.md` — единственный detailed stage и execution-state source полного project overlay.
 Файл содержит ordered execution sequence и ровно один current selector `- Stage ID: <stable-id>`, а stable stage
 включает status/evidence, goal, context, scope, out-of-scope, invariants, tasks, contracts,
 documentation/security/performance/fallback/migration impact, DoD и handoff, а также
@@ -191,7 +192,7 @@ fallback-ом на retained legacy state.
 ### Действия пользователя в canonical state
 
 Любое текущее или ожидаемое действие, которое может выполнить только пользователь или владелец
-проекта, фиксируй в selected `prompts/STAGES.md` record до handoff и до запроса этого действия.
+проекта, фиксируй в selected `docs/STAGES.md` record до handoff и до запроса этого действия.
 Сюда относятся decisions/approvals, предоставление secret или внешнего доступа, локальный setup,
 ручная проверка и approval-gated merge/push/deploy/history/cleanup operation. Чат не является
 долговечным владельцем этих обязательств и не должен требоваться новому агенту для их восстановления.
@@ -281,7 +282,7 @@ tuning decision.
 Обязательный минимум проверки:
 
 - `README.md`;
-- `prompts/STAGES.md`, `docs/ROADMAP.md`; во время согласованной brownfield migration также mapped legacy tracker;
+- `docs/STAGES.md`, `docs/ROADMAP.md`; во время согласованной brownfield migration также mapped legacy tracker;
 - `docs/TRACEABILITY.md`, `CHANGELOG.md` и `docs/DEV_LOG.md`, если проект их использует;
 - затронутые SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`,
   `TESTING.md`, `API.md`, `DATA_MODEL.md`, `DEPENDENCIES.md` и `FALLBACKS.md`.
@@ -307,9 +308,9 @@ feature branch не доказывает, что merge-level status и след�
 
 | Событие | Обязательное действие |
 |---|---|
-| Изменился detailed stage contract, его DAG, scope, PASS criteria, активный slice или порядок текущей работы | обновить единственный `prompts/STAGES.md`; `ROADMAP` менять только при изменении долгосрочного порядка |
-| Выполнена работа, изменился progress/evidence, появился blocker или следующий шаг | обновить lifecycle/evidence/blocker/NEXT соответствующего record и current selector в `prompts/STAGES.md` |
-| Появилось, изменилось или завершилось действие, доступное только пользователю/владельцу проекта | обновить user-action entry в selected `prompts/STAGES.md` record до handoff; не оставлять обязательство только в чате |
+| Изменился detailed stage contract, его DAG, scope, PASS criteria, активный slice или порядок текущей работы | обновить единственный `docs/STAGES.md`; `ROADMAP` менять только при изменении долгосрочного порядка |
+| Выполнена работа, изменился progress/evidence, появился blocker или следующий шаг | обновить lifecycle/evidence/blocker/NEXT соответствующего record и current selector в `docs/STAGES.md` |
+| Появилось, изменилось или завершилось действие, доступное только пользователю/владельцу проекта | обновить user-action entry в selected `docs/STAGES.md` record до handoff; не оставлять обязательство только в чате |
 | Изменились назначение, setup, запуск, публичный интерфейс или user/developer workflow | обновить `README.md` |
 | Принято архитектурное решение | обновить `ARCHITECTURE.md` и/или `DECISIONS.md`; STAGES — только по затронутым execution facts |
 | Возникла значимая нетривиальная ошибка с повторно полезным выводом | добавить evidence-backed запись в `LEARNING_LOG.md`; в STAGES оставить краткий blocker и ссылку, если он активен |
@@ -396,7 +397,7 @@ read-back; без него синхронизация остаётся непр�
 ## Переключение устройств и восстановление
 
 Перед сменой компьютера безопасно останови работу, проверь Git status/diff, выполни применимые
-checks и обнови current record/NEXT в `prompts/STAGES.md` только если иначе потеряется существенное состояние. Commit и push
+checks и обнови current record/NEXT в `docs/STAGES.md` только если иначе потеряется существенное состояние. Commit и push
 выполняются лишь при явном разрешении и по Git policy; без них незакоммиченный worktree не считается
 перенесённым на другое устройство, а handoff получает явный blocker.
 

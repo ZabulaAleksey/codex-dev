@@ -13,7 +13,7 @@ Two real source-validator observations returned one exact candidate and reused
 fast-forward integrated into local `main` at `0884495`; post-merge suite and
 manifest passed. Active runtime installer validation, Skill parity and
 no-change dry-run passed. Current lifecycle, worktree, blocker and NEXT belong
-to the selected `prompts/STAGES.md` record. Exact Notion child cleanup passed
+to the selected `docs/STAGES.md` record. Exact Notion child cleanup passed
 fresh guard/read-back (`20 → 19` members, all neighbors preserved); source
 page is marked `deleted`. The validated source was pushed to GitHub
 `origin/main` at `acc30c3`; no remote feature heads remain. Further DEV work
@@ -37,7 +37,7 @@ active Notion queue: source/parent read-back сохранил все 22 сосе
 `noop / verified_previous_cleanup`.
 P1/P2 и scores
 принадлежат `docs/notes/REPLACEABILITY_AUDIT.md`; exact lifecycle/NEXT — выбранной записи
-`prompts/STAGES.md`.
+`docs/STAGES.md`.
 
 ## Текущий master — Specification → Execution Pipeline
 
@@ -45,7 +45,7 @@ P1/P2 и scores
 `DEV-SEP-A..F` are verified. It extends Continuous Master Execution with stage-first capability/Skill routing,
 requirement/evidence trace, deterministic-first execution и evidence-driven automation promotion.
 Canonical owners не меняются: SPEC хранит behavior, architecture/ADR — boundaries/decisions,
-selected `prompts/STAGES.md` — единственное execution state, Prompt Queue — cleanup guard, profiler —
+selected `docs/STAGES.md` — единственное execution state, Prompt Queue — cleanup guard, profiler —
 optional observations. Progressive chain `DEV-SEP-A..F` начинает с contract/audit, затем добавляет
 один bounded stdlib-only core и metadata-only Skill registry, trace/placement validation,
 promotion lifecycle, diagnostics/retirement preflight и final compatibility audit. Product rollout,
@@ -75,7 +75,7 @@ canonical source and product repositories are now materialized and Git-verified,
 recovery copies remain pending explicit cleanup. GitHub rename and origin update to `codex-dev` are
 complete; real runtime install remains a separate security-gated item. Acceptance
 принадлежит `specs/features/unified-dev-path-layout.spec.md`; current execution record —
-`prompts/STAGES.md`. Bootstrap implementation locally validated: 129 targeted tests PASS (2
+`docs/STAGES.md`. Bootstrap implementation locally validated: 129 targeted tests PASS (2
 expected skips), full 302 tests PASS (6 expected skips), 266-file manifest PASS, isolated installer
 dry-run/apply/idempotency + global validator PASS, both wrapper syntax checks and diff check PASS.
 Canonical `~/codex-dev`, `~/math-morph` and `~/math-morph-astra` have been materialized and
@@ -90,7 +90,7 @@ manifest-only materialization, protected runtime denylist, deterministic ownersh
 ledger-only stale cleanup, staged/atomic apply with rollback, zero-write dry-run, existing Skill
 sync и повторные validators. Реальный runtime home не изменяется до отдельного запуска installer;
 acceptance принадлежит `specs/features/source-installed-layer.spec.md`; current master selector в
-`prompts/STAGES.md` сохранён без нового competing execution graph. Implementation validated
+`docs/STAGES.md` сохранён без нового competing execution graph. Implementation validated
 locally: 273 tests PASS с 6 ожидаемыми
 platform skips, 246-file context manifest PASS, PowerShell isolated apply/dry-run/idempotency и
 Git Bash dry-run PASS; реальный runtime home не изменялся.
@@ -123,7 +123,7 @@ product mutation не выполнялась. Feature chain fast-forward merged 
 
 ## Предыдущий internal delta — Canonical STAGES.md Policy
 
-Единый `prompts/STAGES.md` теперь владеет selector, current plan, lifecycle/evidence, blockers и
+Единый `docs/STAGES.md` теперь владеет selector, current plan, lifecycle/evidence, blockers и
 `NEXT`. Global governance/hooks/validators/Skills/templates мигрированы; legacy AI plan/status
 sources удалены после semantic/link audit. Full suite 140 PASS, context validator 233 files PASS,
 `git diff --cached --check` PASS. Implementation `72197b2` merged into local `main` through
@@ -132,7 +132,7 @@ sources удалены после semantic/link audit. Full suite 140 PASS, cont
 ## Предыдущий internal delta — Prompt Queue Lifecycle
 
 Retention/guard/receipt implementation и project propagation выполнены и проверены отдельно от product
-master. Source policy: `rules/prompt-queue-lifecycle.md`; current evidence — `prompts/STAGES.md`.
+master. Source policy: `rules/prompt-queue-lifecycle.md`; current evidence — `docs/STAGES.md`.
 Checkpoint `80a63b3` merged into local `main` through `1e34f41`; push не выполнялся.
 
 

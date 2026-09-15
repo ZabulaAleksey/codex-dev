@@ -17,7 +17,7 @@ continuation переиспользует существующий track, а н�
 Входит:
 
 - portable master/slice execution graph и deterministic readiness/stop transitions;
-- canonical persistence execution state внутри selected record `prompts/STAGES.md`;
+- canonical persistence execution state внутри selected record `docs/STAGES.md`;
 - Git/worktree route planning и guarded adapter для continuation/parallel track;
 - context scope, budget, launcher/handoff, evidence и integration checkpoint gates;
 - hierarchical Prompt Queue Lifecycle и recovery scenarios;
@@ -44,7 +44,7 @@ dependency-ready slice, проверяет evidence/stop conditions и возв�
 ### CME-002 Canonical durable state
 
 Master/track/slice graph сохраняется как versioned bounded `master-execution` JSON block внутри
-selected stage record `prompts/STAGES.md`; отдельный plan/status/registry owner не создаётся.
+selected stage record `docs/STAGES.md`; отдельный plan/status/registry owner не создаётся.
 State содержит master/track IDs, branch/worktree, source revision/retention, checkpoints, graph,
 evidence, blockers, decisions, context budget и next action. Invalid/oversized/duplicate state
 даёт stable validation failure и не запускает следующий slice.

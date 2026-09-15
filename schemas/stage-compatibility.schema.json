@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": 1},
     "migration_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
-    "state_owner": {"const": "prompts/STAGES.md"},
+    "state_owner": {"const": "docs/STAGES.md"},
     "legacy_sources": {
       "type": "array",
       "maxItems": 16,
@@ -17,7 +17,7 @@
         "additionalProperties": false,
         "required": ["path", "sha256", "disposition"],
         "properties": {
-          "path": {"enum": ["docs/AI_PLAN.md", "docs/AI_STATUS.md"]},
+          "path": {"enum": ["prompts/STAGES.md", "docs/AI_PLAN.md", "docs/AI_STATUS.md"]},
           "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
           "disposition": {"const": "retained"}
         }

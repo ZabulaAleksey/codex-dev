@@ -2,7 +2,7 @@
 
 ## Единственный execution-state owner
 
-Active full staged overlay использует `prompts/STAGES.md` одновременно для:
+Active full staged overlay использует `docs/STAGES.md` одновременно для:
 
 - единственного current selector `- Stage ID: <stable-id>`;
 - current/next plan;
@@ -87,7 +87,7 @@ access, secret, local setup, manual validation либо merge/push/deploy/histor
    `PROGRESS.md` и mapped equivalents.
 3. Сопоставь current selector, stages, facts, blockers, evidence и NEXT. При конфликте предпочитай
    repository/test evidence, затем более свежее подтверждённое состояние; не угадывай.
-4. Создай или дополни один `prompts/STAGES.md`, сохрани stable IDs и уникальное актуальное содержание.
+4. Создай или дополни один `docs/STAGES.md`, сохрани stable IDs и уникальное актуальное содержание.
 5. Обнови routes в `AGENTS.md`, README, Skills, hooks, prompts, scripts и документации.
 6. Запусти project validator и baseline/regression checks.
 7. Только после semantic/content/link audit удали legacy files. Reconciler/validator сами ничего
@@ -101,7 +101,7 @@ Unresolved conflict оставляет migration `BLOCKED`; competing files не
 Перед `DONE`, commit handoff и после разрешённого merge всегда проверь существующие:
 
 - `README.md`;
-- `prompts/STAGES.md`, `docs/ROADMAP.md`;
+- `docs/STAGES.md`, `docs/ROADMAP.md`;
 - `docs/TRACEABILITY.md`, `CHANGELOG.md`, `docs/DEV_LOG.md`, если они используются;
 - затронутые SPEC, architecture, decisions, design, security, testing, API, data,
   dependencies и fallback documents.

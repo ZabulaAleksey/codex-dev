@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -18,7 +19,7 @@ FRAMEWORK_FILES = (
     "docs/DECISIONS.md",
     "docs/DESIGN.md",
     "docs/ROADMAP.md",
-    "prompts/STAGES.md",
+    "docs/STAGES.md",
     "docs/CONTEXT_COMPATIBILITY.md",
 )
 LEGACY_EXECUTION_FILES = {
@@ -107,7 +108,14 @@ def _iter_files(root: Path) -> Iterable[Path]:
     if root.is_file():
         yield root
         return
-    yield from sorted((path for path in root.rglob("*") if path.is_file()), key=lambda path: path.as_posix().casefold())
+    files: list[Path] = []
+    for parent, directories, names in os.walk(root, topdown=True, followlinks=False):
+        directories[:] = sorted(
+            (name for name in directories if name not in GENERATED_DEPENDENCY_DIRECTORIES
+             and name != ".git"), key=str.casefold,
+        )
+        files.extend(Path(parent) / name for name in names if (Path(parent) / name).is_file())
+    yield from sorted(files, key=lambda path: path.as_posix().casefold())
 
 
 def classify_project(project: Path) -> str:
@@ -268,11 +276,11 @@ def reconcile_project(
             continue
         if relative in FRAMEWORK_FILES:
             continue
-        if Path(relative).name.casefold() in LEGACY_EXECUTION_FILES:
+        if relative == "prompts/STAGES.md" or Path(relative).name.casefold() in LEGACY_EXECUTION_FILES:
             entries.append(MatrixEntry(
                 relative,
                 "MERGE",
-                "merge current facts, blockers and evidence into prompts/STAGES.md before validated removal",
+                "merge current facts, blockers and evidence into docs/STAGES.md before validated removal",
             ))
         elif any(relative == automation or relative.startswith(f"{automation}/") for automation in AUTOMATION_PATHS) and "conflict" in path.read_text(encoding="utf-8", errors="replace").casefold():
             status = "ADAPT" if relative in resolved else "CONFLICT"

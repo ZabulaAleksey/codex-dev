@@ -186,13 +186,12 @@ class NormalRouterCompatibilityTests(unittest.TestCase):
 
     def make(self) -> Path:
         root = Path(tempfile.mkdtemp())
-        (root / "prompts").mkdir()
         (root / "docs").mkdir()
         return root
 
     def test_ordinary_canonical_uses_normal_path_without_cme_error(self) -> None:
         root = self.make()
-        (root / "prompts/STAGES.md").write_text(
+        (root / "docs/STAGES.md").write_text(
             "- Stage ID: STAGE-A\n\n## STAGE-A\n\n- Status: planned\n- NEXT: STAGE-A\n",
             encoding="utf-8",
         )
@@ -210,7 +209,7 @@ class NormalRouterCompatibilityTests(unittest.TestCase):
         value["master"]["status"] = "completed"
         stages = ("- Stage ID: SLICE-A\n\n## SLICE-A\n\n```master-execution\n"
                   + json.dumps(value) + "\n```\n")
-        (root / "prompts/STAGES.md").write_text(stages, encoding="utf-8")
+        (root / "docs/STAGES.md").write_text(stages, encoding="utf-8")
         code, result = self.run_main(root)
         self.assertEqual(code, 0)
         self.assertEqual(result["decision"]["reason"], "master_already_completed")
@@ -233,7 +232,7 @@ class NormalRouterCompatibilityTests(unittest.TestCase):
 
     def test_invalid_canonical_does_not_fallback_to_valid_legacy(self) -> None:
         root = self.make()
-        (root / "prompts/STAGES.md").write_text(
+        (root / "docs/STAGES.md").write_text(
             "- Stage ID: STAGE-A\n- Stage ID: STAGE-B\n", encoding="utf-8"
         )
         (root / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
@@ -249,7 +248,7 @@ class NormalRouterCompatibilityTests(unittest.TestCase):
         value["master"]["status"] = "completed"
         original = ("- Stage ID: SLICE-A\n\n## SLICE-A\n\nORIGINAL\n\n```master-execution\n"
                     + json.dumps(value) + "\n```\n")
-        stages_path = root / "prompts/STAGES.md"
+        stages_path = root / "docs/STAGES.md"
         stages_path.write_text(original, encoding="utf-8")
         routing, record = stage_routing_snapshot(root)
 

@@ -3,7 +3,7 @@ name: implement-stage
 description: Полностью реализовать один заранее ограниченный этап дорожной карты с делегированием специалистам, тестами, проверкой и обновлением статуса.
 ---
 
-1. Прочитай `AGENTS.md`, current selector и exact record из `prompts/STAGES.md`,
+1. Прочитай `AGENTS.md`, current selector и exact record из `docs/STAGES.md`,
    `docs/ARCHITECTURE.md` и `specs/README.md`.
 2. Найди относящуюся к этапу SPEC и её критерии приёмки. Для новой существенной `STANDARD` или `COMPLEX` функциональности не начинай реализацию без SPEC. После exact stage/scope resolution используй `skill-sources/registry.toml` и `tools/spec_execution.py route` для requirement → capability → required Skill/tool/validator metadata; затем полностью прочитай только выбранные Skills. Route не авторизует model, command или write action.
 3. Если ограниченного плана нет, сначала запусти процесс планирования.
@@ -19,6 +19,6 @@ description: Полностью реализовать один заранее �
 10. Проверь связь SPEC → критерии приёмки → тесты → реализация. Mocks/stubs/fakes подтверждают только локальный/scaffold contract и не заменяют живой user/production path.
 11. Запусти `reviewer`; добавляй `security_reviewer` или `performance_engineer` только тогда, когда изменение этого требует.
 12. Исправь замечания с высокой достоверностью; допускается не более двух циклов проверки.
-13. Перед `DONE` подтверди terminal conditions Stage contract и выполни Completion Documentation Synchronization Gate из global Skill `dev-karkas` (`~/.agents/skills/dev-karkas/references/STATUS_WORKFLOW.md`): всегда проверь `README.md`, `prompts/STAGES.md`, `docs/ROADMAP.md` и другие state-bearing документы; обнови изменившиеся факты и не создавай churn в точных документах.
+13. Перед `DONE` подтверди terminal conditions Stage contract и выполни Completion Documentation Synchronization Gate из global Skill `dev-karkas` (`~/.agents/skills/dev-karkas/references/STATUS_WORKFLOW.md`): всегда проверь `README.md`, `docs/STAGES.md`, `docs/ROADMAP.md` и другие state-bearing документы; обнови изменившиеся факты и не создавай churn в точных документах.
 14. После разрешённого merge повтори gate по target branch и только затем фиксируй merge-level status и следующий этап.
 15. Не выполняй push, развёртывание или публикацию, если пользователь явно не запросил это внешнее действие.

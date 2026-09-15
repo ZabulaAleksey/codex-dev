@@ -44,7 +44,7 @@ canonical reviewable clone command.
 1. **Глобальное ядро команды** версионируется в canonical source и устанавливается в `~/.codex/`.
 2. **Глобальные Skills** версионируются в `<dev-root>/skill-sources/` и устанавливаются в `~/.agents/skills/`.
 3. Каждый full staged repository имеет тонкий `AGENTS.md`, SPEC и единственный execution-state
-   owner `prompts/STAGES.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при
+   owner `docs/STAGES.md`; локальные `.codex/agents/` и `.agents/skills/` добавляются только при
    подтверждённом project gap.
 4. Глобальные hooks защищают от опасных команд и подмешивают краткий статус проекта в контекст.
 5. Rules задают детерминированную политику для опасных shell-команд.
@@ -103,7 +103,7 @@ Project-specific инструкции, архитектура, Skills и agents 
 ## Синхронизация завершения
 
 Перед завершением задачи или этапа всегда проверяются существующие `README.md`,
-`prompts/STAGES.md`, `docs/ROADMAP.md` и другие
+`docs/STAGES.md`, `docs/ROADMAP.md` и другие
 документы, которые отражают выполненные шаги или текущее состояние. Изменившиеся факты
 обновляются, а точные документы остаются без timestamp-only churn. После merge эта
 проверка повторяется по target branch до фиксации merge-level status.
@@ -120,7 +120,7 @@ evidence — `blocked`, `partial` или `implemented_unverified`, но не `DO
 ## Continuous Master Execution
 
 Явно запущенный `master_prompt` хранит versioned graph/track/checkpoint внутри selected
-`prompts/STAGES.md` record. Controller выбирает dependency-ready slice, маршрутизирует continuation
+`docs/STAGES.md` record. Controller выбирает dependency-ready slice, маршрутизирует continuation
 или isolated parallel worktree, применяет evidence/stop/context gates и строит low-context handoff;
 он не исполняет task commands и не делает merge/push/cleanup.
 
@@ -143,7 +143,7 @@ inspection за разрешение запуска.
 Materialization является отдельным explicit two-phase действием: caller сохраняет byte-exact plan
 и его independently approved digest, затем передаёт оба CLI. Перед первым publish повторно
 проверяются все known state bytes и contained paths; единственный public target —
-`prompts/STAGES.md`. Legacy files сохраняются. Успех требует canonical read-back; stale state,
+`docs/STAGES.md`. Legacy files сохраняются. Успех требует canonical read-back; stale state,
 unknown lock и rollback failure возвращаются как typed non-zero outcomes.
 
 ## Specification → Execution Pipeline
@@ -282,7 +282,7 @@ codex mcp list
 Для большого этапа:
 
 ```text
-Реализуй current selector/record из prompts/STAGES.md. До кода проверь Stage contract: completed prerequisites, DAG, runnable vertical slice, concrete E2E, PASS/evidence, temporary implementation и deferred scope. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Не закрывай mock-only или зависящий от будущего stage путь. Перед DONE проверь README, prompts/STAGES.md, ROADMAP и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
+Реализуй current selector/record из docs/STAGES.md. До кода проверь Stage contract: completed prerequisites, DAG, runnable vertical slice, concrete E2E, PASS/evidence, temporary implementation и deferred scope. Сначала architect + explorer, затем профильные специалисты. Не давай двум агентам с правом записи редактировать одни файлы. После реализации запусти test_engineer + reviewer. Не закрывай mock-only или зависящий от будущего stage путь. Перед DONE проверь README, docs/STAGES.md, ROADMAP и другие state-bearing документы; обнови изменившиеся факты. После merge повтори проверку по target branch.
 ```
 
 Или явно вызови skill:

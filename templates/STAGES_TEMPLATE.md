@@ -4,7 +4,7 @@
 - Sequence: `<stable-id> → <future-stable-id>`
 - NEXT: <один конкретный следующий шаг>
 
-`prompts/STAGES.md` — единственный owner текущего плана, lifecycle/evidence, blockers и NEXT.
+`docs/STAGES.md` — единственный owner текущего плана, lifecycle/evidence, blockers и NEXT.
 Требования принадлежат SPEC, долгосрочный порядок — `docs/ROADMAP.md`, история — Git/CHANGELOG/
 DEV_LOG при наличии. Перед validator замени placeholder selector реальным stable ASCII ID.
 
@@ -76,7 +76,7 @@ bounded `master-execution` JSON block по `schemas/master-execution.schema.json
 ### Documentation synchronization / NEXT
 
 - Обновлены:
-- Проверены без изменений: `README`, `prompts/STAGES.md`, `ROADMAP`, <другие owners>.
+- Проверены без изменений: `README`, `docs/STAGES.md`, `ROADMAP`, <другие owners>.
 - NEXT:
 
 ## <future-stable-id> — <следующий stage>

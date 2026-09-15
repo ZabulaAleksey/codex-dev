@@ -22,7 +22,7 @@ from tools.dev_paths import BRIDGE_MARKER, has_agents_bridge_declaration, has_de
 
 REQUIRED_FILES = (
     "AGENTS.md",
-    "prompts/STAGES.md",
+    "docs/STAGES.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISIONS.md",
     "docs/LEARNING_LOG.md",
@@ -601,7 +601,7 @@ def _backend_dx_issues(project: Path, workspace: Path) -> list[Issue]:
 
 
 def _stage_selector_issues(project: Path) -> list[Issue]:
-    stages_path = project / "prompts/STAGES.md"
+    stages_path = project / "docs/STAGES.md"
     if not stages_path.is_file():
         return []
 
@@ -611,7 +611,7 @@ def _stage_selector_issues(project: Path) -> list[Issue]:
         return [
             Issue(
                 selector.issue_code,
-                "prompts/STAGES.md",
+                "docs/STAGES.md",
                 selector.message or "invalid Stage ID selector",
             )
         ]
@@ -621,7 +621,7 @@ def _stage_selector_issues(project: Path) -> list[Issue]:
         return [
             Issue(
                 record.issue_code,
-                "prompts/STAGES.md",
+                "docs/STAGES.md",
                 record.message or "invalid Stage heading selector",
             )
         ]
@@ -631,7 +631,7 @@ def _stage_selector_issues(project: Path) -> list[Issue]:
         except MasterExecutionError as exc:
             return [Issue(
                 "invalid-master-execution-state",
-                "prompts/STAGES.md",
+                "docs/STAGES.md",
                 str(exc),
             )]
     return []
@@ -663,7 +663,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
         ),
     }.get(routing_status)
     if routing_issue:
-        issues.append(Issue(routing_issue[0], "prompts/STAGES.md", routing_issue[1]))
+        issues.append(Issue(routing_issue[0], "docs/STAGES.md", routing_issue[1]))
 
     git_marker = project / ".git"
     git_root, git_error = _git_root(project)
@@ -677,7 +677,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
         )
 
     for relative in REQUIRED_FILES:
-        if relative == "prompts/STAGES.md" and routing_status != "pass_canonical":
+        if relative == "docs/STAGES.md" and routing_status != "pass_canonical":
             continue
         if not (project / relative).is_file():
             issues.append(Issue("missing-required-file", relative, "required project-framework file is missing"))
@@ -714,7 +714,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
                     Issue(
                         "competing-execution-state-file",
                         relative,
-                        "merge current facts into prompts/STAGES.md, validate, then remove this competing state file",
+                        "merge current facts into docs/STAGES.md, validate, then remove this competing state file",
                     )
                 )
 
@@ -726,7 +726,7 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
                     Issue(
                         "legacy-stage-file",
                         _posix_relative(candidate, project),
-                        "detailed stage content must be consolidated into prompts/STAGES.md",
+                        "detailed stage content must be consolidated into docs/STAGES.md",
                     )
                 )
 
@@ -808,10 +808,10 @@ def validate_project(project_path: Path, workspace_root: Path = WORKSPACE_ROOT) 
     }
     for code in routing["issue_codes"]:
         if code in exact_stage_codes:
-            issues.append(Issue(code, "prompts/STAGES.md", "invalid canonical same-file selector"))
+            issues.append(Issue(code, "docs/STAGES.md", "invalid canonical same-file selector"))
         elif code == "invalid_master_execution":
             issues.append(Issue(
-                "invalid-master-execution-state", "prompts/STAGES.md",
+                "invalid-master-execution-state", "docs/STAGES.md",
                 "master-execution block fails the canonical CME schema",
             ))
     ordered = tuple(sorted(issues, key=lambda item: (item.code, item.path.casefold(), item.message)))

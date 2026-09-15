@@ -7,7 +7,7 @@ Source page: `https://app.notion.com/p/3d461ed8f24681059594f00e38ab3c82?pvs=204`
 ## 1. Цель
 
 Для active full staged project overlay существует один канонический источник execution state:
-`prompts/STAGES.md`. Он одновременно хранит выбор текущего stage, порядок и contracts stages,
+`docs/STAGES.md`. Он одновременно хранит выбор текущего stage, порядок и contracts stages,
 lifecycle/evidence, blockers и следующий конкретный шаг. Отдельные `AI_PLAN.md`, `AI_STATUS.md`,
 `PLAN.md`, `STATUS.md` и эквивалентные project-state документы не являются частью нового канона.
 
@@ -19,7 +19,7 @@ lifecycle/evidence, blockers и следующий конкретный шаг. 
 - SessionStart/SubagentStart selector и project-overlay validator;
 - read-only brownfield reconciliation и deterministic migration contract;
 - presets и regression tests, принадлежащие global DEV;
-- миграция собственного состояния global DEV в `prompts/STAGES.md`.
+- миграция собственного состояния global DEV в `docs/STAGES.md`.
 
 Не входит:
 
@@ -33,13 +33,13 @@ lifecycle/evidence, blockers и следующий конкретный шаг. 
 
 ### CSP-001 Единственный execution-state owner
 
-Full staged overlay использует только `prompts/STAGES.md` для current selector, текущего плана,
+Full staged overlay использует только `docs/STAGES.md` для current selector, текущего плана,
 stage lifecycle/evidence, blockers и NEXT. `SPEC`, `ROADMAP`, `ARCHITECTURE`, `DECISIONS`,
 `LEARNING_LOG` и Git сохраняют собственные роли и не становятся competing execution state.
 
 ### CSP-002 Machine-readable selector
 
-`prompts/STAGES.md` содержит ровно одну unfenced строку `- Stage ID: <stable-id>` и ровно один
+`docs/STAGES.md` содержит ровно одну unfenced строку `- Stage ID: <stable-id>` и ровно один
 unfenced Markdown heading с этим ID как отдельным token. Missing, invalid, ambiguous или oversized
 input даёт visible `DEGRADED`/validator failure. Hook загружает только exact selected record, а не
 весь catalog.
@@ -54,34 +54,38 @@ Git, `CHANGELOG` или `DEV_LOG`, когда такой журнал дейст
 
 ### CSP-004 Greenfield/bootstrap
 
-Новые full staged overlays получают `prompts/STAGES.md` из единственного template и не создают
+Новые full staged overlays получают `docs/STAGES.md` из единственного template и не создают
 `docs/AI_PLAN.md` или `docs/AI_STATUS.md`. Router, Skills и framework documentation маршрутизируют
-state updates только в `prompts/STAGES.md`.
+state updates только в `docs/STAGES.md`.
 
 ### CSP-005 Brownfield migration
 
-До mutation выполняется read-only reconciliation существующих `prompts/STAGES.md`,
+До mutation выполняется read-only reconciliation существующих `docs/STAGES.md`,
+`prompts/STAGES.md` (прежний владелец состояния и только migration input),
 `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md`, `PROGRESS.md` и эквивалентов. Актуальные facts,
-plans, blockers и evidence семантически объединяются в `prompts/STAGES.md`; conflicting claims
+plans, blockers и evidence семантически объединяются в `docs/STAGES.md`; conflicting claims
 разрешаются по repository/test evidence и freshness. Legacy files удаляются только после content/
 link audit, успешного validator и подтверждения отсутствия утраты актуального содержания.
 
 Reconciliation остаётся read-only и классифицирует legacy state files как `MERGE`, а существующий
-`prompts/STAGES.md` — `KEEP`, `ADAPT` или `MERGE` по brownfield rules. Product code и unknown files
+`docs/STAGES.md` — `KEEP`, `ADAPT` или `MERGE` по brownfield rules. Product code и unknown files
 остаются `FORBIDDEN_TO_OVERWRITE`.
 
 ### CSP-006 Validation
 
-Full-overlay validator требует `prompts/STAGES.md`, отклоняет competing execution-state files и
-проверяет selector/heading в одном canonical документе. Он не объявляет stage завершённым и не
+Full-overlay validator требует `docs/STAGES.md`, отклоняет competing execution-state files и
+проверяет selector/heading в одном canonical документе. Он не считает `prompts/STAGES.md`
+каноническим даже при valid selector. При наличии старого пути adapter возвращает
+`migration_required` или `conflict` и сохраняет источник до read-back.
+Он не объявляет stage завершённым и не
 удаляет файлы. Global context validator и tests фиксируют отсутствие legacy AI plan/status paths в
 canonical workflow и templates.
 
 ### CSP-007 Update and completion behavior
 
 После изменения фактического project state агент обновляет соответствующий stage record и selector/
-NEXT в `prompts/STAGES.md` до handoff. Completion Documentation Synchronization Gate проверяет
-`README.md`, `prompts/STAGES.md`, `docs/ROADMAP.md` и затронутые state-bearing contracts; mutation
+NEXT в `docs/STAGES.md` до handoff. Completion Documentation Synchronization Gate проверяет
+`README.md`, `docs/STAGES.md`, `docs/ROADMAP.md` и затронутые state-bearing contracts; mutation
 точных документов не требуется.
 
 ## 4. Security and rollback
@@ -95,15 +99,15 @@ NEXT в `prompts/STAGES.md` до handoff. Completion Documentation Synchronizati
 ## 5. Acceptance criteria
 
 - `AC-CSP-001`: global governance/router/framework/Skills/templates назначают единственным
-  execution-state owner `prompts/STAGES.md`.
+  execution-state owner `docs/STAGES.md`.
 - `AC-CSP-002`: greenfield required set и template не содержат `AI_PLAN.md`/`AI_STATUS.md`.
 - `AC-CSP-003`: validator принимает valid single-file selector/catalog и отклоняет missing,
   invalid, ambiguous selector/heading и competing legacy state files.
-- `AC-CSP-004`: hook consumer path `prompts/STAGES.md → selector → exact selected record` проходит;
+- `AC-CSP-004`: hook consumer path `docs/STAGES.md → selector → exact selected record` проходит;
   unrelated stages не попадают в context.
 - `AC-CSP-005`: reconciliation deterministic/read-only и помечает legacy state files `MERGE` без
   их удаления или изменения Git status.
-- `AC-CSP-006`: global DEV current plan/status/evidence/NEXT сохранены в `prompts/STAGES.md`, а
+- `AC-CSP-006`: global DEV current plan/status/evidence/NEXT сохранены в `docs/STAGES.md`, а
   прежние `docs/AI_PLAN.md` и `docs/AI_STATUS.md` удалены после audit.
 - `AC-CSP-007`: repository-wide canonical-workflow search не находит активных требований или
   templates, создающих competing AI plan/status pair; явно historical/migration mentions допустимы.
@@ -111,7 +115,7 @@ NEXT в `prompts/STAGES.md` до handoff. Completion Documentation Synchronizati
 
 ## 6. Executable consumer scenario
 
-1. Создать temporary independent Git project с одним `prompts/STAGES.md` и exact selector.
+1. Создать temporary independent Git project с одним `docs/STAGES.md` и exact selector.
 2. Запустить project-overlay validator и получить PASS.
 3. Передать project cwd в SessionStart hook и получить только selected stage record.
 4. Добавить legacy `docs/AI_PLAN.md`/`docs/AI_STATUS.md`: validator обязан fail visibly, а
@@ -121,3 +125,5 @@ NEXT в `prompts/STAGES.md` до handoff. Completion Documentation Synchronizati
 ## 7. История
 
 - 2026-09-08 — v1: утверждён single-file execution-state contract и безопасная migration policy.
+- 2026-09-15 — v2: по прямому решению пользователя canonical owner перемещён в `docs/STAGES.md`;
+  `prompts/STAGES.md` сохранён как распознаваемый brownfield migration input.

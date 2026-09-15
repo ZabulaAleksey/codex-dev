@@ -10,7 +10,7 @@
   continuous master graph, deterministic worktree routing, low-context handoff, evidence/
   integration gates и hierarchical prompt lifecycle.
 - [`features/canonical-stages-policy.spec.md`](features/canonical-stages-policy.spec.md) — единый
-  `prompts/STAGES.md` для selector, execution state, blockers/evidence и NEXT; безопасная
+  `docs/STAGES.md` для selector, execution state, blockers/evidence и NEXT; безопасная
   brownfield migration без конкурирующих AI plan/status файлов.
 - [`features/prompt-queue-lifecycle.spec.md`](features/prompt-queue-lifecycle.spec.md) — retention/cleanup guard, receipts и project inheritance.
 - [`system.spec.md`](system.spec.md), `FR-015` / `AC-018` — Replaceable Module Contract для

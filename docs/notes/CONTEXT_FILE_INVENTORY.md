@@ -42,8 +42,8 @@
 
 Каждый файл в этих каталогах выбирается router-ом по текущей задаче; каталог целиком в prompt не подмешивается.
 Для stage-bound задачи `rules/governance.md` и выбранный record из project
-`prompts/STAGES.md` добавляются явно; остальные stages не загружаются. Session hook использует
-ровно одну строку `- Stage ID: <stable-id>` из того же `prompts/STAGES.md`, exact unique heading selector и visible
+`docs/STAGES.md` добавляются явно; остальные stages не загружаются. Session hook использует
+ровно одну строку `- Stage ID: <stable-id>` из того же `docs/STAGES.md`, exact unique heading selector и visible
 `DEGRADED` result при ошибке явного selector.
 
 ## Skills
@@ -64,7 +64,7 @@
 
 | Путь | Роль |
 |---|---|
-| `prompts/STAGES.md` | selector, текущее состояние, ближайший план, blockers, evidence и `NEXT` |
+| `docs/STAGES.md` | selector, текущее состояние, ближайший план, blockers, evidence и `NEXT` |
 | `docs/ARCHITECTURE.md`, `docs/SECURITY.md`, `docs/DESIGN.md`, `docs/TESTING.md` | устойчивые глобальные границы и verification contract |
 | `docs/PROJECT_FRAMEWORK.md` | contract project КАРКАСА |
 | `docs/CONTEXT_POLICY.md`, `docs/CONTEXT_COMPATIBILITY.md` | загрузка и reconciliation |

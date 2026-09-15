@@ -7,7 +7,7 @@
 
 При явном запуске конкретного prompt сначала fetch полного source, зафиксируй backend,
 queue ID, item ID, revision и разрешение пользователя; классифицируй тип до `running`.
-Queue metadata хранится вместе с task evidence, а lifecycle проекта — в его `prompts/STAGES.md`.
+Queue metadata хранится вместе с task evidence, а lifecycle проекта — в его `docs/STAGES.md`.
 Типы: `one_shot`, иерархические `one_shot_launcher` / `child_prompt`,
 `canonicalization_candidate`, `master_prompt`, `historical_execution_master`,
 `reusable_template`, `reference`, `unknown`; retention: `auto` или `keep`. Неоднозначность

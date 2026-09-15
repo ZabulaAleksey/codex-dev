@@ -14,7 +14,7 @@ SESSION_HOOK = ROOT / "hooks/session_context.py"
 
 FULL_OVERLAY_DOCS = (
     "AGENTS.md",
-    "prompts/STAGES.md",
+    "docs/STAGES.md",
     "docs/ROADMAP.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISIONS.md",
@@ -35,7 +35,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
                 self.assertIn(marker, content)
 
     def test_global_execution_state_is_owned_only_by_stages(self) -> None:
-        self.assertTrue((ROOT / "prompts/STAGES.md").is_file())
+        self.assertTrue((ROOT / "docs/STAGES.md").is_file())
         self.assertTrue((ROOT / "templates/STAGES_TEMPLATE.md").is_file())
         for relative in (
             "docs/AI_PLAN.md",
@@ -46,7 +46,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
             with self.subTest(path=relative):
                 self.assertFalse((ROOT / relative).exists())
 
-        stages = read("prompts/STAGES.md")
+        stages = read("docs/STAGES.md")
         self.assertEqual(1, stages.count("- Stage ID:"))
         self.assertIn("## DEV-CANONICAL-STAGES-001", stages)
         self.assertIn("- Sequence:", stages)
@@ -147,8 +147,8 @@ class StageCompletionPolicyTests(unittest.TestCase):
             "docs/PROJECT_FRAMEWORK.md",
         ):
             content = read(relative)
-            with self.subTest(path=relative, marker="prompts/STAGES.md"):
-                self.assertIn("prompts/STAGES.md", content)
+            with self.subTest(path=relative, marker="docs/STAGES.md"):
+                self.assertIn("docs/STAGES.md", content)
             with self.subTest(path=relative, marker="selected record"):
                 self.assertTrue("выбран" in content or "selected" in content)
         self.assert_markers(
@@ -188,7 +188,6 @@ class StageCompletionPolicyTests(unittest.TestCase):
         marker.parent.mkdir(parents=True)
         marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["stage-router-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
         (root / "docs").mkdir()
-        (root / "prompts").mkdir()
 
     def write_stages(self, root: Path, body: str, stage_id: str | None = "STAGE-002") -> None:
         selector = f"- Stage ID: `{stage_id}`\n\n" if stage_id is not None else ""
@@ -200,7 +199,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
             end = len(body) if end < 0 else end
             body = (body[:end] + f"\n\n- Status: planned\n- NEXT: {stage_id}"
                     + body[end:])
-        (root / "prompts/STAGES.md").write_text(
+        (root / "docs/STAGES.md").write_text(
             "# Stages\n\n" + selector + body,
             encoding="utf-8",
         )
@@ -273,20 +272,20 @@ class StageCompletionPolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
+            (repo / "docs/STAGES.md").write_text(
                 "- Stage ID: `STAGE-002`\n- Stage ID: `STAGE-003`\n\n"
                 "## STAGE-002\n\nA\n\n## STAGE-003\n\nB\n", encoding="utf-8"
             )
             context = self.run_session_hook(repo)
             self.assertIn("Stage routing — DEGRADED", context)
             self.assertIn("ambiguous-stage-id", context)
-            self.assertNotIn("## prompts/STAGES.md — selected", context)
+            self.assertNotIn("## docs/STAGES.md — selected", context)
 
     def test_session_hook_finds_selector_after_old_prefix_limit(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
+            (repo / "docs/STAGES.md").write_text(
                 "# Stages\n\n" + ("x" * 9000) +
                 "\n\n- Stage ID: `STAGE-002`\n\n## STAGE-002 — selected\n\n"
                 "- Status: planned\n- NEXT: STAGE-002\n\nLATE-SELECTOR-BODY\n",
@@ -300,7 +299,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             self.create_stage_repo(repo)
-            (repo / "prompts/STAGES.md").write_text(
+            (repo / "docs/STAGES.md").write_text(
                 "# Stages\n\n" + ("x" * 500_100) +
                 "\n- Stage ID: `STAGE-002`\n\n## STAGE-002\n\nMUST-NOT-BE-SELECTED\n",
                 encoding="utf-8",
@@ -327,8 +326,8 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.assertEqual(first, second)
             self.assertIn('"routing_status":"migration_plan_available"', first)
             self.assertIn('"execution_allowed":false', first)
-            self.assertNotIn("## prompts/STAGES.md — selected", first)
-            self.assertFalse((repo / "prompts/STAGES.md").exists())
+            self.assertNotIn("## docs/STAGES.md — selected", first)
+            self.assertFalse((repo / "docs/STAGES.md").exists())
             self.assertFalse((repo / ".stage-compatibility.lock").exists())
 
     def test_session_hook_conflict_is_fail_closed_and_advisory(self) -> None:
@@ -348,7 +347,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
             context = self.run_session_hook(repo)
             self.assertIn('"routing_status":"conflicting_stage_state"', context)
             self.assertIn('"execution_allowed":false', context)
-            self.assertNotIn("## prompts/STAGES.md — selected", context)
+            self.assertNotIn("## docs/STAGES.md — selected", context)
 
     def test_session_hook_no_state_is_typed_and_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -359,7 +358,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
             self.assertEqual(first, second)
             self.assertIn('"routing_status":"no_stage_state"', first)
             self.assertIn('"execution_allowed":false', first)
-            self.assertNotIn("## prompts/STAGES.md — selected", first)
+            self.assertNotIn("## docs/STAGES.md — selected", first)
 
     def test_prompt_and_stages_template_collect_operational_fields(self) -> None:
         self.assert_markers(
@@ -418,7 +417,7 @@ class StageCompletionPolicyTests(unittest.TestCase):
         ):
             content = read(relative)
             with self.subTest(path=relative):
-                self.assertIn("prompts/STAGES.md", content)
+                self.assertIn("docs/STAGES.md", content)
                 self.assertNotIn("PROMPTS/BACKLOG", content)
 
     def test_architecture_records_structural_validation_boundary(self) -> None:

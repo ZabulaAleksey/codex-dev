@@ -11,7 +11,7 @@
 - создавать и править production code;
 - создавать новые non-destructive docs/prompts;
 - запускать существующие tests/build/lint;
-- обновлять current record/NEXT в `prompts/STAGES.md` на основе evidence;
+- обновлять current record/NEXT в `docs/STAGES.md` на основе evidence;
 - добавлять безопасные новые tests, если это требуется task/project policy;
 - делать локальные non-destructive git operations;
 - формировать commit/PR content, если workflow это предусматривает.

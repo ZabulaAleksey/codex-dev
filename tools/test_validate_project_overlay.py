@@ -28,7 +28,7 @@ LEGACY_STATUS = """# Status
 
 REQUIRED_CONTENT = {
     "AGENTS.md": f"# Project router\n\n{BRIDGE_MARKER}\n",
-    "prompts/STAGES.md": "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-001 — first slice\n\n- Lifecycle: `planned`\n- NEXT: `STAGE-001`\n",
+    "docs/STAGES.md": "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-001 — first slice\n\n- Lifecycle: `planned`\n- NEXT: `STAGE-001`\n",
     "docs/ARCHITECTURE.md": "# Architecture\n",
     "docs/DECISIONS.md": "# Decisions\n",
     "docs/LEARNING_LOG.md": "# Learning log\n",
@@ -98,7 +98,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_incomplete_overlay_reports_typed_legacy_migration(self) -> None:
         project = self.make_project()
-        (project / "prompts/STAGES.md").unlink()
+        (project / "docs/STAGES.md").unlink()
         (project / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
         (project / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
         result = validate_project(project, self.workspace)
@@ -113,13 +113,13 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_no_stage_state_and_unsafe_legacy_are_typed(self) -> None:
         no_state = self.make_project("no-state")
-        (no_state / "prompts/STAGES.md").unlink()
+        (no_state / "docs/STAGES.md").unlink()
         result = validate_project(no_state, self.workspace)
         self.assertEqual(result.stage_state["status"], "no_stage_state")
         self.assertIn("no-stage-state", {issue.code for issue in result.issues})
 
         unsafe = self.make_project("unsafe")
-        (unsafe / "prompts/STAGES.md").unlink()
+        (unsafe / "docs/STAGES.md").unlink()
         (unsafe / "docs/AI_PLAN.md").write_text(
             LEGACY_PLAN.replace("- NEXT: STAGE-002\n", ""), encoding="utf-8"
         )
@@ -130,7 +130,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_invalid_canonical_never_falls_back_to_valid_legacy(self) -> None:
         project = self.make_project("invalid-canonical")
-        (project / "prompts/STAGES.md").write_text(
+        (project / "docs/STAGES.md").write_text(
             "- Stage ID: STAGE-001\n\n- Stage ID: STAGE-002\n", encoding="utf-8"
         )
         (project / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
@@ -142,7 +142,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_cli_json_migration_is_inspectable_but_exit_one(self) -> None:
         project = self.make_project("cli-legacy")
-        (project / "prompts/STAGES.md").unlink()
+        (project / "docs/STAGES.md").unlink()
         (project / "docs/AI_PLAN.md").write_text(LEGACY_PLAN, encoding="utf-8")
         (project / "docs/AI_STATUS.md").write_text(LEGACY_STATUS, encoding="utf-8")
         output = io.StringIO()
@@ -184,6 +184,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_legacy_stage_file_and_stale_workspace_path_are_reported(self) -> None:
         project = self.make_project()
+        (project / "prompts").mkdir()
         (project / "prompts/01-old-stage.md").write_text("cd ~/codex-workspace/projects/project\n", encoding="utf-8")
         codes = self.issue_codes(project)
         self.assertIn("legacy-stage-file", codes)
@@ -255,20 +256,20 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
         for index, (expected_code, content) in enumerate(cases):
             with self.subTest(expected_code=expected_code, index=index):
                 project = self.make_project(f"{expected_code}-{index}")
-                (project / "prompts/STAGES.md").write_text(
+                (project / "docs/STAGES.md").write_text(
                     content + "\n## STAGE-001 — current\n", encoding="utf-8"
                 )
                 self.assertIn(expected_code, self.issue_codes(project))
 
     def test_stage_selector_rejects_missing_or_ambiguous_heading(self) -> None:
         project = self.make_project("missing-heading")
-        (project / "prompts/STAGES.md").write_text(
+        (project / "docs/STAGES.md").write_text(
             "# Stages\n\n- Stage ID: `STAGE-001`\n\n## STAGE-002 — other\n", encoding="utf-8"
         )
         self.assertIn("missing-stage-heading", self.issue_codes(project))
 
         project = self.make_project("ambiguous-heading")
-        (project / "prompts/STAGES.md").write_text(
+        (project / "docs/STAGES.md").write_text(
             "- Stage ID: `STAGE-001`\n\n## STAGE-001 — first\n\nA\n\n## STAGE-001 — duplicate\n\nB\n",
             encoding="utf-8",
         )
@@ -276,7 +277,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_stage_selector_uses_token_boundaries_and_ignores_fenced_examples(self) -> None:
         project = self.make_project()
-        (project / "prompts/STAGES.md").write_text(
+        (project / "docs/STAGES.md").write_text(
             "# Stages\n\n- Stage ID: `STAGE-001`\n\n"
             "```markdown\n## STAGE-001 — example only\n```\n\n"
             "## PRE-STAGE-001-POST — not a token match\n\n"
@@ -288,7 +289,7 @@ class ProjectOverlayValidatorTests(unittest.TestCase):
 
     def test_declared_master_execution_state_must_be_valid(self) -> None:
         project = self.make_project()
-        (project / "prompts/STAGES.md").write_text(
+        (project / "docs/STAGES.md").write_text(
             "- Stage ID: `MASTER-001`\n\n## MASTER-001\n\n"
             "```master-execution\n{\"schema_version\":1}\n```\n",
             encoding="utf-8",

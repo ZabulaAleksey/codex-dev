@@ -62,7 +62,7 @@
         "required": ["op", "path", "before_sha256", "after_sha256", "content"],
         "properties": {
           "op": {"const": "write"},
-          "path": {"const": "prompts/STAGES.md"},
+          "path": {"const": "docs/STAGES.md"},
           "before_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
           "after_sha256": {"$ref": "#/$defs/sha256"},
           "content": {"type": "string", "maxLength": 500000}
@@ -129,7 +129,7 @@
       "additionalProperties": false,
       "required": ["path", "exists", "type", "sha256"],
       "properties": {
-        "path": {"enum": ["prompts/STAGES.md", "docs/AI_PLAN.md", "docs/AI_STATUS.md"]},
+        "path": {"enum": ["docs/STAGES.md", "prompts/STAGES.md", "docs/AI_PLAN.md", "docs/AI_STATUS.md"]},
         "exists": {"type": "boolean"},
         "type": {"enum": ["regular", "absent"]},
         "sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}

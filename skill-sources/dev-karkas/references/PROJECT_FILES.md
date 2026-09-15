@@ -16,7 +16,7 @@ Repository вне полного overlay сначала явно классиф�
 | `docs/ROADMAP.md` | направления и крупные этапы | обязательно для полного overlay |
 | `docs/project-context.md` | устойчивые project facts, включая применимую Backend DX delta | обязательно для полного overlay; Backend DX section только при `BDX-L1..L3` |
 | `docs/DECISIONS.md` | журнал важных решений; может ссылаться на ADR supplement | обязательно для полного overlay |
-| `prompts/STAGES.md` | единый detailed stage и execution-state source: selector, plan, lifecycle/evidence, blockers, NEXT | обязательно для полного overlay |
+| `docs/STAGES.md` | единый detailed stage и execution-state source: selector, plan, lifecycle/evidence, blockers, NEXT | обязательно для полного overlay |
 | `docs/LEARNING_LOG.md` | повторно полезные выводы | обязательно для полного overlay; entries только при наличии evidence |
 | `docs/DEV_LOG.md` | краткий журнал существенных работ | нужен trace, отличный от Git history |
 | `docs/notes/<topic>.md` | долговечный дополнительный материал без канонической роли | заметка действительно нужна и не помещается в существующий контракт |
@@ -28,12 +28,12 @@ Repository вне полного overlay сначала явно классиф�
 3. Ссылки между документами предпочтительнее копипаста.
 4. Не создавай пустые placeholder-файлы без ближайшего полезного содержания.
 5. Не генерируй `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md`, `PROGRESS.md` или
-   `SNAPSHOT.md`: их актуальное execution-state содержание принадлежит `prompts/STAGES.md`.
+   `SNAPSHOT.md`: их актуальное execution-state содержание принадлежит `docs/STAGES.md`.
 6. Не создавай произвольный новый `.md` в корне repository или непосредственно в `docs/`: сначала переиспользуй канонический документ, иначе используй `docs/notes/<topic>.md`.
 7. Не перемещай существующую документацию автоматически; сначала выполни semantic/link audit и сохрани уникальное содержание.
 
 Для explicit `master_prompt` versioned `master-execution` graph/track/checkpoint block живёт только
-в selected record `prompts/STAGES.md`. Не создавай отдельные `MASTER_STATUS`, `TRACK_REGISTRY` или
+в selected record `docs/STAGES.md`. Не создавай отдельные `MASTER_STATUS`, `TRACK_REGISTRY` или
 handoff files; compact launcher является transient queue/session projection canonical state.
 
 ## Stage prompts

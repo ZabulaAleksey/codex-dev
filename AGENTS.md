@@ -54,7 +54,7 @@ stage record → относящиеся architecture/decisions/design/security �
 status, blockers/evidence и NEXT находятся в выбранном STAGES record. Не загружай целиком архивы prompts, все rules/specs/fixtures или
 старые reports.
 
-Для stage-bound project task ровно одна строка `- Stage ID: <stable-id>` в `prompts/STAGES.md`
+Для stage-bound project task ровно одна строка `- Stage ID: <stable-id>` в `docs/STAGES.md`
 выбирает ровно один heading в этом же файле, где ID является отдельным token. Загружай только
 выбранный record. Invalid/missing/ambiguous selector даёт visible `DEGRADED`; прочитай полный record
 вручную и не используй completion claim, пока контракт не проверен.
@@ -135,7 +135,7 @@ idea-intake, prompt-build или execute.
 Для active full staged product overlay содержательными canonical files являются:
 
 - `AGENTS.md`;
-- `prompts/STAGES.md`;
+- `docs/STAGES.md`;
 - `docs/ROADMAP.md`;
 - `docs/ARCHITECTURE.md`;
 - `docs/DECISIONS.md`;
@@ -210,18 +210,18 @@ Architecture/decisions/design/security/testing/status меняй только п
 
 Перед завершением task/stage и после разрешённого merge выполни Completion Documentation
 Synchronization Gate из `rules/governance.md`. Всегда проверь существующие README,
-`prompts/STAGES.md`, `docs/ROADMAP.md`, затронутые SPEC,
+`docs/STAGES.md`, `docs/ROADMAP.md`, затронутые SPEC,
 architecture/decisions/design/security/testing/API/data/dependencies/fallback и используемые
 traceability/changelog/dev-log sources. Устрани stale status, blockers, next-step, test counts и
 ложные `merged/released/deployed` claims.
 
 В handoff явно укажи, какие state-bearing документы обновлены и какие проверены без изменений.
-`prompts/STAGES.md` — compact current execution truth, не action log. `docs/LEARNING_LOG.md` обновляй только
+`docs/STAGES.md` — compact current execution truth, не action log. `docs/LEARNING_LOG.md` обновляй только
 для evidence-backed повторно полезной диагностики; не записывай скрытые рассуждения и не дублируй
 Git history.
 
 Все действия, решения, доступы, ручные проверки и approval, которые должен выполнить пользователь,
-до handoff фиксируй в selected `prompts/STAGES.md` record по контракту `rules/governance.md`:
+до handoff фиксируй в selected `docs/STAGES.md` record по контракту `rules/governance.md`:
 stable ID, status/condition, точное безопасное действие, ожидаемое evidence и разблокируемый шаг.
 Не оставляй такие обязательства только в чате; secret values в STAGES не записывай.
 

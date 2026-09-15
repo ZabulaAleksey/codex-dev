@@ -6,7 +6,7 @@ description: Возобновить работу в существующем р�
 1. Разреши текущий repository и roles через `~/.codex/tools/dev_paths.py project . --json`.
    Если это не exact Git root с `dev_integration=enabled`, не применяй global DEV resume/Prompt
    Queue semantics: сообщи, что plain repository не подключён, и останови DEV bootstrap.
-2. Прочитай current selector и exact record из `prompts/STAGES.md`, `docs/ROADMAP.md`,
+2. Прочитай current selector и exact record из `docs/STAGES.md`, `docs/ROADMAP.md`,
    `docs/ARCHITECTURE.md`, а также актуальные git status и diff.
 3. Используй встроенного `explorer` только в том случае, если файлов состояния недостаточно.
 4. Сверь claims завершения с Stage contract из `~/.codex/rules/governance.md`. Future dependency, отсутствующий runnable/E2E PASS evidence или mock/stub-only путь не считай completion; классифицируй как `blocked`, `scaffolded`, `implemented_unverified` или `partial`.

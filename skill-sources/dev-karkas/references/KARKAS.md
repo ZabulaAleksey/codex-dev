@@ -38,14 +38,14 @@ Project `AGENTS.md` должен отвечать на вопросы:
 
 Полный staged overlay использует:
 
-- `prompts/STAGES.md` — единственный detailed stage и execution-state source: current selector,
+- `docs/STAGES.md` — единственный detailed stage и execution-state source: current selector,
   plan, lifecycle/evidence, blockers и NEXT;
 - `docs/ROADMAP.md` — порядок развития;
 
 `SPEC` не равен текущему stage plan.
 
 Не создавай отдельные AI plan/status files. Если они исторически существуют, сначала семантически
-объедини актуальные facts/blockers/evidence в `prompts/STAGES.md`, проверь links/validator и только
+объедини актуальные facts/blockers/evidence в `docs/STAGES.md`, проверь links/validator и только
 после этого удаляй legacy files.
 
 Следуй `STATUS_WORKFLOW.md`.
@@ -130,7 +130,7 @@ clean-room evidence, limitations и deviations. Используй
 
 ## 10. Prompts / staged implementation
 
-В полном staged overlay используй только `prompts/STAGES.md` как очередь и подробный источник
+В полном staged overlay используй только `docs/STAGES.md` как очередь и подробный источник
 самодостаточных implementation stages. Сырые идеи остаются backlog/Notion до refinement/approval.
 
 Хороший prompt:

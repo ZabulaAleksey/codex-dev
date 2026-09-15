@@ -23,7 +23,7 @@ REQUIRED_CONTENT = {
         "Backend workflow: read ~/.codex/rules/backend-dx.md and "
         "docs/project-context.md.\n"
     ),
-    "prompts/STAGES.md": (
+    "docs/STAGES.md": (
         "# Stages\n\n- Stage ID: `STAGE-001`\n\n"
         "## STAGE-001 — backend slice\n\n- Lifecycle: `planned`\n- NEXT: `STAGE-001`\n"
     ),
@@ -63,7 +63,7 @@ COMPLETE_DELTA = """# Project context
 - Worker/scheduler commands: `N/A — this project has no worker or scheduler`
 - External sandbox/stub/fallback modes: `N/A — this project has no external provider`
 - Clean-room smoke command or documented manual scenario: `pwsh scripts/dev.ps1 smoke-clean`
-- Project-specific quality gates: `BDX-GATE-01..12` recorded in `prompts/STAGES.md`
+- Project-specific quality gates: `BDX-GATE-01..12` recorded in `docs/STAGES.md`
 - Known limitations: clean-room fixture covers Windows and CI Linux only
 - Explicit deviations from global Backend DX Policy: none
 """

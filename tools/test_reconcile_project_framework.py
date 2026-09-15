@@ -138,6 +138,17 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(before, after)
 
+    def test_retired_stages_is_preserved_for_semantic_merge(self) -> None:
+        project = self.make_project(files={
+            "prompts/STAGES.md": "- Stage ID: OLD-001\n\n## OLD-001\n- Status: partial\n- NEXT: OLD-001\n",
+        })
+        before = (project / "prompts/STAGES.md").read_bytes()
+        report = reconcile_project(project, framework_root=self.workspace)
+        entries = {entry.path: entry for entry in report.entries}
+        self.assertEqual(entries["docs/STAGES.md"].status, "ADD")
+        self.assertEqual(entries["prompts/STAGES.md"].status, "MERGE")
+        self.assertEqual((project / "prompts/STAGES.md").read_bytes(), before)
+
     def test_dependency_inventory_reports_manager_and_drift(self) -> None:
         project = self.make_project(files={
             "package.json": '{"packageManager":"pnpm@9.0.0"}\n',

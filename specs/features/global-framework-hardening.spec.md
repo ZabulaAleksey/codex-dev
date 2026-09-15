@@ -29,7 +29,7 @@ install/validation path на Windows и Unix-like системах.
 - изменение `docs/LEARNING_LOG.md`, `docs/notes/LEARNING_LOG.md` либо личных learning-журналов;
 - создание новых agents, hooks, Skills, MCP или второго source of truth;
 - превращение global infrastructure repository в product overlay; собственный internal
-  `prompts/STAGES.md` разрешён последующим canonical-stages contract;
+  `docs/STAGES.md` разрешён последующим canonical-stages contract;
 - semantic validation полного Stage contract, product E2E, mass rollout project repositories;
 - удаление legacy presets, изменение hook size limits, push, merge, release или deployment.
 
@@ -53,9 +53,9 @@ role-specific `model_reasoning_effort`. Recommendation file не устанав�
 
 Для полного project overlay validator обязан fail visibly, если:
 
-- в `prompts/STAGES.md` нет ровно одной unfenced строки `- Stage ID: <id>`;
+- в `docs/STAGES.md` нет ровно одной unfenced строки `- Stage ID: <id>`;
 - ID пуст, длиннее 64 символов или содержит символы вне ASCII letters/digits/`.`/`_`/`-`;
-- в том же `prompts/STAGES.md` нет ровно одного unfenced Markdown heading, содержащего ID как отдельный
+- в том же `docs/STAGES.md` нет ровно одного unfenced Markdown heading, содержащего ID как отдельный
   token;
 - heading отсутствует или неоднозначен.
 
@@ -123,6 +123,6 @@ backup contract существующего `sync_global_skills.py`; `config.toml
 
 ## Compatibility update
 
-С 2026-09-08 selector и execution state принадлежат одному `prompts/STAGES.md` согласно
+С 2026-09-08 selector и execution state принадлежат одному `docs/STAGES.md` согласно
 `canonical-stages-policy.spec.md`. Это заменяет только прежнюю AI plan/status projection и не
 изменяет остальные требования/acceptance этого завершённого hardening contract.

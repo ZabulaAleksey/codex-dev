@@ -16,9 +16,9 @@ description: Создать или актуализировать проектн
 5. Сними baseline тестов до refresh; старые failures зафиксируй отдельно, а новые failures после refresh трактуй как regression.
 6. Если repository уже содержит КАРКАС, выполни inspect → gap analysis; не регенерируй работающие документы.
 7. Отдели стабильные требования и архитектуру от execution state. Используй канонические
-   `specs/system.spec.md`, `docs/ROADMAP.md` и единственный `prompts/STAGES.md` для selector,
+   `specs/system.spec.md`, `docs/ROADMAP.md` и единственный `docs/STAGES.md` для selector,
    current plan, lifecycle/evidence, blockers и NEXT.
-8. Спроектируй минимальную project delta: локальные инварианты, архитектурные границы, решения, контракты, security/testing по риску и `prompts/STAGES.md` для полного staged overlay. Для repository вне полного overlay зафиксируй классификацию и не создавай placeholders.
+8. Спроектируй минимальную project delta: локальные инварианты, архитектурные границы, решения, контракты, security/testing по риску и `docs/STAGES.md` для полного staged overlay. Для repository вне полного overlay зафиксируй классификацию и не создавай placeholders.
 9. Перед добавлением agent, hook, MCP, Skill, config или workflow классифицируй его как `INHERITED`, `EXTEND`, `PROJECT_ONLY`, `CONFLICT` или `OBSOLETE`. Запиши нетривиальный результат в проектный `docs/CONTEXT_COMPATIBILITY.md`.
 10. Настрой в тонком `AGENTS.md` маршрутизацию от типа задачи к минимальному набору SPEC, architecture, decisions, security и tests. Не копируй глобальные правила.
 11. Классифицируй backend applicability как `BDX-L0..L3`. Для `BDX-L1..L3` добавь в `docs/project-context.md` только project delta по `~/.codex/templates/BACKEND_DX_DELTA_TEMPLATE.md`; для `BDX-L0` не создавай пустой раздел.

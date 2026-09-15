@@ -22,9 +22,9 @@ Pure parsing contract находится в `hooks/stage_selector.py` и пер�
 projection, а read-only validator — за fail-visible structural preflight; расхождение правил
 selector-а между ними считается regression.
 
-Для stage-bound работы `prompts/STAGES.md` содержит ровно одну непустую строку `Stage ID` вне
+Для stage-bound работы `docs/STAGES.md` содержит ровно одну непустую строку `Stage ID` вне
 fenced code block: 1–64 ASCII-символа из букв, цифр, `.`, `_`, `-`. Hook находит ровно один
-Markdown heading вне fenced code block с этим ID как отдельным token в `prompts/STAGES.md` и
+Markdown heading вне fenced code block с этим ID как отдельным token в `docs/STAGES.md` и
 ставит bounded record первым в дополнительном контексте; весь catalog не загружается. Это context
 projection, а не semantic validation DAG, prerequisites или evidence.
 

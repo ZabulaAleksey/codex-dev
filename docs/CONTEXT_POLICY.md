@@ -19,7 +19,7 @@ project-local `.codex/dev-project.toml`. AGENTS declaration alone недоста
 
 1. Применимые global и ближайшие project/module `AGENTS.md` / rules.
 2. Project overlay/bootstrap/router entrypoint.
-3. Live Git state, current selector и только выбранный `prompts/STAGES.md` record.
+3. Live Git state, current selector и только выбранный `docs/STAGES.md` record.
 4. Current slice contract и его requirement IDs.
 5. Только затрагиваемые требования/acceptance из SPEC.
 6. Только относящаяся architecture/ADR boundary.
@@ -54,7 +54,7 @@ stage и active runtime; предложить exact migration/retirement с roll
 Automatic delete/migration по возрасту, отсутствию search result или рекомендациям модели
 запрещены. Prompt Queue cleanup остаётся у `prompt_queue.py` и его fresh exact-item guard.
 
-Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `prompts/STAGES.md`;
+Автоматический selector stage задаётся строкой `- Stage ID: <stable-id>` в `docs/STAGES.md`;
 тот же ID должен быть отдельным token ровно одного Markdown heading в этом же файле.
 SessionStart/SubagentStart hook проецирует bounded запись первой. Без valid selector запись не проецируется;
 invalid/ambiguous/oversized явный selector либо отсутствующий выбранный heading даёт видимый
@@ -81,7 +81,7 @@ verified chain, blockers и NEXT. Budget overflow создаёт compact launche
 2. global `~/.codex/AGENTS.md` и только применимые global rules/Skills;
 3. project `AGENTS.md` / ближайший `AGENTS.override.md`;
 4. `README.md`, затронутая SPEC, canonical architecture/decisions и один exact
-   current `prompts/STAGES.md` record;
+   current `docs/STAGES.md` record;
 6. target code/tests/manifests и только релевантные `LEARNING_LOG.md` entries;
 7. явно назначенные external mappings и их `synced | pending sync | blocked` state.
 
@@ -96,7 +96,7 @@ missing selector, dirty state без provenance или противоречие 
 
 - доменные и проектные правила;
 - SPEC, архитектуру, дизайн и решения;
-- current selector/state в `prompts/STAGES.md` и долгосрочный `ROADMAP`;
+- current selector/state в `docs/STAGES.md` и долгосрочный `ROADMAP`;
 - проектные agents, Skills, hooks и MCP только при подтверждённом пробеле общей конфигурации.
 
 Не создавай второй глобальный config Codex, второй Git workflow, дубли универсальных агентов или MCP «на всякий случай».
@@ -105,7 +105,7 @@ missing selector, dirty state без provenance или противоречие 
 
 - Уровни сложности: `SIMPLE`, `STANDARD`, `COMPLEX`; строгий режим для `COMPLEX` задаёт `rules/modes/strict.md`.
 - Стабильные требования: `specs/system.spec.md` и `specs/features/<feature>.spec.md`.
-- Текущий исполняемый срез и фактическое состояние: `prompts/STAGES.md`; отдельные
+- Текущий исполняемый срез и фактическое состояние: `docs/STAGES.md`; отдельные
   `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md` и `PROGRESS.md` не нужны.
 - Долгосрочный порядок развития: `docs/ROADMAP.md`.
 - Учебный журнал и подробная хронология создаются только при реальной пользе и не подменяют STAGES state.

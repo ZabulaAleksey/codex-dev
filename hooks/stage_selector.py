@@ -48,7 +48,7 @@ def parse_stage_id(stages: str) -> SelectorResult:
         return SelectorResult(
             issue_code="missing-stage-id",
             message=(
-                "prompts/STAGES.md must contain exactly one unfenced "
+                "docs/STAGES.md must contain exactly one unfenced "
                 "`- Stage ID: <id>` selector"
             ),
         )
@@ -56,7 +56,7 @@ def parse_stage_id(stages: str) -> SelectorResult:
         return SelectorResult(
             issue_code="ambiguous-stage-id",
             message=(
-                "prompts/STAGES.md must contain exactly one unfenced Stage ID selector; "
+                "docs/STAGES.md must contain exactly one unfenced Stage ID selector; "
                 f"found {len(candidates)}"
             ),
         )
@@ -148,7 +148,7 @@ def find_stage_record(catalog: str, stage_id: str) -> SelectorResult:
             stage_id=stage_id,
             issue_code="missing-stage-heading",
             message=(
-                f"prompts/STAGES.md must contain exactly one unfenced Markdown heading "
+                f"docs/STAGES.md must contain exactly one unfenced Markdown heading "
                 f"with Stage ID `{stage_id}` as a separate token"
             ),
         )
@@ -157,7 +157,7 @@ def find_stage_record(catalog: str, stage_id: str) -> SelectorResult:
             stage_id=stage_id,
             issue_code="ambiguous-stage-heading",
             message=(
-                f"prompts/STAGES.md contains {len(matches)} headings with Stage ID "
+                f"docs/STAGES.md contains {len(matches)} headings with Stage ID "
                 f"`{stage_id}`; expected exactly one"
             ),
         )
@@ -176,7 +176,7 @@ def find_stage_record(catalog: str, stage_id: str) -> SelectorResult:
 def select_stage_record(catalog: str, stage_id: str) -> tuple[str | None, str | None]:
     result = find_stage_record(catalog, stage_id)
     if result.issue_code == "missing-stage-heading":
-        return None, f"Stage ID `{stage_id}` не найден в heading `prompts/STAGES.md`."
+        return None, f"Stage ID `{stage_id}` не найден в heading `docs/STAGES.md`."
     if result.issue_code == "ambiguous-stage-heading":
         count = sum(
             1

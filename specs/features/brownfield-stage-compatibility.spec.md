@@ -5,7 +5,8 @@
 ## 1. Цель
 
 Расширить Continuous Master Execution единым read-only compatibility adapter для brownfield
-repositories, где execution state ещё распределён между prompts/STAGES.md, docs/AI_PLAN.md и
+repositories, где execution state ещё распределён между прежним prompts/STAGES.md,
+docs/STAGES.md, docs/AI_PLAN.md и
 docs/AI_STATUS.md. Adapter должен детерминированно классифицировать состояние, сформировать
 проверяемый dry-run migration plan и fail closed при конфликте, не изменяя product repository.
 
@@ -16,7 +17,7 @@ docs/AI_STATUS.md. Adapter должен детерминированно кла�
 - bounded detection canonical, legacy, mixed, conflicting, migrated и absent state;
 - strict extraction только явно размеченных legacy selector/status facts;
 - normalized projection current stage/master, status, next selector, blockers, checkpoint/evidence;
-- versioned stage-compatibility manifest внутри selected prompts/STAGES.md record;
+- versioned stage-compatibility manifest внутри selected docs/STAGES.md record;
 - content digests retained legacy sources и drift detection;
 - dry-run migration plan с stable idempotency key;
 - explicit digest-matched materialization API с typed stale/already-materialized/failure outcomes;
@@ -40,14 +41,16 @@ conflict, migrated или none. Порядок filesystem iteration и locale н
 
 ### BSC-002 Bounded legacy adapter
 
-Adapter читает только prompts/STAGES.md, docs/AI_PLAN.md и docs/AI_STATUS.md как contained regular
+Adapter читает только docs/STAGES.md, prompts/STAGES.md, docs/AI_PLAN.md и docs/AI_STATUS.md как contained regular
 files с per-file limit. Symlink/path escape, oversized content, malformed/duplicate selector и
 unsupported encoding дают conflict; product scripts и Markdown commands не выполняются.
+`prompts/STAGES.md` остаётся immutable migration input. Из него извлекаются facts только
+выбранного same-file record; остальные stage contracts сохраняются в intended target bytes.
 
 ### BSC-003 Canonical compatibility manifest
 
 Завершённая migration фиксируется versioned stage-compatibility JSON block в selected record
-prompts/STAGES.md. Block хранит canonical projection и SHA-256 каждого retained legacy source.
+docs/STAGES.md. Block хранит canonical projection и SHA-256 каждого retained legacy source.
 Это не второй state owner: runtime после migration читает projection из того же selected record.
 
 ### BSC-004 Normalized projection
@@ -68,14 +71,16 @@ Nullable master_id/checkpoint означает, что legacy project не об�
 selected heading, invalid manifest,
 manifest/source digest drift либо canonical/legacy selector mismatch дают route
 migration_required и classification conflict. Controller не запускает product stage.
+Наличие одного valid `prompts/STAGES.md` без `docs/STAGES.md` всегда даёт
+`migration_required`; противоречие старого и нового record даёт `conflict` без plan.
 
-Наличие `prompts/STAGES.md` без same-file selector при согласованном legacy pair является
-`mixed`/partial migration и может получить dry-run plan; отсутствие legacy state в том же случае
-остаётся `conflict`.
+Наличие selector-less `prompts/STAGES.md` или `docs/STAGES.md` при согласованном legacy pair
+является `mixed`/partial migration и может получить dry-run plan; отсутствие legacy state в том
+же случае остаётся `conflict`.
 
 ### BSC-006 Dry-run migration plan
 
-Полный и непротиворечивый legacy/mixed state возвращает immutable plan: target prompts/STAGES.md, source fingerprints,
+Полный и непротиворечивый legacy/mixed state возвращает immutable plan: target docs/STAGES.md, source fingerprints,
 normalized projection, preserve list, manual-review issues, destructive_removals=false и stable
 idempotency_key. Повторный запуск на тех же bytes возвращает идентичный report/plan.
 Incomplete state остаётся non-runnable `migration_required` с explicit issues и без plan.
@@ -163,7 +168,7 @@ repositories.
 Transaction имеет private deterministic test seam перед staging/publish/read-back, чтобы tests
 доказывали zero-write и full rollback без ослабления production checks. Test seam не управляется
 plan content и не экспортируется как CLI option. Public plan allow-list содержит только
-`prompts/STAGES.md`; обязательная multi-write rollback проверка использует private transaction
+`docs/STAGES.md`; обязательная multi-write rollback проверка использует private transaction
 primitive с synthetic targets внутри temporary repository и не создаёт второго state owner.
 
 ### BSC-020 No real product rollout in Slice B
@@ -189,7 +194,7 @@ projection, exact issues и bounded migration handoff. Low-level Slice A classif
 ### BSC-023 Canonical same-file enforcement
 
 Canonical/migrated execution разрешён только когда current stage/master, status, NEXT, blockers и
-required checkpoint/evidence однозначно разрешаются из selected `prompts/STAGES.md` record либо
+required checkpoint/evidence однозначно разрешаются из selected `docs/STAGES.md` record либо
 его digest-verified same-file manifest. Невалидный canonical file с внешне согласованным legacy
 state остаётся `conflicting_stage_state`; silent fallback на legacy запрещён.
 Authorization и передаваемый consumer-у selected record принадлежат одному bounded read snapshot;
@@ -265,7 +270,7 @@ disposition. Projection owns current_stage, optional master_id, normalized statu
 blockers, checkpoint and evidence. A valid manifest is authoritative only when:
 
 1. it is the only block in the selected record;
-2. state_owner equals prompts/STAGES.md;
+2. state_owner equals docs/STAGES.md;
 3. projection.current_stage equals the same-file selector;
 4. every declared legacy source exists and matches its digest;
 5. no undeclared known legacy state file exists.

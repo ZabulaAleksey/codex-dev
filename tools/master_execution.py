@@ -1,7 +1,7 @@
 """Deterministic primitives for Continuous Master Execution.
 
 The canonical state is an embedded ``master-execution`` JSON block in the selected
-``prompts/STAGES.md`` record. This module never executes commands from that state and never
+``docs/STAGES.md`` record. This module never executes commands from that state and never
 performs merge, push, release, prompt cleanup, or worktree deletion.
 """
 from __future__ import annotations
@@ -277,7 +277,7 @@ def extract_master_state(record: str) -> dict[str, Any]:
 
 def load_selected_state(project: Path) -> tuple[str, dict[str, Any]]:
     root = project.resolve()
-    stages_path = (root / "prompts" / "STAGES.md").resolve()
+    stages_path = (root / "docs" / "STAGES.md").resolve()
     try:
         stages_path.relative_to(root)
     except ValueError as exc:

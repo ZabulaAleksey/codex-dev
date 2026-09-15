@@ -59,7 +59,7 @@ runtime не изменяются. Apply/materialization и mass rollout отс�
 
 | Возможность | До изменения | Delta | Статус |
 |---|---|---|---|
-| Execution-state owner | `prompts/STAGES.md` + отдельные AI plan/status | один STAGES selector/plan/lifecycle/evidence/blocker/NEXT | `CONFLICT` → `EXTEND` |
+| Execution-state owner | `docs/STAGES.md` + отдельные AI plan/status | один STAGES selector/plan/lifecycle/evidence/blocker/NEXT | `CONFLICT` → `EXTEND` |
 | Session context | selector читался из отдельного plan | selector и exact record читаются из одного bounded STAGES | `EXTEND` |
 | Greenfield bootstrap | два AI templates плюс STAGES | один `STAGES_TEMPLATE.md` | `SUPERSEDED` → `EXTEND` |
 | Brownfield migration | legacy status names только отклонялись | read-only `MERGE` classification, semantic/link audit до удаления | `EXTEND` |
@@ -143,7 +143,7 @@ brownfield projects. Project-specific реализации остаются ис
 
 | Возможность | Найденное состояние | Потребность | Статус | Канонический owner |
 |---|---|---|---|---|
-| Current state | `prompts/STAGES.md` уже владеет selector/lifecycle/evidence/NEXT | durable master/track/graph без второго registry | `EXTEND` | selected STAGES record + versioned embedded block |
+| Current state | `docs/STAGES.md` уже владеет selector/lifecycle/evidence/NEXT | durable master/track/graph без второго registry | `EXTEND` | selected STAGES record + versioned embedded block |
 | Stage readiness | governance задаёт DAG и completion gates, semantic parser отсутствует | deterministic ready/stop transition | `EXTEND` | portable controller + SPEC/governance |
 | Worktree isolation | Git policy требует isolation, но route выбирается вручную | continuation reuse и parallel ensure без чужого branch switch | `EXTEND` | guarded Git adapter; Git остаётся source of facts |
 | Context | exact selected record уже bounded hook-ом | targeted scope, budget и durable launcher/handoff | `EXTEND` | controller projection внутри current record |

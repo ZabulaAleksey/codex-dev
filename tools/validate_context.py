@@ -17,7 +17,7 @@ REQUIRED = {
     "hooks/stage_selector.py",
     "install-global.sh",
     "MANIFEST.txt",
-    "prompts/STAGES.md",
+    "docs/STAGES.md",
     "docs/ARCHITECTURE.md",
     "docs/notes/AUTOMATION_EXTENSIONS.md",
     "docs/CONTEXT_COMPATIBILITY.md",

@@ -64,7 +64,7 @@ Stage contract из `~/.codex/rules/governance.md`; references ниже не п�
 - дерево репозитория;
 - `AGENTS.md` / `AGENTS.override.md`;
 - README, SPEC, DESIGN, SECURITY, ROADMAP;
-- canonical `prompts/STAGES.md`, legacy competing state files при migration, DEV_LOG, LEARNING, decisions;
+- canonical `docs/STAGES.md`, legacy competing state files при migration, DEV_LOG, LEARNING, decisions;
 - docs, tests, CI/CD;
 - package/workspace manifests;
 - dependency manager, canonical lockfile, CI restore command and tracked generated
@@ -118,7 +118,7 @@ Stage contract из `~/.codex/rules/governance.md`; references ниже не п�
 - неизвестно / требует evidence.
 
 Перед завершением выполни Completion Documentation Synchronization Gate из
-`references/STATUS_WORKFLOW.md`: всегда проверь README, `prompts/STAGES.md`, ROADMAP
+`references/STATUS_WORKFLOW.md`: всегда проверь README, `docs/STAGES.md`, ROADMAP
 и другие state-bearing документы; обнови изменившиеся факты, а точные
 документы оставь без churn. После merge повтори gate по target branch.
 
@@ -163,7 +163,7 @@ vertical slice, concrete end-to-end scenario, PASS/evidence, fully working tempo
 1. фактическое состояние репозитория и результаты проверок;
 2. явно утверждённая спецификация / архитектурное решение;
 3. project-specific `AGENTS.md` и project policy;
-4. current selector/record в `prompts/STAGES.md`;
+4. current selector/record в `docs/STAGES.md`;
 5. backlog / Notion;
 6. Notion-идеи и brainstorm.
 

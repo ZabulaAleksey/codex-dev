@@ -267,8 +267,8 @@ class HookRegressionTests(unittest.TestCase):
             marker = repo / ".codex/dev-project.toml"
             marker.parent.mkdir(parents=True)
             marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["stage-router-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
-            (repo / "prompts").mkdir()
-            (repo / "prompts/STAGES.md").write_text(
+            (repo / "docs").mkdir()
+            (repo / "docs/STAGES.md").write_text(
                 "- Stage ID: `STAGE-001`\n\n## STAGE-001\n\n"
                 "- Status: planned\n- NEXT: STAGE-001\n\nСтатус → готово\n",
                 encoding="utf-8",
@@ -285,8 +285,8 @@ class HookRegressionTests(unittest.TestCase):
             marker = repo / ".codex/dev-project.toml"
             marker.parent.mkdir(parents=True)
             marker.write_text('schema_version = 1\n\n[dev]\nmanaged = true\nrequires_global_dev = true\nminimum_version = "2026.09.10"\nrequired_capabilities = ["stage-router-v1"]\nrequired_contract_schema = 1\n', encoding="utf-8")
-            (repo / "prompts").mkdir()
-            stages = repo / "prompts/STAGES.md"
+            (repo / "docs").mkdir()
+            stages = repo / "docs/STAGES.md"
             stages.write_text(
                 "- Stage ID: STAGE-001\n\n## STAGE-001\n\n- Status: planned\n"
                 "- NEXT: STAGE-001\n\nORIGINAL-SNAPSHOT\n", encoding="utf-8"
@@ -316,11 +316,11 @@ class HookRegressionTests(unittest.TestCase):
             repo = base / "repo"
             repo.mkdir()
             (repo / ".git").mkdir()
-            (repo / "prompts").mkdir()
+            (repo / "docs").mkdir()
             outside = base / "outside.txt"
             outside.write_text("DO-NOT-EXPOSE", encoding="utf-8")
             try:
-                (repo / "prompts/STAGES.md").symlink_to(outside)
+                (repo / "docs/STAGES.md").symlink_to(outside)
             except OSError as exc:
                 self.skipTest(f"symlink creation is unavailable: {exc}")
             result = self.run_session_hook(repo)
@@ -330,8 +330,8 @@ class HookRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repo = Path(temporary)
             (repo / ".git").mkdir()
-            (repo / "prompts").mkdir()
-            (repo / "prompts/STAGES.md").write_text("x" * 1_000_000, encoding="utf-8")
+            (repo / "docs").mkdir()
+            (repo / "docs/STAGES.md").write_text("x" * 1_000_000, encoding="utf-8")
             result = self.run_session_hook(repo)
             self.assertLess(len(result.stdout), 12_000)
 

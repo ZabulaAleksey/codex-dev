@@ -9,7 +9,7 @@ Source item: `3db61ed8-f246-81d7-bc79-fba7f8d03a41`; source revision:
 
 This is a global DEV capability. Versioned contracts and catalog live in the canonical DEV Git
 source. Journal events are opt-in runtime data in an ignored directory and never become project
-stage state, a prompt queue, or a Git-tracked log. `prompts/STAGES.md` remains the only owner of
+stage state, a prompt queue, or a Git-tracked log. `docs/STAGES.md` remains the only owner of
 execution status and NEXT. Existing `spec_execution.py` owns Skill routing and pure automation
 promotion decisions; `ai_policy_profiler.py` remains project-local and opt-in.
 

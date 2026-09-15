@@ -183,7 +183,7 @@ Subprocess-тесты дополнительно проходят внутрен
 
 Policy-часть остаётся structural contract test глобальной автоматизации, а hook-часть — internal
 E2E context-projection path. Она не валидирует семантику произвольного project
-`prompts/STAGES.md`, не исполняет product path и не превращает mocks/stubs в E2E evidence.
+`docs/STAGES.md`, не исполняет product path и не превращает mocks/stubs в E2E evidence.
 
 `tools.test_validate_project_overlay` дополнительно проверяет shared selector/compatibility
 contract: canonical PASS, migration-required non-PASS, conflict/no-state, invalid-canonical

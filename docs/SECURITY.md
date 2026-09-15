@@ -61,7 +61,7 @@ size limits, запрещает symlink/non-file sources и декодирует
 извлекаются по exact labels; duplicate/conflicting facts, malformed same-file manifest и source
 digest drift дают `conflict` / `migration_required`. Dry-run plan не исполняет Markdown и не
 запускает product code. Explicit materializer принимает только strict bounded plan JSON и отдельно
-подтверждённый digest, разрешает write только `prompts/STAGES.md`, повторно проверяет repository
+подтверждённый digest, разрешает write только `docs/STAGES.md`, повторно проверяет repository
 identity, все source/target bytes и path containment под exclusive lock. Sibling temp file
 fsync-ится до atomic replace; exact parser/router read-back обязателен, failure восстанавливает
 pre-image. Unknown leftover lock не удаляется по возрасту: до manual reconciliation возвращается

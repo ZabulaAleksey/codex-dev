@@ -30,7 +30,7 @@ class DocumentationSyncPolicyTests(unittest.TestCase):
             (
                 "Completion Documentation Synchronization Gate",
                 "`README.md`",
-                "`prompts/STAGES.md`",
+                "`docs/STAGES.md`",
                 "`docs/ROADMAP.md`",
                 "После merge повтори аудит",
             ),
@@ -63,7 +63,7 @@ class DocumentationSyncPolicyTests(unittest.TestCase):
     def test_templates_and_readme_expose_the_gate(self) -> None:
         self.assert_markers(
             "templates/STAGES_TEMPLATE.md",
-            ("`README`", "`prompts/STAGES.md`", "`ROADMAP`", "Проверены без изменений"),
+            ("`README`", "`docs/STAGES.md`", "`ROADMAP`", "Проверены без изменений"),
         )
         self.assert_markers(
             "README.md",

@@ -665,17 +665,17 @@ def _git_recovery_facts(
     if worktree_exists:
         state_diff = git(
             worktree, "diff", "--quiet", "--no-ext-diff", "--no-textconv",
-            "HEAD", "--", "prompts/STAGES.md",
+            "HEAD", "--", "docs/STAGES.md",
         )
         head_state_file: subprocess.CompletedProcess[str] | None = None
         if state_diff.returncode == 0:
-            head_state_size = git(worktree, "cat-file", "-s", "HEAD:prompts/STAGES.md")
+            head_state_size = git(worktree, "cat-file", "-s", "HEAD:docs/STAGES.md")
             try:
                 size = int(head_state_size.stdout.strip()) if head_state_size.returncode == 0 else -1
             except ValueError:
                 size = -1
             if 0 <= size <= MAX_INPUT_BYTES:
-                head_state_file = git(worktree, "cat-file", "-p", "HEAD:prompts/STAGES.md")
+                head_state_file = git(worktree, "cat-file", "-p", "HEAD:docs/STAGES.md")
         if head_state_file is not None and head_state_file.returncode == 0:
             try:
                 head_selector = parse_stage_id(head_state_file.stdout)
@@ -1161,7 +1161,7 @@ def build_trace_contract(repository_root: Path, contract_path: Path) -> TraceCon
         },
     )
     stage_id = _identifier(data["stage_id"], "trace_contract.stage_id")
-    stages_path = root / "prompts" / "STAGES.md"
+    stages_path = root / "docs" / "STAGES.md"
     if not stages_path.is_file() or stages_path.stat().st_size > MAX_INPUT_BYTES:
         raise SpecExecutionError("canonical STAGES is missing or oversized", "invalid_stage_contract")
     try:

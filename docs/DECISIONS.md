@@ -1,5 +1,20 @@
 # Существенные решения
 
+## 2026-09-15 — Канонический STAGES перенесён в docs
+
+**Контекст:** пользователь установил `docs/STAGES.md` как долговечный project state owner и
+отменил использование каталога `prompts` для этой роли. Прежние проекты и DEV runtime всё ещё
+содержат `prompts/STAGES.md`.
+
+**Решение:** full staged overlay читает selector, selected record, lifecycle/evidence, blockers и
+NEXT только из `docs/STAGES.md`. Старый `prompts/STAGES.md` adapter распознаёт как ограниченный
+migration input с digest; при его наличии execution не разрешается до явной сверки и read-back.
+`docs/AI_PLAN.md` и `docs/AI_STATUS.md` сохраняются как legacy inputs до semantic reconciliation.
+
+**Последствия:** source/manifest/Skill templates/validators/hooks/controllers получают один путь.
+Brownfield проекты мигрируются отдельно, сохраняя unique content и recoverable rollback;
+standalone repositories без full DEV overlay не получают STAGES механически.
+
 ## 2026-09-15 — Global action observation is explicit and source-separated
 
 For `DEV-GAJ-001`, use a versioned, sanitized opt-in local journal and a read-only

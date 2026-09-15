@@ -14,7 +14,7 @@
 - сохранение dirty/index/merge/worktree state;
 - обновление global/project paths, trust config, hooks, validators и manifests;
 - project `AGENTS.md` как delta;
-- `prompts/STAGES.md` как единый detailed stage source;
+- `docs/STAGES.md` как единый detailed stage source;
 - canonical project docs и устранение semantic duplicates без потери уникального содержания;
 - global governance policy из `rules/governance.md`;
 - read-only structure/context validators.
@@ -42,6 +42,6 @@
 3. `dune-rts` placeholder архивирован после переноса уникального содержания.
 4. Global/project canonical context не содержит активных ссылок на старый layout.
 5. Versioned Skill source и runtime projection совпадают по file set/SHA-256.
-6. Project stage content консолидирован в `prompts/STAGES.md`; legacy stage files удалены только после content/link audit.
+6. Project stage content консолидирован в `docs/STAGES.md`; legacy stage files удалены только после content/link audit.
 7. Updated global/project validators и релевантные project gates проходят либо имеют явно pre-existing/blocked evidence.
 8. Final handoff содержит commits, statuses, rollback refs, gate results и оставшиеся blockers.

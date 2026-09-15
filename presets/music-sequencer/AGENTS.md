@@ -14,7 +14,7 @@ Global DEV bridge: enabled
 - Для исследования структуры репозитория используй встроенного `explorer`.
 - Не запускай всех специалистов для каждой задачи.
 - Для работы по дорожной карте используй `$implement-stage` или локальный skill проекта.
-- Поддерживай актуальность `prompts/STAGES.md`, `docs/ARCHITECTURE.md` и `docs/DECISIONS.md`.
+- Поддерживай актуальность `docs/STAGES.md`, `docs/ARCHITECTURE.md` и `docs/DECISIONS.md`.
 - Для существенной `STANDARD` или `COMPLEX` функциональности сначала найди или создай SPEC через `specs/README.md`.
 - Загружай только относящиеся к задаче mode, SDLC, domain и stack rules из `~/.codex/rules/`.
 

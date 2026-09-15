@@ -35,9 +35,9 @@ AGENTS declaration без marker недостаточна.
 ### NFR-001 Минимальный контекст
 
 Codex должен загружать ближайшие инструкции и только относящиеся к задаче правила, SPEC,
-выбранный stage record из `prompts/STAGES.md` и относящиеся к задаче документы; весь stage catalog
+выбранный stage record из `docs/STAGES.md` и относящиеся к задаче документы; весь stage catalog
 не загружается автоматически. Автоматическая проекция использует единственный stable `Stage ID`
-из самого `prompts/STAGES.md` и exact unique heading; ошибка явного selector должна быть видимой деградацией,
+из самого `docs/STAGES.md` и exact unique heading; ошибка явного selector должна быть видимой деградацией,
 а не silent fallback к другой записи.
 
 ### NFR-002 Безопасное изменение
@@ -67,7 +67,7 @@ Codex должен загружать ближайшие инструкции и
 
 Перед завершением задачи или этапа и после разрешённого merge Codex должен проверить все
 существующие источники, которые описывают возможности, выполненные шаги, текущий статус и
-следующие действия. Обязательный минимум: `README.md`, `prompts/STAGES.md`,
+следующие действия. Обязательный минимум: `README.md`, `docs/STAGES.md`,
 `docs/ROADMAP.md` и затронутые канонические документы.
 
 Проверка обязательна всегда; изменение содержимого обязательно только тогда, когда изменились
@@ -99,7 +99,7 @@ Mocks, stubs, fakes и заранее подготовленные интерф�
 источником требований.
 
 Новый Codex-сеанс должен восстанавливать состояние из Git, глобального ДЕВ, project overlay,
-`README.md`, selected/current record из `prompts/STAGES.md`, архитектурных документов и релевантных записей
+`README.md`, selected/current record из `docs/STAGES.md`, архитектурных документов и релевантных записей
 `LEARNING_LOG.md`. Старый чат и machine-local файлы не являются обязательной предпосылкой.
 Перенос между компьютером и ноутбуком выполняется через независимые Git repositories, штатную
 установку/валидацию глобального ДЕВ и восстановление project dependencies/secrets; ручное
@@ -116,7 +116,7 @@ Mocks, stubs, fakes и заранее подготовленные интерф�
 Project monitoring классифицируется как `active`, `event-driven` или `frozen` без создания
 глобального live inventory. `LEARNING_LOG.md` получает только evidence-backed повторно полезные
 записи в едином формате `Problem / Symptom / Root cause / Failed attempts / Fix / Verification /
-Prevention / Links` и не дублирует Git history либо `prompts/STAGES.md`.
+Prevention / Links` и не дублирует Git history либо `docs/STAGES.md`.
 
 ### FR-010 Глобальная готовность пользовательских продуктов к i18n / l10n
 
@@ -140,7 +140,7 @@ resource/fallback infrastructure и pseudo-locale либо alternate test locale
 ### FR-011 Единый canonical execution state
 
 Active full staged overlay хранит selector, current plan, lifecycle/evidence, blockers и NEXT в
-единственном `prompts/STAGES.md`. Отдельные `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md`,
+единственном `docs/STAGES.md`. Отдельные `AI_PLAN.md`, `AI_STATUS.md`, `PLAN.md`, `STATUS.md`,
 `PROGRESS.md` и эквивалентные project-state owners после миграции запрещены. Brownfield migration
 сначала семантически объединяет актуальное содержание и проверяет ссылки/evidence, затем удаляет
 legacy files; global tooling не выполняет такую cleanup mutation автоматически.
@@ -150,7 +150,7 @@ legacy files; global tooling не выполняет такую cleanup mutation
 После одного явного запуска `master_prompt` global DEV должен уметь детерминированно продолжать
 последовательность dependency-ready backward-complete slices без нового пользовательского prompt
 между безопасными однозначными шагами. Durable graph/track/checkpoint/evidence/NEXT сохраняются в
-selected record канонического `prompts/STAGES.md`; отдельный task/status owner не создаётся.
+selected record канонического `docs/STAGES.md`; отдельный task/status owner не создаётся.
 
 Continuation переиспользует текущий track/worktree, независимый write-track изолируется отдельной
 branch/worktree, а read-only задача не создаёт isolation механически. Critical unverified
@@ -161,7 +161,7 @@ hard blocker и context budget overflow являются fail-visible stop condi
 ### FR-013 Brownfield canonical stage compatibility
 
 Continuous Master Execution должен иметь один bounded read-only adapter для repositories, где
-canonical `prompts/STAGES.md` ещё сосуществует с legacy `docs/AI_PLAN.md` и
+canonical `docs/STAGES.md` ещё сосуществует с legacy `docs/AI_PLAN.md` и
 `docs/AI_STATUS.md` либо same-file selector отсутствует. Adapter детерминированно классифицирует
 state, выдаёт dry-run migration plan и не запускает work при неоднозначности.
 
@@ -218,7 +218,7 @@ vendor lock-in, alternate implementation, fake/emulator, migration или fallba
   architectures без копирования в project overlay; contract test подтверждает различие
   `language`/`locale`, resource-based строки, locale-aware форматы, fallback locale, text expansion,
   RTL и самостоятельный initial slice, не зависящий от будущей translation infrastructure.
-- AC-014 `prompts/STAGES.md` является единственным execution-state owner; hook и validator читают
+- AC-014 `docs/STAGES.md` является единственным execution-state owner; hook и validator читают
   selector из этого же файла, greenfield templates не создают AI plan/status pair, а read-only
   reconciliation даёт deterministic migration path существующим проектам.
 - AC-015 Continuous master controller выбирает готовые slices по dependency/evidence contract,
@@ -244,7 +244,7 @@ vendor lock-in, alternate implementation, fake/emulator, migration или fallba
   external projections, monitoring и единый формат learning evidence.
 - 2026-08-27 — добавлен межпроектный i18n/l10n contract для всех пользовательских продуктов.
 - 2026-09-08 — execution state, selector, blockers/evidence и NEXT консолидированы в единственном
-  `prompts/STAGES.md`; отдельные AI plan/status sources выведены из canonical workflow.
+  `docs/STAGES.md`; отдельные AI plan/status sources выведены из canonical workflow.
 - 2026-09-08 — добавлен portable Continuous Master Execution contract с deterministic graph,
   worktree routing, low-context handoff и verification/integration gates.
 - 2026-09-08 — добавлен контракт brownfield stage compatibility и retained-legacy manifest.

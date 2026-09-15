@@ -43,7 +43,7 @@ class GlobalFrameworkHardeningTests(unittest.TestCase):
             "Completion Documentation Synchronization Gate",
             "state-bearing документы обновлены",
             "проверены без изменений",
-            "prompts/STAGES.md",
+            "docs/STAGES.md",
             "docs/LEARNING_LOG.md",
             "config.toml",
             "Да, сливай",
@@ -95,7 +95,7 @@ class GlobalFrameworkHardeningTests(unittest.TestCase):
     def test_greenfield_router_template_uses_bootstrap_without_local_automation(self) -> None:
         template = read("templates/AGENTS_PROJECT_TEMPLATE.md")
         self.assertIn("bootstrap-project-framework", template)
-        self.assertIn("prompts/STAGES.md", template)
+        self.assertIn("docs/STAGES.md", template)
         self.assertNotIn("docs/AI_PLAN.md", template)
         self.assertNotIn("docs/AI_STATUS.md", template)
         self.assertNotIn(".codex/agents", template)

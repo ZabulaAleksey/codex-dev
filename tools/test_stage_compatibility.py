@@ -13,6 +13,7 @@ import tools.stage_compatibility as stage_compatibility
 
 from tools.stage_compatibility import (
     LEGACY_FILES,
+    OLD_STAGES,
     STATUSES,
     _FaultHooks,
     _publish_transaction,
@@ -61,10 +62,9 @@ PROJECTION = {
 class StageCompatibilityTests(unittest.TestCase):
     def make(self, *, stages=None, plan=None, status=None):
         root = Path(tempfile.mkdtemp())
-        (root / "prompts").mkdir()
         (root / "docs").mkdir()
         if stages is not None:
-            (root / "prompts" / "STAGES.md").write_text(stages, encoding="utf-8", newline="")
+            (root / "docs" / "STAGES.md").write_text(stages, encoding="utf-8", newline="")
         if plan is not None:
             (root / "docs" / "AI_PLAN.md").write_text(plan, encoding="utf-8", newline="")
         if status is not None:
@@ -83,7 +83,7 @@ class StageCompatibilityTests(unittest.TestCase):
         value = {
             "schema_version": 1,
             "migration_id": "MIG-001",
-            "state_owner": "prompts/STAGES.md",
+            "state_owner": "docs/STAGES.md",
             "legacy_sources": sources,
             "projection": projection,
         }
@@ -94,6 +94,42 @@ class StageCompatibilityTests(unittest.TestCase):
         self.assertEqual((result["classification"], result["route"]), ("canonical", "canonical"))
         self.assertTrue(result["runnable"])
         self.assertEqual(result["projection"], PROJECTION)
+        self.assertIsNone(result["plan"])
+
+    def test_retired_stages_path_is_migration_input(self):
+        root = self.make()
+        (root / "prompts").mkdir()
+        old = root / OLD_STAGES
+        old.write_text(STAGES, encoding="utf-8")
+        before = old.read_bytes()
+        result = inspect_compatibility(root)
+        self.assertEqual((result["classification"], result["route"]),
+                         ("legacy", "migration_required"))
+        self.assertFalse(result["runnable"])
+        self.assertEqual(result["plan"]["operations"][0]["path"], "docs/STAGES.md")
+        self.assertIn("DEV-TEST-A - fixture", result["plan"]["operations"][0]["content"])
+        self.assertEqual(old.read_bytes(), before)
+
+    def test_selectorless_old_catalog_with_structured_pair_can_plan(self):
+        root = self.make(plan=LEGACY_PLAN, status=LEGACY_STATUS)
+        (root / "prompts").mkdir()
+        old = root / OLD_STAGES
+        old.write_text("# old catalog\n\n## Other future slice\n", encoding="utf-8")
+        result = inspect_compatibility(root)
+        self.assertEqual((result["classification"], result["route"]),
+                         ("mixed", "migration_required"))
+        self.assertIsNotNone(result["plan"])
+        self.assertIn("Other future slice", result["plan"]["operations"][0]["content"])
+        self.assertTrue(old.is_file())
+
+    def test_old_and_new_stages_need_explicit_reconciliation(self):
+        root = self.make(stages=STAGES)
+        (root / "prompts").mkdir()
+        (root / OLD_STAGES).write_text(STAGES.replace("DEV-TEST-B", "DEV-OTHER"), encoding="utf-8")
+        result = inspect_compatibility(root)
+        self.assertEqual(result["classification"], "conflict")
+        self.assertIn("canonical_legacy_next_selector_mismatch", result["issues"])
+        self.assertFalse(result["runnable"])
         self.assertIsNone(result["plan"])
 
     def test_pure_legacy_has_dry_run_plan(self):
@@ -270,7 +306,7 @@ class StageCompatibilityTests(unittest.TestCase):
         self.assertEqual(handoff["state"], "plan_available")
         self.assertFalse(handoff["plan_persisted"])
         self.assertIsNone(handoff["plan_path"])
-        self.assertEqual(handoff["targets"], ["prompts/STAGES.md"])
+        self.assertEqual(handoff["targets"], ["docs/STAGES.md"])
         self.assertEqual(handoff["retained_legacy"], ["docs/AI_PLAN.md", "docs/AI_STATUS.md"])
         self.assertEqual(handoff["command_argv_template"][:5], [
             "py", "-3", "-B", "~/.codex/tools/master_execution.py", "<project-root>",
@@ -412,12 +448,12 @@ class StageCompatibilityTests(unittest.TestCase):
         self.assertEqual(plan["detected"]["projection"], plan["intended_state"]["projection"])
         self.assertIsNone(plan["detected"]["stage_selector"])
         self.assertEqual(plan["intended_state"]["stage_selector"], "DEV-TEST-A")
-        before = {name: (root / name).read_bytes() for name in LEGACY_FILES}
+        before = {name: (root / name).read_bytes() for name in LEGACY_FILES if (root / name).is_file()}
         with patch.object(Path, "read_bytes", side_effect=AssertionError("unbounded read-back")):
             result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
         self.assertEqual(result["status"], "materialized")
         self.assertEqual(result["writes"], 1)
-        self.assertEqual(before, {name: (root / name).read_bytes() for name in LEGACY_FILES})
+        self.assertEqual(before, {name: (root / name).read_bytes() for name in LEGACY_FILES if (root / name).is_file()})
         second = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
         self.assertEqual(second["status"], "already_materialized")
         self.assertEqual(second["writes"], 0)
@@ -430,7 +466,7 @@ class StageCompatibilityTests(unittest.TestCase):
         plan_path.write_text(json.dumps(tampered, ensure_ascii=False, sort_keys=True), encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
         self.assertEqual(result["status"], "invalid_plan")
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_plan_cannot_be_replayed_against_another_repository(self):
         root, plan_path, plan_digest = self.materialization_fixture()
@@ -438,7 +474,7 @@ class StageCompatibilityTests(unittest.TestCase):
         result = materialize_plan(other, plan_path, expected_plan_digest=plan_digest)
         self.assertEqual(result["status"], "invalid_plan")
         self.assertIn("repository identity mismatch", result["error"])
-        self.assertFalse((other / "prompts" / "STAGES.md").exists())
+        self.assertFalse((other / "docs" / "STAGES.md").exists())
 
     @unittest.skipIf(os.name == "nt", "case-only roots are not distinct on Windows")
     def test_repository_identity_preserves_case_and_backslash_on_posix(self):
@@ -469,7 +505,7 @@ class StageCompatibilityTests(unittest.TestCase):
         plan_path.write_text(json.dumps(malformed, ensure_ascii=False, sort_keys=True), encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=malformed["plan_digest"])
         self.assertEqual(result["status"], "invalid_plan")
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_unpaired_surrogate_plan_is_typed_invalid(self):
         root, plan_path, plan_digest = self.materialization_fixture()
@@ -479,7 +515,7 @@ class StageCompatibilityTests(unittest.TestCase):
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
         self.assertEqual(result["status"], "invalid_plan")
         self.assertIn("invalid Unicode", result["error"])
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_huge_json_integer_is_typed_invalid(self):
         root, plan_path, plan_digest = self.materialization_fixture()
@@ -488,7 +524,7 @@ class StageCompatibilityTests(unittest.TestCase):
         plan_path.write_text(raw, encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
         self.assertEqual(result["status"], "invalid_plan")
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_over_count_evidence_is_typed_invalid(self):
         root, plan_path, _ = self.materialization_fixture()
@@ -504,7 +540,7 @@ class StageCompatibilityTests(unittest.TestCase):
         plan_path.write_text(json.dumps(malformed, ensure_ascii=False, sort_keys=True), encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=malformed["plan_digest"])
         self.assertEqual(result["status"], "invalid_plan")
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_unclosed_manifest_marker_fails_closed_without_plan(self):
         stages = STAGES + "\n```stage-compatibility\n"
@@ -518,7 +554,7 @@ class StageCompatibilityTests(unittest.TestCase):
         original_snapshot = stage_compatibility._snapshot_known_state
 
         def drift_before_snapshot(project):
-            (project / "prompts" / "STAGES.md").write_text("concurrent state", encoding="utf-8")
+            (project / "docs" / "STAGES.md").write_text("concurrent state", encoding="utf-8")
             return original_snapshot(project)
 
         with patch.object(stage_compatibility, "_snapshot_known_state", side_effect=drift_before_snapshot):
@@ -540,7 +576,7 @@ class StageCompatibilityTests(unittest.TestCase):
         plan_path.write_text(json.dumps(tampered, ensure_ascii=False, sort_keys=True), encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
         self.assertEqual(result["status"], "invalid_plan")
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_stale_source_drift_has_zero_writes(self):
         root, plan_path, plan_id = self.materialization_fixture()
@@ -549,31 +585,38 @@ class StageCompatibilityTests(unittest.TestCase):
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
         self.assertEqual(result["status"], "stale_plan")
         self.assertEqual(result["writes"], 0)
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_target_drift_and_mixed_drift_have_zero_writes(self):
         root, plan_path, plan_digest = self.materialization_fixture()
-        (root / "prompts" / "STAGES.md").write_text("target drift", encoding="utf-8")
+        (root / "docs" / "STAGES.md").write_text("target drift", encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
         self.assertEqual(result["status"], "stale_plan")
         self.assertEqual(result["writes"], 0)
 
         root, plan_path, plan_digest = self.materialization_fixture()
         (root / "docs" / "AI_STATUS.md").write_text("source drift", encoding="utf-8")
-        (root / "prompts").mkdir(exist_ok=True)
-        (root / "prompts" / "STAGES.md").write_text("target drift", encoding="utf-8")
+        (root / "docs").mkdir(exist_ok=True)
+        (root / "docs" / "STAGES.md").write_text("target drift", encoding="utf-8")
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
         self.assertEqual(result["status"], "stale_plan")
         self.assertEqual(result["writes"], 0)
 
     def test_apply_time_parent_symlink_fails_closed(self):
-        root, plan_path, plan_id = self.materialization_fixture()
+        root = self.make()
+        (root / "prompts").mkdir()
+        (root / OLD_STAGES).write_text(STAGES, encoding="utf-8")
+        plan = inspect_compatibility(root)["plan"]
+        self.assertIsNotNone(plan)
+        plan_path = root / "migration-plan.json"
+        plan_path.write_text(json.dumps(plan, sort_keys=True), encoding="utf-8")
+        plan_id = plan["plan_digest"]
         outside = Path(tempfile.mkdtemp())
         (outside / "STAGES.md").write_text("outside", encoding="utf-8")
-        prompts = root / "prompts"
-        prompts.rmdir()
+        docs = root / "docs"
+        docs.rmdir()
         try:
-            os.symlink(outside, prompts, target_is_directory=True)
+            os.symlink(outside, docs, target_is_directory=True)
         except OSError as exc:
             self.skipTest(f"directory symlink unavailable: {exc}")
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_id)
@@ -585,7 +628,7 @@ class StageCompatibilityTests(unittest.TestCase):
         hooks = _FaultHooks(before_readback=lambda: (_ for _ in ()).throw(RuntimeError("injected readback")))
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_id, _fault_hooks=hooks)
         self.assertEqual(result["status"], "readback_failed_rolled_back")
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_rollback_cas_preserves_external_edit_and_retains_recovery_lock(self):
         root, plan_path, plan_digest = self.materialization_fixture()
@@ -600,7 +643,7 @@ class StageCompatibilityTests(unittest.TestCase):
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest, _fault_hooks=hooks)
         self.assertEqual(result["status"], "rollback_failed")
         self.assertEqual(result["writes"], 1)
-        self.assertEqual((root / "prompts" / "STAGES.md").read_text(encoding="utf-8"), "external edit")
+        self.assertEqual((root / "docs" / "STAGES.md").read_text(encoding="utf-8"), "external edit")
         lock = root / ".stage-compatibility.lock"
         self.assertTrue(lock.exists())
         retry = materialize_plan(root, plan_path, expected_plan_digest=plan_digest)
@@ -613,7 +656,7 @@ class StageCompatibilityTests(unittest.TestCase):
         result = materialize_plan(root, plan_path, expected_plan_digest=plan_digest, _fault_hooks=hooks)
         self.assertEqual(result["status"], "write_failed_rolled_back")
         self.assertEqual(result["writes"], 0)
-        self.assertFalse((root / "prompts" / "STAGES.md").exists())
+        self.assertFalse((root / "docs" / "STAGES.md").exists())
 
     def test_private_transaction_mid_publish_restores_all_targets(self):
         root = Path(tempfile.mkdtemp())
@@ -748,7 +791,7 @@ class StageCompatibilityTests(unittest.TestCase):
         self.assertEqual(plan_properties["operations"]["maxItems"], 1)
         self.assertEqual(
             plan_properties["operations"]["items"]["properties"]["path"]["const"],
-            "prompts/STAGES.md",
+            "docs/STAGES.md",
         )
         self.assertEqual(plan_properties["destructive_removals"]["const"], False)
         self.assertIn("plan_id", plan_schema["required"])

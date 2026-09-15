@@ -7,7 +7,7 @@
 ```text
 ~/.codex/AGENTS.md
   ├─ локальный project AGENTS.md (более специфичная delta)
-  │    └─ affected SPEC → selected/current prompts/STAGES.md record
+  │    └─ affected SPEC → selected/current docs/STAGES.md record
   ├─ rules/README.md
   │    ├─ mode
   │    ├─ SDLC
@@ -31,9 +31,9 @@
 | Engineering rules | `rules/**` | summaries в docs |
 | Skill workflow | `skill-sources/**` | `~/.agents/skills/**` |
 | Hook wiring | `hooks.json`, `hooks/**` | session output |
-| Current state/plan | project `prompts/STAGES.md` | handoff |
+| Current state/plan | project `docs/STAGES.md` | handoff |
 | Framework contract | `docs/PROJECT_FRAMEWORK.md`, `specs/**` | project overlay |
-| Stage lifecycle/evidence | `rules/governance.md` | selected project `prompts/STAGES.md` record |
+| Stage lifecycle/evidence | `rules/governance.md` | selected project `docs/STAGES.md` record |
 | Product i18n/l10n | `rules/i18n-l10n.md` | project SPEC, DESIGN, architecture и testing delta |
 | Project facts | project repository | external projections |
 | Project bindings | внешний project-aware слой | schema `PROJECT_REGISTRY.md` |
@@ -47,7 +47,7 @@ sync direction, pending state и read-back contract определены в `rul
 
 `hooks.json` выбирает скрипт. Hook определяет project root, читает только bounded набор существующих
 project-файлов, не следует наружу по symlink и не подмешивает глобальную библиотеку целиком.
-Ровно одна строка `- Stage ID: <stable-id>` в `prompts/STAGES.md` выбирает exact unique heading
+Ровно одна строка `- Stage ID: <stable-id>` в `docs/STAGES.md` выбирает exact unique heading
 record из того же файла; selected record идёт первым. Ошибка явного selector даёт visible `DEGRADED`
 warning без retry или произвольного fallback. События additive: project hook допустим лишь для
 доказанного локального gap.
@@ -63,7 +63,7 @@ warning без retry или произвольного fallback. События 
 5. сквозные fallback/security/i18n-l10n правила по применимости и риску.
 
 Для stage-bound задачи router обязательно добавляет Stage contract из `rules/governance.md` и
-только выбранный project record из `prompts/STAGES.md`; весь stage catalog не загружается.
+только выбранный project record из `docs/STAGES.md`; весь stage catalog не загружается.
 
 Для backend/runtime developer workflow router дополнительно подключает
 `rules/backend-dx.md`; этот файл ссылается на dependency, database/API, testing,
@@ -95,7 +95,7 @@ schema/discovery policy и намеренно не содержит actual proje
 ## Documents
 
 Канонические `docs/*.md` хранят устойчивые global contracts. Execution state, текущий план,
-blockers, evidence и `NEXT` принадлежат `prompts/STAGES.md`. Дополнительные долговечные материалы
+blockers, evidence и `NEXT` принадлежат `docs/STAGES.md`. Дополнительные долговечные материалы
 находятся в `docs/notes/` и читаются on demand. Новая тема сначала пытается дополнить существующий
 канон; отдельный note создаётся только при отсутствии подходящего owner.
 
@@ -104,7 +104,7 @@ blockers, evidence и `NEXT` принадлежат `prompts/STAGES.md`. Доп�
 ```text
 requirements
   → specs/**
-  → selected prompts/STAGES.md record
+  → selected docs/STAGES.md record
   → architecture/selected STAGES record
   → implementation
   → tests

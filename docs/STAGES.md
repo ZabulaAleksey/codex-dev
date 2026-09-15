@@ -34,6 +34,15 @@
 
 ### Действия пользователя
 
+- `USER-DEV-STAGES-INTEGRATION` — `PENDING`, condition: after isolated
+  `feature/docs-stages-canonical` commit/push, global checks and brownfield
+  reconciliation are reviewable, approve merging that exact branch into
+  `~/codex-dev/main`. Agent action after approval: fast-forward merge, repeat
+  relevant tests and manifest validation, apply the manifest-managed installer
+  to active `~/.codex`, then read back `docs/STAGES.md` and absence of the
+  retired managed `prompts/STAGES.md`. Expected evidence: clean main ancestry,
+  passing checks, installer ledger/read-back and protected runtime preserved.
+  This unlocks use of the new canonical validator for product migrations.
 - `USER-DEV-GAJ-MERGE` — `DONE`: user authorized local merge and later worktree
   removal; fast-forward `c81174a → 0884495`, clean ancestry and post-merge
   403 tests / 7 skips plus 285-file manifest PASS. Canonical source integrated;
@@ -627,7 +636,7 @@ so the historical execution prompt was moved to Trash and removed from active `A
 ### Runnable slice / concrete consumer scenario
 
 ```text
-temporary full overlay with one prompts/STAGES.md
+temporary full overlay with one docs/STAGES.md
   → project validator checks canonical files + single selector/heading
   → SessionStart hook loads exact selected record
   → added legacy AI plan/status fail visibly and reconcile as MERGE
@@ -646,7 +655,7 @@ external writes, commit, merge, push, release или deployment.
 
 - [x] Exact Notion prompt fetched and scoped.
 - [x] Isolated branch/worktree and pre-change baseline established.
-- [x] Canonical policy and migration documentation use only `prompts/STAGES.md` as execution owner.
+- [x] Canonical policy and migration documentation use only `docs/STAGES.md` as execution owner.
 - [x] Hook/validator/reconciliation and templates implement the single-file contract.
 - [x] Global state migrated without loss of current facts; legacy AI files removed after audit.
 - [x] Targeted consumer scenario, full tests, context validator and `git diff --check` PASS.
@@ -710,7 +719,7 @@ Evidence: L1
 Blockers: none
 
 - Lifecycle: `completed`; Evidence level: `validated locally + committed`.
-- Goal: make every project-owner-only action recoverable from selected `prompts/STAGES.md` without
+- Goal: make every project-owner-only action recoverable from selected `docs/STAGES.md` without
   relying on chat history.
 - Scope: canonical governance, global router, `dev-karkas` status workflow, project framework,
   STAGES template and contract regression; no runtime installation, product rollout or external write.

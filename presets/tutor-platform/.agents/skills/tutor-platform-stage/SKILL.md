@@ -3,7 +3,7 @@ name: tutor-platform-stage
 description: Реализовать ровно один ограниченный этап дорожной карты Tutor Platform с использованием специалистов проекта и правил проверки.
 ---
 
-1. Прочитай `AGENTS.md`, current selector/record из `prompts/STAGES.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md` и `specs/README.md`.
+1. Прочитай `AGENTS.md`, current selector/record из `docs/STAGES.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md` и `specs/README.md`.
 2. Найди SPEC выбранного этапа; для существенной функции не начинай реализацию без требований и критериев приёмки.
 3. Используй встроенного `explorer` и минимально необходимое число проектных специалистов.
 4. Если изменяются несколько слоёв, сначала используй глобального `architect` и зафиксируй интерфейсы до параллельной записи.

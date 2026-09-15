@@ -92,7 +92,7 @@ class MinimalUserLauncherTests(unittest.TestCase):
     def _materialize_project(self, project: Path | None = None) -> None:
         project = project or self.project
         (project / ".codex").mkdir(parents=True, exist_ok=True)
-        (project / "prompts").mkdir(exist_ok=True)
+        (project / "docs").mkdir(exist_ok=True)
         (project / "AGENTS.md").write_text(
             "# Fixture\n\nGlobal DEV bridge: enabled\n", encoding="utf-8"
         )
@@ -115,7 +115,7 @@ class MinimalUserLauncherTests(unittest.TestCase):
             check=True, capture_output=True, text=True, encoding="utf-8",
         ).stdout
         if status:
-            subprocess.run(["git", "-C", str(project), "add", "prompts/STAGES.md"], check=True)
+            subprocess.run(["git", "-C", str(project), "add", "docs/STAGES.md"], check=True)
             subprocess.run(["git", "-C", str(project), "commit", "-q", "-m", "stage state"], check=True)
 
     def _bound_state(self, project: Path | None = None) -> dict[str, object]:
@@ -135,7 +135,7 @@ class MinimalUserLauncherTests(unittest.TestCase):
     def _commit_state(self, state: dict[str, object], message: str) -> None:
         self._write_state(self.project, state)
         subprocess.run(
-            ["git", "-C", str(self.project), "add", "prompts/STAGES.md"], check=True
+            ["git", "-C", str(self.project), "add", "docs/STAGES.md"], check=True
         )
         subprocess.run(
             ["git", "-C", str(self.project), "commit", "-q", "-m", message], check=True
@@ -144,7 +144,7 @@ class MinimalUserLauncherTests(unittest.TestCase):
     @staticmethod
     def _write_state(project: Path, state: dict[str, object]) -> None:
         encoded = json.dumps(state, ensure_ascii=False)
-        (project / "prompts" / "STAGES.md").write_text(
+        (project / "docs" / "STAGES.md").write_text(
             "# Stages\n\n- Stage ID: `DEV-LAUNCHER-A`\n\n"
             "## DEV-LAUNCHER-A — launcher slice\n\n"
             "```master-execution\n" + encoded + "\n```\n"

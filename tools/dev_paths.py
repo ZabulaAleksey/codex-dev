@@ -306,7 +306,7 @@ def _legacy_dev_signals(project: Path) -> tuple[str, ...]:
                 signals.append("agents_global_dev_reference")
         except OSError:
             signals.append("agents_unreadable")
-    if (project / "prompts/STAGES.md").is_file() and (project / "docs/CONTEXT_COMPATIBILITY.md").is_file():
+    if any((project / relative).is_file() for relative in ("docs/STAGES.md", "prompts/STAGES.md")) and (project / "docs/CONTEXT_COMPATIBILITY.md").is_file():
         signals.append("full_overlay_shape")
     return tuple(signals)
 

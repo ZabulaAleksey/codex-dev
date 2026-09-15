@@ -76,7 +76,7 @@ Product repositories не изменяются автоматически тол
 - AC-GC-004 GitHub/Atlassian MCP и отсутствующие Calendar/Slack plugins выключены обратимо;
 - AC-GC-005 unit, integration и component проверки проходят;
 - AC-GC-006 `docs/CONTEXT_COMPATIBILITY.md`, `docs/SECURITY.md`, `docs/DECISIONS.md` и
-  соответствующий record `prompts/STAGES.md` отражают фактический результат;
+  соответствующий record `docs/STAGES.md` отражают фактический результат;
 - AC-GC-007 все неустранённые пункты перечислены с причиной и следующим безопасным действием.
 
 ## 6. Откат

@@ -142,7 +142,7 @@ def main() -> None:
                     "open the full record before stage execution.]"
                 )
             stage_chunk = (
-                f"## prompts/STAGES.md — selected `{routing['stage_selector']}`\n"
+                f"## docs/STAGES.md — selected `{routing['stage_selector']}`\n"
                 + selected_record
             )
             chunks.append(stage_chunk)

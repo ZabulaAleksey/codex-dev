@@ -8,7 +8,7 @@ and emits pure repeat candidates. `schemas/script-registry.json` catalogs exact 
 DEV script paths; lookup/preflight are read-only and never execute them. Exact observed
 executor + active catalog task class can be reused; other candidates require review.
 Candidate promotion and
-placement continue through `tools/spec_execution.py`; selected `prompts/STAGES.md`
+placement continue through `tools/spec_execution.py`; selected `docs/STAGES.md`
 continues to own task state/NEXT. The journal cannot replace project `.metrics`,
 the prompt queue, Git/SPEC/ADR facts, or the installed Codex runtime state.
 See the factual gap/ownership map in `docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`.
@@ -56,7 +56,7 @@ explicit adapter/exception. `compose_registries` объединяет global reg
 
 Prompt lifecycle, telemetry и durable state сохраняют существующих владельцев:
 
-- `prompts/STAGES.md` — selected execution state, blockers, evidence and NEXT;
+- `docs/STAGES.md` — selected execution state, blockers, evidence and NEXT;
 - `prompt_queue.py` — exact cleanup guard/receipt; master retention `keep`;
 - `ai_policy_profiler.py` — opt-in sanitized observations/economics, no auto-tuning;
 - `docs/LEARNING_LOG.md` — только подтверждённая reusable diagnosis, не raw reasoning/backlog;
@@ -71,7 +71,7 @@ Fallback to reasoning remains visible and never promotes evidence or silently lo
 Новый adapter расширяет existing Continuous Master Execution, не заменяя selector/controller:
 
     known bounded files
-      prompts/STAGES.md
+      docs/STAGES.md
       docs/AI_PLAN.md
       docs/AI_STATUS.md
             |
@@ -93,7 +93,7 @@ stage-compatibility block. Он хранит normalized projection и digests re
 совпадение selector/digests является условием canonical route. Analysis adapter не исполняет
 Markdown и остаётся read-only compatibility mode существующего `tools/master_execution.py` CLI.
 Отдельный explicit materialization mode применяет только exact bytes из approved plan к
-allow-listed `prompts/STAGES.md`, не перерендеривает state и не удаляет legacy files. Каждый apply
+allow-listed `docs/STAGES.md`, не перерендеривает state и не удаляет legacy files. Каждый apply
 повторно сверяет все source/target digests, выполняет read-back через тот же parser/router и при
 ошибке восстанавливает pre-image; product rollout остаётся отдельным slice.
 
@@ -121,7 +121,7 @@ Router и hook потребляют already-validated selected record из то�
 Continuous execution расширяет существующий Stage contour и не вводит второй task manager:
 
 ```text
-selected prompts/STAGES.md record + versioned master-execution block
+selected docs/STAGES.md record + versioned master-execution block
         ↓ parse / validate / reconcile with bounded Git facts
 MasterExecutionController: ready slice → evidence/stop/context decision
         ↓                         ↓
@@ -135,7 +135,7 @@ evidence подключаются как bounded adapters. Controller не ис�
 prompt/state и не делает merge/push/release/cleanup. Existing `prompt_queue.py` остаётся cleanup
 guard; hierarchical master/child semantics лишь определяют eligibility перед этим guard.
 
-Canonical durable owner остаётся `prompts/STAGES.md`. `master-execution` JSON block находится внутри
+Canonical durable owner остаётся `docs/STAGES.md`. `master-execution` JSON block находится внутри
 selected record, поэтому SessionStart получает master/track/checkpoint/next action без чтения всего
 catalog или отдельного handoff owner. Project без блока сохраняет обычный Stage lifecycle.
 
@@ -220,7 +220,7 @@ Stage lifecycle проходит через отдельный policy/evidence c
 ```text
 SPEC requirement
       ↓
-prompts/STAGES.md: selector + current slice + lifecycle/evidence + DAG/E2E/PASS
+docs/STAGES.md: selector + current slice + lifecycle/evidence + DAG/E2E/PASS
       ↓
 implementation → unit/integration/component → concrete end-to-end path
       ↓
@@ -230,9 +230,9 @@ lifecycle status + evidence level → documentation synchronization
 Task-aware context projection использует current selector из canonical STAGES:
 
 ```text
-prompts/STAGES.md: stable Stage ID + stage catalog
+docs/STAGES.md: stable Stage ID + stage catalog
       ↓ hooks/stage_selector.py: exact unique heading selector
-hooks/session_context.py → bounded selected prompts/STAGES.md record first
+hooks/session_context.py → bounded selected docs/STAGES.md record first
 tools/validate_project_overlay.py → preflight PASS или stable issue code
       ↓ hook: invalid / missing selected heading / ambiguous / oversized
 visible DEGRADED warning → manual full-record check → no completion claim до проверки

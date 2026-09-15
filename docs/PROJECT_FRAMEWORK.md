@@ -6,7 +6,7 @@
 ## Continuous Master Execution
 
 Крупный approved master не превращается ни в giant diff, ни в ручную очередь микропромптов.
-Selected `prompts/STAGES.md` record хранит versioned graph/track/checkpoint state; controller
+Selected `docs/STAGES.md` record хранит versioned graph/track/checkpoint state; controller
 выбирает единственный dependency-ready backward-complete slice, проверяет evidence/stop/context,
 создаёт checkpoint и продолжает автоматически. Continuation reuse-ит worktree, independent writer
 получает isolated branch/worktree. Low-context launcher восстанавливается из repository facts;
@@ -46,7 +46,7 @@ Implementation → tests → state update
 
 - `specs/system.spec.md` и при необходимости `specs/features/*` — стабильные требования и критерии приёмки;
 - `AGENTS.md` — тонкий project overlay с локальными инвариантами и маршрутизацией контекста;
-- `prompts/STAGES.md` — единственный подробный источник stages и execution state: selector,
+- `docs/STAGES.md` — единственный подробный источник stages и execution state: selector,
   current plan, lifecycle/evidence, blockers, действия пользователя и NEXT;
 - `docs/ARCHITECTURE.md` — границы, зависимости, интерфейсы и потоки данных;
 - `docs/DECISIONS.md` — существенные решения и их последствия;
@@ -59,7 +59,7 @@ test strategy, integration contracts и другие предметные док
 когда подробная хронология действительно полезна; отсутствие UI не является причиной для
 пустого `DESIGN.md`.
 
-`prompts/STAGES.md` не заменяет SPEC или ROADMAP: SPEC определяет стабильные требования,
+`docs/STAGES.md` не заменяет SPEC или ROADMAP: SPEC определяет стабильные требования,
 STAGES — detailed/current execution contract, ROADMAP — долгосрочный порядок.
 
 ### Backend DX profile
@@ -81,7 +81,7 @@ OpenAPI, queue или tracing.
 
 ### Каталог дополнительных Markdown-файлов
 
-До создания нового документа определи его роль. Если содержание относится к существующим SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `prompts/STAGES.md`, `ROADMAP.md` или другому каноническому контракту, обнови этот источник вместо создания параллельного файла.
+До создания нового документа определи его роль. Если содержание относится к существующим SPEC, `ARCHITECTURE.md`, `DECISIONS.md`, `DESIGN.md`, `SECURITY.md`, `TESTING.md`, `docs/STAGES.md`, `ROADMAP.md` или другому каноническому контракту, обнови этот источник вместо создания параллельного файла.
 
 На верхнем уровне `docs/` остаются только обязательные и условные канонические документы КАРКАСА. Новый долговечный материал без канонической роли — исследовательская заметка, разбор, handoff, audit note или вспомогательное объяснение — размещается в `docs/notes/<topic>.md`. Одноразовый временный материал не входит в repository.
 
@@ -165,20 +165,20 @@ Context =
 nearest instructions
 + selected mode/SDLC/domain/stack rules
 + affected SPEC requirements
-+ selected record from prompts/STAGES.md when stage-bound
++ selected record from docs/STAGES.md when stage-bound
 + relevant architecture/decisions/security
 + target files/tests/diff
 + current/selected STAGES record
 ```
 
 Не загружай автоматически все stages, roadmap, fixtures, logs и общую библиотеку. Для stage-bound
-задачи укажи stable `Stage ID` в `prompts/STAGES.md` и загружай только exact unique heading record
+задачи укажи stable `Stage ID` в `docs/STAGES.md` и загружай только exact unique heading record
 из этого же файла. Degraded-warning selector требует ручного чтения полного record и запрещает
 completion claim до проверки. Остальная маршрутизация должна быть
 предметной: например изменение публичного API подтягивает API-контракт, compatibility decision и
 contract tests, а изменение хранения — data model, security/retention rules и migration plan.
 
-После этапа всегда проверяй `README.md`, `prompts/STAGES.md`, `ROADMAP` и
+После этапа всегда проверяй `README.md`, `docs/STAGES.md`, `ROADMAP` и
 другие state-bearing документы по Completion Documentation Synchronization Gate из
 `rules/governance.md`. Обновляй только документы, чья фактическая информация изменилась;
 для остальных достаточно подтверждения `checked, still accurate` без timestamp-only churn.
@@ -248,7 +248,7 @@ overlay хранит только реализацию, исключения, de
 
 ## Язык проектного контекста
 
-По умолчанию человекочитаемый проектный контекст создаётся и поддерживается на русском языке. Это относится к `AGENTS.md`, SPEC, архитектуре, решениям, безопасности, тестовой стратегии, roadmap, `prompts/STAGES.md` и инструкциям проектных agents/Skills.
+По умолчанию человекочитаемый проектный контекст создаётся и поддерживается на русском языке. Это относится к `AGENTS.md`, SPEC, архитектуре, решениям, безопасности, тестовой стратегии, roadmap, `docs/STAGES.md` и инструкциям проектных agents/Skills.
 
 Не переводятся программные идентификаторы, публичные API и wire-контракты, команды, пути, имена файлов, названия технологий и машинные ключи конфигурации. Другой основной язык допустим по прямому указанию пользователя либо когда его требует внешний стандарт, аудитория или контракт проекта.
 
@@ -260,7 +260,7 @@ overlay хранит только реализацию, исключения, de
 - архитектурные границы и существенные решения явны;
 - этапы архитектурно завершены: каждый имеет completed prerequisites, runnable vertical slice,
   end-to-end PASS evidence и не зависит от будущего stage для основного пути;
-- один `prompts/STAGES.md` описывает текущую работу, lifecycle/evidence, blockers и NEXT;
+- один `docs/STAGES.md` описывает текущую работу, lifecycle/evidence, blockers и NEXT;
 - security и testing соответствуют рискам проекта;
 - context routing использует минимально достаточный набор источников;
 - нет необоснованных локальных копий глобальной AI Dev Team;

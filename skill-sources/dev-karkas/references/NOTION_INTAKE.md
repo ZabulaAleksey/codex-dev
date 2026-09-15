@@ -61,8 +61,8 @@ Notion
 - код;
 - DESIGN / architecture docs;
 - ROADMAP;
-- current selector/state в `prompts/STAGES.md`;
-- existing `prompts/STAGES.md` и принятый project backlog;
+- current selector/state в `docs/STAGES.md`;
+- existing `docs/STAGES.md` и принятый project backlog;
 - decisions;
 - тесты и TODO, если релевантно.
 
@@ -86,7 +86,7 @@ Notion
 ### 6. Build prompt
 
 Если идея достаточно определена, подготовь prompt по `PROMPT_TEMPLATE.md`. Для полного staged
-overlay каноническая project-проекция добавляется в `prompts/STAGES.md`; не создавай отдельный
+overlay каноническая project-проекция добавляется в `docs/STAGES.md`; не создавай отдельный
 локальный backlog directory. До approval идея остаётся backlog/`PROMPT_READY`, а не implementation stage.
 
 ### 7. State machine

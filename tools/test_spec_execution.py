@@ -136,7 +136,7 @@ class RegistryAndRouterTests(unittest.TestCase):
         implementation = self.root / "tools" / "spec_execution.py"
         implementation.parent.mkdir()
         implementation.write_text("# trace fixture\n", encoding="utf-8")
-        stages = self.root / "prompts" / "STAGES.md"
+        stages = self.root / "docs" / "STAGES.md"
         stages.parent.mkdir()
         state = cme_state(2)
         state["slices"][0]["id"] = "DEV-SEP-C"

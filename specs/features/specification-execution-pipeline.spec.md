@@ -53,7 +53,7 @@ Canonical owners:
 | user intent | зачем работа запущена сейчас | architecture, historical state |
 | global rules | какие общие invariants обязательны | project-specific commands |
 | project overlay | какая project/domain delta нужна | generic DEV implementation |
-| live Git + selected `prompts/STAGES.md` | что фактически активно сейчас | durable product requirements |
+| live Git + selected `docs/STAGES.md` | что фактически активно сейчас | durable product requirements |
 | SPEC / structured contract | что система обязана делать | implementation procedure |
 | architecture / ADR | где responsibility и почему принято решение | current execution status |
 | stage/slice | что ограниченно выполняется сейчас | полный master payload |
@@ -172,7 +172,7 @@ mechanics и repeated manual procedure. Missing opt-in telemetry остаётс�
 
 Pipeline расширяет selected CME slice optional structured execution contract-ом и не меняет ordinary
 project без него. SessionStart/validators остаются read-only; invalid route даёт visible degraded/
-blocked result, но не выбирает другую stage. `prompts/STAGES.md` остаётся единственным execution-state
+blocked result, но не выбирает другую stage. `docs/STAGES.md` остаётся единственным execution-state
 owner; Prompt Queue — cleanup owner; profiler — optional observations owner.
 
 ### SEP-012 — Minimal user entrypoints

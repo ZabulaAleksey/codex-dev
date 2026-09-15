@@ -27,9 +27,10 @@ MAX_STAGES_BYTES = 500_000
 MAX_FIELD_CHARS = 1_024
 MAX_PLAN_BYTES = 1_000_000
 MAX_PLAN_CONTENT_BYTES = 500_000
-LEGACY_FILES = ("docs/AI_PLAN.md", "docs/AI_STATUS.md")
-KNOWN_STATE_FILES = ("prompts/STAGES.md",) + LEGACY_FILES
-MATERIALIZATION_TARGET = "prompts/STAGES.md"
+MATERIALIZATION_TARGET = "docs/STAGES.md"
+OLD_STAGES = "prompts/STAGES.md"
+LEGACY_FILES = (OLD_STAGES, "docs/AI_PLAN.md", "docs/AI_STATUS.md")
+KNOWN_STATE_FILES = (MATERIALIZATION_TARGET,) + LEGACY_FILES
 MATERIALIZATION_LOCK = ".stage-compatibility.lock"
 MATERIALIZATION_GENERATOR = "DEV-BCSC-B/1"
 FENCE = re.compile(r"(?ms)^```stage-compatibility[ \t]*\r?\n(?P<body>.*?)^```[ \t]*\r?$")
@@ -387,7 +388,7 @@ def _validate_manifest(
         issues.append("invalid_manifest_schema_version")
     if type(manifest.get("migration_id")) is not str or not ID.fullmatch(manifest["migration_id"]):
         issues.append("invalid_manifest_migration_id")
-    if manifest.get("state_owner") != "prompts/STAGES.md":
+    if manifest.get("state_owner") != MATERIALIZATION_TARGET:
         issues.append("invalid_manifest_state_owner")
 
     sources = manifest.get("legacy_sources")
@@ -444,7 +445,7 @@ def _repository_identity(root: Path) -> str:
 def _snapshot_known_state(root: Path) -> dict[str, dict[str, Any]]:
     snapshot: dict[str, dict[str, Any]] = {}
     for relative in KNOWN_STATE_FILES:
-        limit = MAX_STAGES_BYTES if relative == MATERIALIZATION_TARGET else MAX_FILE_BYTES
+        limit = MAX_STAGES_BYTES if relative in {MATERIALIZATION_TARGET, OLD_STAGES} else MAX_FILE_BYTES
         raw, digest = _read(root, relative, limit)
         snapshot[relative] = {
             "path": relative,
@@ -465,7 +466,7 @@ def _manifest_for_plan(
     return {
         "schema_version": 1,
         "migration_id": "MIG-" + _digest(seed)[:16],
-        "state_owner": "prompts/STAGES.md",
+        "state_owner": MATERIALIZATION_TARGET,
         "legacy_sources": source_fingerprints,
         "projection": projection,
     }
@@ -520,13 +521,15 @@ def _append_manifest_to_record(text: str, stage: str, manifest: dict[str, Any]) 
 def _build_materialization_plan(
     root: Path,
     stages_raw: bytes | None,
+    old_stages_raw: bytes | None,
     stage: str,
     source_fingerprints: list[dict[str, str]],
     projection: dict[str, Any],
     detected: dict[str, Any],
 ) -> dict[str, Any]:
     manifest = _manifest_for_plan(stage, source_fingerprints, projection)
-    current = stages_raw.decode("utf-8-sig") if stages_raw is not None else ""
+    base = stages_raw if stages_raw is not None else old_stages_raw
+    current = base.decode("utf-8-sig") if base is not None else ""
     target_text = _append_manifest_to_record(current, stage, manifest)
     target_raw = target_text.encode("utf-8")
     if len(target_raw) > MAX_PLAN_CONTENT_BYTES:
@@ -595,10 +598,10 @@ def _conflict(issue: str) -> dict[str, Any]:
 def _inspect_compatibility_snapshot(project: str | Path) -> tuple[dict[str, Any], str | None]:
     root = Path(project).resolve()
     try:
-        stages_raw, _ = _read(root, "prompts/STAGES.md", MAX_STAGES_BYTES)
+        stages_raw, _ = _read(root, MATERIALIZATION_TARGET, MAX_STAGES_BYTES)
         legacy: dict[str, tuple[bytes, str]] = {}
         for relative in LEGACY_FILES:
-            raw, digest = _read(root, relative, MAX_FILE_BYTES)
+            raw, digest = _read(root, relative, MAX_STAGES_BYTES if relative == OLD_STAGES else MAX_FILE_BYTES)
             if raw is not None and digest is not None:
                 legacy[relative] = (raw, digest)
     except CompatibilityError as exc:
@@ -606,6 +609,28 @@ def _inspect_compatibility_snapshot(project: str | Path) -> tuple[dict[str, Any]
         return _conflict("state_read_error"), None
 
     legacy_texts = {path: raw.decode("utf-8-sig") for path, (raw, _) in legacy.items()}
+    old_stages_raw = legacy.get(OLD_STAGES, (None, None))[0]
+    old_stage_issue: str | None = None
+    if old_stages_raw is not None:
+        old_text = old_stages_raw.decode("utf-8-sig")
+        old_selector = parse_stage_id(old_text)
+        if old_selector.issue_code or old_selector.stage_id is None:
+            old_stage_issue = old_selector.issue_code or "missing-stage-id"
+            # A selector-less retired catalog is a known partial migration
+            # shape only when the structured AI pair supplies the selector.
+            if old_stage_issue == "missing-stage-id" and any(
+                path in legacy for path in ("docs/AI_PLAN.md", "docs/AI_STATUS.md")
+            ):
+                old_stage_issue = None
+                legacy_texts.pop(OLD_STAGES)
+        else:
+            old_record = find_stage_record(old_text, old_selector.stage_id)
+            if old_record.issue_code or old_record.record is None:
+                old_stage_issue = old_record.issue_code or "missing-stage-record"
+            else:
+                # Only selected old facts participate in projection; other records
+                # remain intact in the migration input, without guessing their state.
+                legacy_texts[OLD_STAGES] = f"- Stage ID: {old_selector.stage_id}\n" + old_record.record
     legacy_projection, legacy_issues = (
         _projection_from_texts(legacy_texts) if legacy_texts else (_empty_projection(), [])
     )
@@ -655,7 +680,10 @@ def _inspect_compatibility_snapshot(project: str | Path) -> tuple[dict[str, Any]
     issues: list[str] = []
     projection = _empty_projection()
 
-    if canonical_stage is not None and record is not None and canonical_issue is None:
+    if old_stage_issue is not None:
+        classification, route = "conflict", "migration_required"
+        issues.append("invalid_old_stages_" + old_stage_issue)
+    elif canonical_stage is not None and record is not None and canonical_issue is None:
         projection = canonical_projection
         if canonical_projection_issues:
             classification, route = "conflict", "migration_required"
@@ -697,7 +725,9 @@ def _inspect_compatibility_snapshot(project: str | Path) -> tuple[dict[str, Any]
             classification, route = "conflict", "migration_required"
             issues.extend(legacy_issues)
         else:
-            classification = "mixed" if stages_raw is not None else "legacy"
+            classification = "mixed" if stages_raw is not None or (
+                old_stages_raw is not None and len(legacy) > 1 and OLD_STAGES not in legacy_texts
+            ) else "legacy"
             route = "migration_required"
             issues.extend(legacy_issues)
     elif stages_raw is not None:
@@ -728,7 +758,7 @@ def _inspect_compatibility_snapshot(project: str | Path) -> tuple[dict[str, Any]
                     "projection": projection,
                 }
                 plan = _build_materialization_plan(
-                    root, stages_raw, stage_for_plan, source_fingerprints, projection, detected
+                    root, stages_raw, old_stages_raw, stage_for_plan, source_fingerprints, projection, detected
                 )
             except CompatibilityError as exc:
                 del exc
@@ -998,7 +1028,7 @@ def _validate_materialization_plan(plan: Any, root: Path) -> dict[str, Any]:
     manifest = intended["manifest"]
     if type(manifest) is not dict:
         raise CompatibilityError("invalid intended manifest")
-    if manifest.get("projection") != projection or manifest.get("state_owner") != "prompts/STAGES.md":
+    if manifest.get("projection") != projection or manifest.get("state_owner") != MATERIALIZATION_TARGET:
         raise CompatibilityError("intended manifest projection mismatch")
     if _validate_manifest(manifest, {}, stage, projection, False):
         # Source digests are checked against preconditions below; this call only
