@@ -241,6 +241,7 @@ redacted/verified transfer and is not needed for critical stage recovery.
 | `py -3 -B tools/validate_context.py` | PASS, 285 manifest files after staging | tracked source integrity |
 | isolated `install_global.py --dry-run` | PASS, no destination/Skill changes | source-only manifest consumer |
 | Local fast-forward merge and post-merge suite/manifest | PASS, `c81174a → 0884495`; 403 tests / 7 skips; 285 files | canonical source `main` |
+| GitHub push/read-back | PASS, `origin/main` at `acc30c3`; fresh remote heads contain only `main` | published DEV source; no remote feature deletion needed |
 | canonical-source active installer dry-run | PASS, 16 managed file changes plus ledger planned; protected runtime skipped, no writes | active-layer preview |
 | `git diff --cached --check` | PASS | whitespace |
 | Active runtime install/parity | PASS, 253 managed files, 10 Skill sources; protected runtime preserved; immediate `[no changes]` dry-run | active installed DEV layer |
@@ -258,7 +259,7 @@ Files in Stages A/B/C delta: `specs/features/global-action-journal.spec.md`,
 `docs/CONTEXT_POLICY.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md`,
 `docs/SECURITY.md`, `docs/TESTING.md`, this audit record,
 `MANIFEST.txt`, and `prompts/STAGES.md`.
-Local merge is evidenced; no push or deployment is implied.
+Local merge and GitHub push are evidenced; no deployment is implied.
 
 Canonical NEXT: execution DoD, runtime parity and exact Notion cleanup passed.
 No further `DEV-GAJ-001` slice remains; await an explicitly selected DEV prompt.
