@@ -1,8 +1,8 @@
 # Global DEV AI Context, Automation & Script Factory — factual audit
 
-Scope: canonical `DEV_SOURCE_ROOT` Git source at `~/codex-dev`; isolated audit branch
-`feature/global-ai-context-audit`. This is a source/worktree audit, not a claim that the
-new tool is installed in active `CODEX_HOME`. Notion source item
+Scope: canonical `DEV_SOURCE_ROOT` Git source at `~/codex-dev`; audit branch
+`feature/global-ai-context-audit`, fast-forward integrated into local `main`
+at `0884495`. Active `CODEX_HOME` installer and read-back passed. Notion source item
 `3db61ed8-f246-81d7-bc79-fba7f8d03a41`, parent queue
 `3d061ed8-f246-8163-b502-d1829668063c`, revision
 `2026-09-14T20:47:07.483Z`; user launched it on 2026-09-15 and allowed removal after
@@ -238,8 +238,11 @@ redacted/verified transfer and is not needed for critical stage recovery.
 | `py -3 -B -m unittest discover -s tools -p "test_*.py"` | PASS, 403 tests, 7 platform skips | source suite |
 | `py -3 -B tools/validate_context.py` | PASS, 285 manifest files after staging | tracked source integrity |
 | isolated `install_global.py --dry-run` | PASS, no destination/Skill changes | source-only manifest consumer |
+| Local fast-forward merge and post-merge suite/manifest | PASS, `c81174a → 0884495`; 403 tests / 7 skips; 285 files | canonical source `main` |
+| canonical-source active installer dry-run | PASS, 16 managed file changes plus ledger planned; protected runtime skipped, no writes | active-layer preview |
 | `git diff --cached --check` | PASS | whitespace |
-| Active runtime install/parity | NOT RUN | new source-only delta; requires separate installed-layer action |
+| Active runtime install/parity | PASS, 253 managed files, 10 Skill sources; protected runtime preserved; immediate `[no changes]` dry-run | active installed DEV layer |
+| Installed `~/.codex/tools/global_action.py catalog` | PASS, 16 scripts | actual runtime CLI consumer |
 | real opt-in `init → record ×2 → detect → preflight` | PASS, 1 exact candidate, `reuse_existing` | live CLI → ignored journal → existing script lookup |
 | `master_execution.py .` | PASS, `blocked` finalization slice | one selected STAGES/master graph |
 | `spec_execution.py route` | PASS, `dev-karkas` selected | stage-first relevant-only capability route |
@@ -253,19 +256,16 @@ Files in Stages A/B/C delta: `specs/features/global-action-journal.spec.md`,
 `docs/CONTEXT_POLICY.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md`,
 `docs/SECURITY.md`, `docs/TESTING.md`, this audit record,
 `MANIFEST.txt`, and `prompts/STAGES.md`.
-Source-only evidence must not be relabeled as pushed, merged or deployed.
+Local merge is evidenced; no push or deployment is implied.
 
-Canonical NEXT: review the isolated implementation checkpoint
-`60583245ec748f7b7204d9120b7e278911010816` for integration
-into local `main`. Then run post-merge source tests/manifest and explicitly
-install/verify the managed runtime layer before claiming active capability.
-Retain the master prompt until overall DoD and runtime parity are evidenced.
-Prompt cleanup requires fresh parent/source
-membership, deterministic guard `allowed` and exact read-back.
+Canonical NEXT: execution DoD and runtime parity passed; refresh the exact
+Notion parent/source membership, run deterministic guard `allowed`, remove
+the authorized exact child and verify neighbor-preserving read-back. Retain
+the receipt and finalize the coherent worktree track.
 
 Automation maturity at this checkpoint: nine versioned Skills; 16 cataloged
 scripts including one new explicit CLI; verified active-host runtime
-tools for this new capability: zero; observed automation candidates:
+tools for this new capability: one; observed automation candidates:
 one exact-repeat candidate, safely resolved to an existing script;
 quarantined scripts: zero. Instructions-only procedures are not
 meaningfully countable from source text without an agreed unit; report

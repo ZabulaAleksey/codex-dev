@@ -9,10 +9,12 @@ belongs to `docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`. Backward-complete source sli
 Script Registry lookup, a pure configurable Repeat Detector and exact
 existing-script reuse preflight without a new scheduler or automatic hook.
 Two real source-validator observations returned one exact candidate and reused
-`validate_context.py`; comparative cost claims remain unknown. Current
-lifecycle, worktree, blocker
-and NEXT belong to the selected `prompts/STAGES.md` record. No runtime install,
-merge/push or Notion cleanup is implied by source validation.
+`validate_context.py`; comparative cost claims remain unknown. The source is
+fast-forward integrated into local `main` at `0884495`; post-merge suite and
+manifest passed. Active runtime installer validation, Skill parity and
+no-change dry-run passed. Current lifecycle, worktree, blocker and NEXT belong
+to the selected `prompts/STAGES.md` record. Exact Notion cleanup remains
+pending fresh guard/read-back.
 
 ## Завершённый one-shot — Replaceable Modules Audit
 
