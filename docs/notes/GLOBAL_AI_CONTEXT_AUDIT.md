@@ -240,17 +240,22 @@ redacted/verified transfer and is not needed for critical stage recovery.
 | `git diff --cached --check` | PASS | whitespace |
 | Active runtime install/parity | NOT RUN | new source-only delta; requires separate installed-layer action |
 | real opt-in `init → record ×2 → detect → preflight` | PASS, 1 exact candidate, `reuse_existing` | live CLI → ignored journal → existing script lookup |
+| `master_execution.py .` | PASS, `blocked` finalization slice | one selected STAGES/master graph |
+| `spec_execution.py route` | PASS, `dev-karkas` selected | stage-first relevant-only capability route |
 | Live cost/token savings | UNKNOWN: two validations carry no cost/token baseline | no fabricated economics |
 
 Files in Stages A/B/C delta: `specs/features/global-action-journal.spec.md`,
 `schemas/global-action-event.schema.json`, `schemas/script-registry.json`,
 `schemas/repeat-detector.json`,
 `tools/global_action.py`, `tools/test_global_action.py`,
-`docs/CONTEXT_POLICY.md`, this audit record, `MANIFEST.txt`,
-`prompts/STAGES.md`, `docs/ROADMAP.md`, and `docs/TESTING.md`.
+`README.md`, `docs/ARCHITECTURE.md`, `docs/CONTEXT_COMPATIBILITY.md`,
+`docs/CONTEXT_POLICY.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md`,
+`docs/SECURITY.md`, `docs/TESTING.md`, this audit record,
+`MANIFEST.txt`, and `prompts/STAGES.md`.
 Source-only evidence must not be relabeled as pushed, merged or deployed.
 
-Canonical NEXT: complete the source checkpoint and review isolated integration
+Canonical NEXT: review the isolated implementation checkpoint
+`60583245ec748f7b7204d9120b7e278911010816` for integration
 into local `main`. Then run post-merge source tests/manifest and explicitly
 install/verify the managed runtime layer before claiming active capability.
 Retain the master prompt until overall DoD and runtime parity are evidenced.

@@ -57,8 +57,12 @@ promotion decisions; `ai_policy_profiler.py` remains project-local and opt-in.
    safety-sensitive candidates require human review. It cannot mutate scripts or policy.
 3. `DEV-GAJ-C`: Exact existing-script reuse preflight and a real sanitized repeat consumer path.
    Novel candidates use the existing promotion/placement reviewer and require a separate
-   bounded implementation decision. Comparative cost and advanced graph/cache/event service
-   remain deferred until observed need.
+  bounded implementation decision. Comparative cost and advanced graph/cache/event service
+  remain deferred until observed need.
+4. `DEV-GAJ-D`: Finalization gate. Completed A/B/C source evidence is the prerequisite;
+   local main integration, post-merge source checks, managed runtime parity and Notion
+   exact-item cleanup are separate authorization/evidence boundaries. With either boundary
+   pending, the master stays `partial` and the selected slice `blocked`.
 
 The first stage is independently runnable and leaves current DEV routes intact. Later stages
 only enrich observations; they do not unlock the first stage's CLI/lookup or validation.

@@ -1,9 +1,53 @@
 # DEV / КАРКАС — stages и execution state
 
-- Stage ID: `DEV-REPLACEABILITY-D`
-- Sequence: `DEV-SEP-A → DEV-SEP-B → DEV-SEP-C → DEV-SEP-D → DEV-SEP-E → DEV-SEP-F → DEV-SEP-LAUNCHER-001 → DEV-STAGES-USER-ACTIONS-001 → DEV-REPLACEABILITY-A → DEV-REPLACEABILITY-B → DEV-REPLACEABILITY-C → DEV-REPLACEABILITY-D`
-- NEXT: no approved continuation inside this completed master; await an explicitly selected DEV
-  prompt. The completed Replaceability one-shot has been removed through the exact-item guard.
+- Stage ID: `DEV-GAJ-D`
+- Sequence: `DEV-GAJ-A → DEV-GAJ-B → DEV-GAJ-C → DEV-GAJ-D`
+- NEXT: review isolated local `main` integration; after merge, verify source and installed
+  runtime parity, then evaluate overall DoD and exact-item Notion cleanup.
+
+## DEV-GAJ-D — Global AI Context integration/runtime gate
+
+- Status: `blocked` on integration/runtime parity; `DEV-GAJ-A..C` are
+  `verified locally`, master `partial`.
+- Source: Notion queue `3d061ed8-f246-8163-b502-d1829668063c`, item
+  `3db61ed8-f246-81d7-bc79-fba7f8d03a41`, revision
+  `2026-09-14T20:47:07.483Z`; user launch/conditional deletion authorization.
+- Branch/worktree: `feature/global-ai-context-audit` /
+  `~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/dev-audit-worktree`; source checkpoint `60583245ec748f7b7204d9120b7e278911010816`.
+- Requirements: `GAJ-001..007`; contract:
+  `specs/features/global-action-journal.spec.md`; audit/evidence:
+  `docs/notes/GLOBAL_AI_CONTEXT_AUDIT.md`.
+- Consumer: two real manifest checks → sanitized `record ×2 → detect`
+  one candidate → `preflight` reused `tools/validate_context.py`.
+- PASS: 402 tests / 7 platform skips; 285-file manifest; isolated installer
+  dry-run/no writes; five focused tests; 16-script catalog; CLI read-back;
+  whitespace, master controller `blocked` and relevant-only `dev-karkas` route.
+- Limits: no merge/runtime install/push/deploy/queue cleanup; cost saving unknown.
+
+### Действия пользователя
+
+- `USER-DEV-GAJ-MERGE` — `PENDING` after review: explicitly authorize local
+  merge of `feature/global-ai-context-audit` into `main`; expected evidence:
+  ancestry, clean branch/worktree and post-merge full tests/manifest. Unlocks
+  canonical source integration.
+- `USER-DEV-GAJ-RUNTIME` — `PENDING` after merged source checks: authorize
+  manifest-managed installer dry-run/apply from `~/codex-dev` into active
+  `~/.codex`; expected evidence: protected runtime preserved, ownership
+  ledger/read-back, Skill parity and immediate no-change dry-run. Unlocks
+  active runtime capability/overall DoD. Do not copy credentials.
+- `USER-DEV-GAJ-CLEANUP` — `AUTHORIZED / NOT YET ELIGIBLE`: user already
+  allowed deleting the Notion prompt after execution. Execute only after
+  overall DoD, fresh exact source/parent membership, PASS guard, exact child
+  operation and neighbor-preserving read-back.
+
+```master-execution
+{"schema_version":2,"state_revision":2,"master":{"id":"DEV-GAJ-001","status":"partial","source":{"backend":"notion","queue_id":"3d061ed8-f246-8163-b502-d1829668063c","item_id":"3db61ed8-f246-81d7-bc79-fba7f8d03a41","revision":"2026-09-14T20:47:07.483Z","prompt_type":"master_prompt","retention":"auto"}},"tracks":[{"id":"global-ai-context","repository":"~/codex-dev","worktree":"~/Documents/Codex/2026-09-15/dev-global-ai-context-automation-script/work/dev-audit-worktree","branch":"feature/global-ai-context-audit","checkpoint":"60583245ec748f7b7204d9120b7e278911010816","ownership":["GAJ source"],"status":"active"}],"slices":[{"id":"DEV-GAJ-A","master_id":"DEV-GAJ-001","title":"DEV-GAJ-A","status":"verified","predecessors":[],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-001","GAJ-002","GAJ-003","GAJ-004","GAJ-005"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-B","master_id":"DEV-GAJ-001","title":"DEV-GAJ-B","status":"verified","predecessors":["DEV-GAJ-A"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-006"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-C","master_id":"DEV-GAJ-001","title":"DEV-GAJ-C","status":"verified","predecessors":["DEV-GAJ-B"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"c81174a705781d311e9d362a7b42c066a41a7750","checkpoint_after":"60583245ec748f7b7204d9120b7e278911010816","required_evidence":["L1","L2","L3"],"evidence":["L1","L2","L3"],"context_scope":["GAJ SPEC","targeted evidence"],"requirements":["GAJ-007"],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":false},{"id":"DEV-GAJ-D","master_id":"DEV-GAJ-001","title":"Finalization gate","status":"blocked","predecessors":["DEV-GAJ-C"],"dependencies":[],"worktree_track":"global-ai-context","checkpoint_before":"60583245ec748f7b7204d9120b7e278911010816","checkpoint_after":"","required_evidence":["L1","L2","L3"],"evidence":[],"context_scope":["merge/runtime parity"],"requirements":[],"capabilities":["project.framework.governance"],"model_class":"MEDIUM","reasoning_effort":"high","stop_after":true}],"blockers":[{"id":"global-ai-context-integration","class":"pre_existing","status":"active","blocking":true,"owner":"user","evidence":"local merge not authorized"},{"id":"global-ai-context-runtime-parity","class":"pre_existing","status":"active","blocking":true,"owner":"user","evidence":"active runtime not yet installed"}],"decisions":["sanitized-opt-in","reuse-existing-promotion","no-automatic-hook"],"context_budget":{"max_chars":7000,"max_items":14,"max_contours":5,"max_decisions":5,"max_evidence_threads":6},"next_action":"review local merge, then runtime parity and cleanup guard","integration":{"required":false,"reason":"finalization blocked in DEV-GAJ-D"}}
+```
+
+NEXT: integration review/authorization, then post-merge/runtime parity and
+overall cleanup guard. Retain the Notion master while `partial`.
+
+
 
 Этот файл — единственный canonical execution-state owner global DEV. Requirements принадлежат
 SPEC, долговременный порядок — `docs/ROADMAP.md`, architecture/decisions — своим владельцам.

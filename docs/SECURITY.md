@@ -1,5 +1,16 @@
 # Безопасность
 
+## Global Action Journal boundary
+
+`tools/global_action.py` is an explicit opt-in local observation CLI. It rejects unknown,
+oversized, secret-like or unsafe event/catalog inputs and stores only normalized IDs,
+safe relative refs and fingerprints; raw prompts, commands, stdout/stderr, environment
+values, credentials and model reasoning are excluded. `init/record --dry-run` do not
+write; actual append has bounded lock, duplicate-ID no-op/conflict and read-back.
+Detection/preflight cannot execute or promote scripts. The ignored journal is runtime
+data, not Git/project status. Unknown host activation and exact Notion cleanup remain
+separate gates.
+
 ## Continuous master execution
 
 Embedded `master-execution` state считается недоверенным структурированным вводом: bounded size,
